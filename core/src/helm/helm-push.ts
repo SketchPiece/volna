@@ -144,6 +144,30 @@ export class HelmPush {
     });
   }
 
+  /**
+   * Мак ждёт Face ID с телефона (sudo или окно с паролем, helm/authBridge.ts в «Штурвале»): срочный пуш на все
+   * телефоны, мимо настроек уведомлений о тредах. Текст переводит приложение; через две минуты пуш уже не нужен.
+   */
+  notifyAuthRequest(request: { environmentId: string; id: string; kind: 'sudo' | 'prompt'; app: string; title: string }): Promise<void> {
+    return this.#serial(async () => {
+      const sudo = request.kind === 'sudo';
+      const arg = (sudo ? request.title : request.app || request.title).slice(0, 120);
+      const alert = sudo
+        ? { title: 'sudo', body: `Waiting for Face ID: ${arg}`, 'loc-key': 'HELM_ALERT_MAC_SUDO', 'loc-args': [arg] }
+        : { body: `${arg} wants to unlock. Confirm with Face ID`, 'loc-key': 'HELM_ALERT_MAC_UNLOCK', 'loc-args': [arg] };
+      const expiration = String(Math.floor(this.#nowMs() / 1000) + 120);
+      for (const device of this.#devices.values()) {
+        if (!device.pushToken) continue;
+        await this.#send(device, 'pushToken', {
+          'apns-push-type': 'alert', 'apns-topic': device.bundleId, 'apns-priority': '10', 'apns-expiration': expiration, 'apns-collapse-id': request.id.slice(0, 64)
+        }, {
+          aps: { alert, sound: 'default', 'interruption-level': 'time-sensitive', 'thread-id': 'helm-auth' },
+          environmentId: request.environmentId, authRequestId: request.id
+        });
+      }
+    });
+  }
+
   unregisterDevice(deviceId: string): Promise<void> {
     return this.#serial(async () => {
       this.#devices.delete(deviceId);

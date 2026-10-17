@@ -63,6 +63,16 @@ export function helmRoutes(options: { push: HelmPush; serverAuth: MiddlewareHand
     return c.json({ ok: true, deliveries: [] });
   });
 
+  // Мак ждёт Face ID (sudo, окно с паролем): разбудить телефон. Ответ телефон шлёт уже самому Маку.
+  app.post('/v1/environments/:environmentId/auth-requests', async c => {
+    const parsed = z.object({
+      id: z.string().trim().min(1).max(200), kind: z.enum(['sudo', 'prompt']), app: z.string().max(200).default(''), title: z.string().max(2000).default('')
+    }).safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: 'Нужны id, kind, app и title.' }, 400);
+    void push.notifyAuthRequest({ environmentId: c.req.param('environmentId'), ...parsed.data });
+    return c.json({ ok: true });
+  });
+
   app.post('/v1/mobile/devices', async c => {
     const parsed = deviceRegistrationSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'Неверная регистрация устройства.' }, 400);

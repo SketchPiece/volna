@@ -118,3 +118,17 @@ test('/helm speaks the relay API: the server token only publishes, the phone tok
     assert.equal(snapshot.aggregate.activeCount, 1);
   });
 });
+
+test('a Mac waiting for Face ID wakes every phone with a short-lived, app-localized alert', async () => {
+  const { push, requests } = await setup();
+  await push.registerDevice(device({ preferences: { ...PREFS, notificationsEnabled: false } }));
+  await push.notifyAuthRequest({ environmentId: 'env', id: 'sudo-1', kind: 'sudo', app: 'sudo', title: 'brew services restart nginx' });
+  await push.notifyAuthRequest({ environmentId: 'env', id: 'prompt-1-2', kind: 'prompt', app: '1Password', title: '1Password is trying to unlock.' });
+  assert.equal(requests.length, 2, 'thread notification settings do not hold these back');
+  assert.deepEqual(aps(requests[0]!).alert['loc-args'], ['brew services restart nginx']);
+  assert.equal(aps(requests[0]!).alert['loc-key'], 'HELM_ALERT_MAC_SUDO');
+  assert.equal(aps(requests[1]!).alert['loc-key'], 'HELM_ALERT_MAC_UNLOCK');
+  assert.deepEqual(aps(requests[1]!).alert['loc-args'], ['1Password']);
+  assert.equal(JSON.parse(requests[1]!.body).authRequestId, 'prompt-1-2');
+  assert.equal(requests[1]!.headers['apns-expiration'], String(Math.floor(NOW.getTime() / 1000) + 120));
+});
