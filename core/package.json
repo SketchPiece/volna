@@ -1,0 +1,30 @@
+{
+  "name": "wave-core",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/main.ts",
+    "test": "node --test --test-force-exit 'src/**/*.test.ts'",
+    "typecheck": "tsc --noEmit",
+    "dream": "node --env-file-if-exists=.env src/dream.ts",
+    "metrics": "node --env-file-if-exists=.env src/metrics.ts",
+    "persona": "node --env-file-if-exists=.env src/persona-cli.ts",
+    "skills": "node --env-file-if-exists=.env src/skills-cli.ts",
+    "plugins": "node --env-file-if-exists=.env src/plugins-cli.ts",
+    "greetings": "node src/greetings-cli.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "hono": "^4.13.8",
+    "ws": "^8.22.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^7.0.2"
+  }
+}

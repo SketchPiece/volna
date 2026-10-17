@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ВОЛНА-1 · Дизайн-система голосового звонка · v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* =====================================================================
+   1. ПРОДУКТОВЫЕ ТОКЕНЫ. Базовые взяты из драфта без изменений.
+      Блок «call» добавлен для голосового звонка.
+   ===================================================================== */
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F; --signal-deep:#8E2415;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --ether:#1F1B18; --ether-text:#EFE7D6;
+  --shade:#BFB6A6; --light:#FBF6EC;
+
+  --raised: 7px 7px 16px var(--shade), -7px -7px 16px var(--light);
+  --raised-sm: 5px 5px 12px var(--shade), -5px -5px 12px var(--light);
+  --raised-lg: 12px 12px 28px var(--shade), -12px -12px 28px var(--light);
+  --pressed: inset 5px 5px 12px var(--shade), inset -5px -5px 12px var(--light);
+  --pressed-sm: inset 3px 3px 7px var(--shade), inset -3px -3px 7px var(--light);
+  --glass: inset 0 3px 14px rgba(0,0,0,.7), inset 0 0 50px rgba(232,163,61,.08);
+  --glow: 0 0 8px var(--lamp);
+
+  --r-sm:14px; --r-md:24px; --r-lg:32px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  /* call: добавлено для голосового звонка */
+  --ether-line:rgba(232,163,61,.22);   /* разделители на стекле */
+  --ether-muted:#CDBFA6;               /* вторичный текст на стекле */
+  --wave:var(--signal);                /* линия волны в знаке */
+  --wave-stroke:5.5;                   /* толщина волны в единицах viewBox 120 */
+  --ring-off:var(--lamp-off);          /* кольцо знака в покое */
+  --ring-on:var(--lamp);               /* кольцо знака, когда Волна слышит или думает */
+  --ring-hot:var(--lamp-hot);          /* кольцо знака, когда Волна говорит */
+  --halo:0 0 44px rgba(232,163,61,.38);/* янтарное свечение вокруг знака при речи */
+  --lamp-blink:1.1s;                   /* мигание при соединении */
+}
+
+/* ===== Токены документа ===== */
+:root{--page-bg:var(--ivory);--page-fg:var(--bakelite);--page-muted:var(--ink-2);--page-line:rgba(38,33,29,.14);--code-bg:var(--ether);--code-fg:var(--ether-text)}
+:root{box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--page-bg);color:var(--page-fg);font:16px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--signal)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+section{padding:64px 0;border-top:1px solid var(--page-line)}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0}
+h2{font-size:clamp(24px,3vw,32px);margin-bottom:12px}
+h3{font-size:17px;margin-bottom:8px}
+.lead{max-width:64ch;color:var(--page-muted);margin:0 0 28px}
+p{margin:0 0 12px;max-width:70ch}
+.muted{color:var(--page-muted)}
+.mono{font-family:var(--font-mono)}
+.grid{display:grid;gap:24px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.stage{background:var(--ivory);color:var(--bakelite);border-radius:var(--r-lg);padding:32px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+.cap{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--ink-2);margin-top:10px}
+pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:var(--r-sm);padding:18px 20px;overflow-x:auto;font:13px/1.6 var(--font-mono);max-width:100%}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font-family:var(--font-mono);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--page-muted)}
+td .mono{font-size:13px}
+.tag{display:inline-block;font:500 10.5px var(--font-mono);letter-spacing:.1em;padding:3px 8px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);color:var(--ink-2);vertical-align:middle}
+.tag.new{color:var(--signal)}
+.dos li{margin-bottom:8px}
+.note{border-left:3px solid var(--lamp);padding:10px 16px;background:rgba(232,163,61,.09);border-radius:0 var(--r-sm) var(--r-sm) 0;max-width:70ch}
+
+header.top{position:sticky;top:0;z-index:5;background:var(--page-bg);border-bottom:1px solid var(--page-line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px}
+header.top nav{display:flex;gap:16px;overflow-x:auto;font-size:13.5px}
+header.top nav a{color:var(--page-muted);text-decoration:none;white-space:nowrap}
+header.top nav a:hover{color:var(--page-fg)}
+.brandmini{display:flex;align-items:center;gap:10px;font:600 15px var(--font-display);white-space:nowrap}
+.hero{padding:56px 0 64px;border-top:0}
+.wordmark{font:800 clamp(44px,7vw,80px)/1 var(--font-display);letter-spacing:-.01em;margin:18px 0 10px}
+.wordmark span{color:var(--signal)}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--page-muted);margin-bottom:20px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:22px}
+.sw .chip{height:76px;border-radius:var(--r-md);box-shadow:var(--raised-sm);margin-bottom:10px}
+.sw b{display:block;font-size:13.5px}
+.sw code{font:11.5px var(--font-mono);color:var(--ink-2)}
+footer{padding:48px 0 64px;border-top:1px solid var(--page-line);color:var(--page-muted);font-size:14px}
+
+/* =====================================================================
+   2. КОМПОНЕНТЫ ПРОДУКТА
+   ===================================================================== */
+.raised{background:var(--ivory);box-shadow:var(--raised)}
+.pressed{background:var(--ivory);box-shadow:var(--pressed)}
+.btn{font:600 15px var(--font-body);color:var(--bakelite);border:0;height:48px;padding:0 24px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised);cursor:pointer;transition:box-shadow .15s ease;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn:active,.btn[aria-pressed="true"]{box-shadow:var(--pressed);color:var(--signal)}
+.btn-signal{background:var(--signal);color:var(--light);font-family:var(--font-display);font-size:14px;font-weight:600;box-shadow:var(--raised)}
+.btn-signal:active{background:var(--signal-deep);color:var(--light);box-shadow:var(--raised)}
+.btn-cta{width:100%;height:64px;font-size:15px}
+.btn-quiet{box-shadow:none;background:transparent;font-weight:500;font-size:13px;color:var(--ink-2);height:40px;padding:0 12px}
+.btn-quiet:active{box-shadow:var(--pressed-sm)}
+.round{width:64px;height:64px;padding:0;border-radius:50%}
+.round.lg{width:72px;height:72px}
+.lamp{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:var(--glow);display:inline-block;flex-shrink:0}
+.lamp.hot{background:var(--lamp-hot);box-shadow:0 0 10px var(--lamp-hot)}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 2px 2px 3px #A89F90}
+.lamp.blink{animation:blink var(--lamp-blink) ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.status{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 11px var(--font-mono);letter-spacing:.12em;white-space:nowrap}
+.status .lamp{width:9px;height:9px}
+
+/* Круглая клавиша управления: mute, динамик, аудио */
+.ctl{display:flex;flex-direction:column;align-items:center;gap:10px;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
+.ctl .k{width:64px;height:64px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center;transition:box-shadow .15s ease}
+.ctl[aria-pressed="true"] .k{box-shadow:var(--pressed)}
+.ctl[aria-pressed="true"] .k svg{stroke:var(--signal)}
+.ctl .l{font:500 12px var(--font-body);color:var(--ink-2)}
+.ctl:disabled{opacity:.45;cursor:default}
+.ctl svg{stroke:var(--bakelite)}
+
+/* ===== ЗНАК-ВОЛНА: центральный элемент экрана звонка ===== */
+.mark{position:relative;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:box-shadow .3s ease}
+.mark.xl{width:272px;height:272px;box-shadow:3px 3px 8px var(--shade),-3px -3px 8px var(--light)}
+.mark.lg{width:236px;height:236px}
+.mark.md{width:150px;height:150px}
+.mark.sm{width:96px;height:96px;box-shadow:var(--raised)}
+.mark svg{width:82%;height:82%;overflow:visible}
+.mark .wv{fill:none;stroke:var(--wave);stroke-width:var(--wave-stroke);stroke-linecap:round;stroke-linejoin:round;transition:opacity .3s}
+.mark .ring{fill:none;stroke:var(--ring-off);stroke-width:1.6;stroke-dasharray:2 5;transition:stroke .3s;transform-origin:60px 60px}
+.mark .orb{fill:var(--ring-off);transition:fill .3s}
+.mark .orbit{transform-origin:60px 60px}
+.mark[data-state="connecting"] .ring{stroke:var(--ring-on);animation:spin 6s linear infinite}
+.mark[data-state="connecting"] .orb{fill:var(--lamp);animation:blink var(--lamp-blink) ease-in-out infinite}
+.mark[data-state="listening"] .ring{stroke:var(--ring-on);filter:drop-shadow(0 0 3px var(--lamp))}
+.mark[data-state="listening"] .orb{fill:var(--lamp)}
+.mark[data-state="thinking"] .ring{stroke:var(--ring-on)}
+.mark[data-state="thinking"] .orb{fill:var(--lamp-hot);filter:drop-shadow(0 0 4px var(--lamp-hot))}
+.mark[data-state="thinking"] .orbit{animation:spin 9s linear infinite}
+.mark[data-state="speaking"]{box-shadow:var(--raised-lg),var(--halo)}
+.mark[data-state="speaking"] .ring{stroke:var(--ring-hot);stroke-dasharray:none;filter:drop-shadow(0 0 5px var(--lamp-hot));animation:pulse 1.6s ease-in-out infinite}
+.mark[data-state="speaking"] .orb{fill:var(--lamp-hot);filter:drop-shadow(0 0 4px var(--lamp-hot))}
+.mark[data-state="muted"] .wv{opacity:.45}
+.mark[data-state="failed"] .wv{opacity:.7}
+.mark[data-state="failed"] .ring{stroke-dasharray:1 9}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+.timer{font:500 22px var(--font-mono);letter-spacing:.04em;color:var(--bakelite);font-variant-numeric:tabular-nums}
+.timer.muted{color:var(--ink-2)}
+
+/* Логотип для шапки и иконки (статичный, оригинальная кривая из драфта) */
+.logo-static{display:block}
+
+/* Поля, карточки, группы настроек, строки голосов */
+.field{height:52px;padding:0 18px;border-radius:26px;box-shadow:var(--pressed);display:flex;align-items:center;gap:10px;font:15px var(--font-body);color:var(--bakelite)}
+.field .ph{color:#6E655A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.field .mono{font-size:14px}
+.card{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--raised);padding:18px 20px}
+.card.err{box-shadow:var(--pressed)}
+.card.ether{background:var(--ether);color:var(--ether-text);box-shadow:var(--raised),inset 0 0 40px rgba(232,163,61,.08)}
+.card.ether .who{font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--lamp);margin-bottom:10px}
+.card.ether .txt{font:15px/1.5 var(--font-body)}
+.card.ether .res{border-top:1px solid var(--ether-line);margin-top:12px;padding-top:10px;font:10px var(--font-mono);color:var(--ether-muted);letter-spacing:.1em;display:flex;justify-content:space-between}
+.group{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--raised);padding:6px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 20px;font-size:15px}
+.row + .row{border-top:1px solid rgba(38,33,29,.08)}
+.row .v{margin-left:auto;color:var(--ink-2);font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.row .v .mono{font-size:12.5px;letter-spacing:.06em}
+.row.sub{display:block;font-size:13px;color:var(--ink-2);min-height:0;padding-top:8px;padding-bottom:10px;line-height:1.4}
+.gh{font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin:0 0 10px 20px;text-transform:uppercase}
+.voice{width:100%;height:56px;border:0;border-radius:var(--r-sm);background:var(--ivory);box-shadow:var(--raised-sm);display:flex;align-items:center;gap:14px;padding:0 18px;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:box-shadow .15s}
+.voice[aria-pressed="true"]{box-shadow:var(--pressed)}
+.voice .n{font-weight:600;font-size:15px;flex:1}
+.voice[aria-pressed="true"] .n{color:var(--signal)}
+.voice .d{font-size:12px;color:var(--ink-2)}
+.siri{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:var(--r-md);box-shadow:var(--raised);font-size:14px}
+.siri b{font-weight:600}
+.siri .arr{margin-left:auto;color:var(--ink-2)}
+
+/* =====================================================================
+   3. ЭКРАНЫ: рамка телефона 390 × 844
+   ===================================================================== */
+.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:36px 28px;align-items:start}
+.shot{display:flex;flex-direction:column;gap:12px}
+.shot .cap{margin:0}
+.phone-wrap{width:100%;aspect-ratio:390/844;position:relative}
+.phone{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:top left;border-radius:46px;background:var(--ivory);color:var(--bakelite);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(38,33,29,.12);overflow:hidden;display:flex;flex-direction:column;padding:58px 24px 30px}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#0C0A09}
+.phone .sb{position:absolute;top:16px;left:34px;right:34px;display:flex;justify-content:space-between;font:600 14px var(--font-body)}
+.phone .home{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--bakelite);opacity:.75}
+.topbar{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.topbar .brand{display:flex;align-items:center;gap:10px;font:600 15px var(--font-display)}
+.icobtn{width:44px;height:44px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-sm);display:flex;align-items:center;justify-content:center;border:0}
+.title{font:600 28px/1.15 var(--font-display);margin:22px 0 6px;letter-spacing:-.01em}
+.subtitle{font:15px/1.45 var(--font-body);color:var(--ink-2);margin:0 0 8px}
+.ctls{display:flex;justify-content:space-between;padding:0 8px}
+.foot{margin-top:auto;text-align:center;font:400 9.5px var(--font-mono);letter-spacing:.17em;color:var(--ink-2);opacity:.7}
+.hint{text-align:center;font-size:12.5px;color:var(--ink-2);margin-top:14px}
+.center{display:flex;flex-direction:column;align-items:center}
+.stagearea{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;flex:1;min-height:0}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--ivory);border-radius:34px 34px 0 0;box-shadow:0 -14px 40px rgba(38,33,29,.28);padding:14px 24px 40px}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--shade);margin:0 auto 18px}
+.dim{position:absolute;inset:0;background:rgba(31,27,24,.42)}
+.states{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:24px}
+.states .tile{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 16px 20px;border-radius:var(--r-lg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+.states .tile .status{margin-top:4px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brandmini">
+      <svg width="28" height="28" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ВОЛНА-1 · звонок
+    </div>
+    <nav aria-label="Разделы">
+      <a href="#adapt">Адаптация</a><a href="#mark">Знак</a><a href="#tokens">Токены</a><a href="#type">Шрифт</a><a href="#components">Компоненты</a><a href="#states">Состояния</a><a href="#screens">Экраны</a><a href="#motion">Движение</a><a href="#a11y">Доступность</a><a href="#plan">Внедрение</a><a href="#questions">Вопросы</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap grid g2">
+    <div>
+      <p class="mono muted" style="font-size:13px">Дизайн-система · iOS 18+ · SwiftUI · версия 2 для одобрения</p>
+      <h1 class="wordmark">ВОЛНА<span>-1</span></h1>
+      <div class="decode">ГОЛОСОВОЙ ЗВОНОК · CALLKIT · SIRI · REALTIME</div>
+      <p>Приложение делает одно: по тапу или по фразе «Siri, позвони Волне» открывает голосовой разговор с AI. В центре внимания <b>сама волна из знака</b>. В покое это логотип. Когда Волна слушает, кольцо вокруг загорается янтарным. Когда Волна говорит, волна бежит и дышит по амплитуде голоса.</p>
+      <p class="muted">Корпус, тени, шрифты, лампы и красный сигнал взяты из драфта «Бакелит и лампа» без изменений. Радиошкала, стрелка и ручка из драфта не используются: в звонке им нечего показывать.</p>
+    </div>
+    <div class="center" style="gap:18px;padding:12px 0">
+      <div class="mark lg" data-state="speaking" aria-hidden="true"></div>
+      <p class="cap" style="margin:0">Знак на экране звонка: фаза «говорит», живая анимация</p>
+    </div>
+  </div>
+</section>
+
+<section id="adapt">
+  <div class="wrap">
+    <h2>Что переложено из драфта</h2>
+    <p class="lead">Одна метафора на всё приложение: Волна выходит в эфир. Всё, что было про приёмник и станции, убрано или отложено.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ПОНЯТИЕ ДРАФТА</th><th>В ПРИЛОЖЕНИИ ЗВОНКА</th><th>ГДЕ ЖИВЁТ</th></tr></thead>
+        <tbody>
+          <tr><td>Знак</td><td><b>Главный элемент экрана.</b> Круг из знака становится выпуклым диском корпуса, волна на нём в сигнальном красном, пунктирное кольцо превращается в лампу-индикатор. Волна анимируется по фазам звонка.</td><td>Все экраны звонка, экран «Голос»</td></tr>
+          <tr><td>Корпус</td><td>Без изменений: всё управление на слоновой кости, выпуклое = нажать, вдавленное = выбрано.</td><td>Все экраны</td></tr>
+          <tr><td>Эфир (тёмное стекло)</td><td>Профиль памяти на экране «Память». В стенограмме звонка не используется: ответы Волны в едва утопленной карточке цвета корпуса.</td><td>Экран «Память»</td></tr>
+          <tr><td>Лампы и статусы</td><td>Лампы в настройках и пилюля «Проба голоса» на экране выбора голоса. На экране звонка пилюли нет: фазу говорят заголовок и подзаголовок. Под кнопкой звонка подсказок и карточки Siri нет.</td><td>Шапка, настройки</td></tr>
+          <tr><td>Сигнал (один красный)</td><td>До звонка красная только кнопка «Позвонить Волне». Во время звонка красная только кнопка завершения. Волна в знаке красная по правилу драфта: знак не считается.</td><td>Экран «Эфир открыт», экран звонка</td></tr>
+          <tr><td>Станция = модель, шкала, стрелка, ручка</td><td>Не используются. Голос Волны выбирается простым списком с лампой у выбранного.</td><td>Экран «Голос»</td></tr>
+          <tr><td>Диапазоны, резонанс</td><td>Не используются, зарезервированы.</td><td>—</td></tr>
+          <tr><td>Поле ввода</td><td>Только в настройках: адрес ядра и токен. В разговоре ввода нет.</td><td>Настройки</td></tr>
+          <tr><td>Тёмная тема</td><td>Приложение сейчас тёмное. Переходим на светлый корпус как основной, чёрный бакелит отложен.</td><td>См. «Вопросы»</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="mark">
+  <div class="wrap">
+    <h2>Знак-волна</h2>
+    <p class="lead">Один компонент <span class="mono">WaveMark</span> в трёх размерах. Форма волны считается процедурно, поэтому в покое она совпадает с логотипом, а в речи оживает без подмены картинки.</p>
+    <div class="grid g3">
+      <div>
+        <div class="stage center" style="gap:16px">
+          <div class="mark lg" data-state="idle" aria-hidden="true"></div>
+        </div>
+        <p class="cap">lg · 236 pt · экран до звонка. В звонке xl · 272 pt, плоская тень (см. <a href="volna-call-refresh.html">правки 22.09.2026</a>). Покой = логотип.</p>
+      </div>
+      <div>
+        <div class="stage center" style="gap:16px;justify-content:center;min-height:300px">
+          <div class="mark md" data-state="listening" aria-hidden="true"></div>
+        </div>
+        <p class="cap">md · 150 pt · экран «Голос», карточки состояний</p>
+      </div>
+      <div>
+        <div class="stage" style="display:flex;justify-content:center;align-items:center;gap:28px;min-height:300px;flex-wrap:wrap">
+          <div class="mark sm" data-state="idle" aria-hidden="true"></div>
+          <svg width="96" height="96" viewBox="0 0 120 120" role="img" aria-label="Иконка приложения"><rect width="120" height="120" rx="27" fill="#E7E0D2"/><circle cx="60" cy="60" r="44" fill="#B8321F"/><path d="M27 60 Q32 55 37 60 Q43 68 49 60 Q55 40 62 60 Q69 80 75 60 Q81 52 87 60 Q90 62 93 60" fill="none" stroke="#E7E0D2" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p class="cap">sm · 96 pt · шапка листов. Иконка приложения: красный диск на корпусе.</p>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:28px">
+      <div>
+        <h3>Геометрия</h3>
+        <ul class="dos">
+          <li>Диск: корпус <span class="mono">ivory</span> с тенью <span class="mono">raised-lg</span>. Это тот же круг, что в знаке, только выпуклый.</li>
+          <li>Волна: линия <span class="mono">signal</span>, толщина 5.5 в viewBox 120, концы скруглены. Огибающая колокол с центром в середине, длина волны 36, максимум амплитуды 26.</li>
+          <li>Кольцо: пунктир 2/5 радиусом 50. В покое <span class="mono">lampOff</span>, при приёме <span class="mono">lamp</span>, при речи сплошное <span class="mono">lampHot</span> с пульсом.</li>
+          <li>Метка: точка сверху на кольце, как на ручке в драфте. Горит вместе с кольцом, при обработке бежит по кольцу.</li>
+          <li>Ниже 48 pt используется статичный логотип драфта: красный диск, волна корпусного цвета.</li>
+        </ul>
+      </div>
+      <div>
+<pre><code>// UI/Components/WaveMark.swift
+struct WaveMark: View {
+  enum Size { case xl, lg, md, sm }      // 272 / 236 / 150 / 96; xl и lg с плоской тенью
+  var phase: CallCoordinator.Phase
+  var isMuted: Bool
+  var level: Double = 0                   // 0…1, амплитуда голоса
+  var body: some View {
+    TimelineView(.animation(minimumInterval: 1/30, paused: !animates)) { tl in
+      ZStack {
+        Circle().fill(Volna.Color.ivory).raised(.lg)
+        Ring(state: state)                  // пунктир / сплошное / лампа
+        WaveShape(t: tl.date, amp: amp, travel: travel)
+          .stroke(Volna.Color.signal, style: .init(lineWidth: 5.5, lineCap: .round))
+      }
+    }
+  }
+}
+// WaveShape: path из 45 точек, y = 60 − 26·amp·exp(−2.8u²)·sin(k(x−62) + travel·t)
+// amp по фазе: idle 1.0 · connecting 0.35 · listening 0.6 + 0.15·sin(1.6t)
+//              thinking 0.4 · speaking 0.55 + 0.6·level · muted 0.08 · failed 0.15 + шум</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tokens">
+  <div class="wrap">
+    <h2>Токены</h2>
+    <p class="lead">Базовые токены драфта не менялись. Добавлен блок <span class="mono">call</span>. Имена переносятся в SwiftUI как есть.</p>
+    <div class="stage">
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#E7E0D2"></div><b>Слоновая кость</b><code>ivory #E7E0D2</code></div>
+        <div class="sw"><div class="chip" style="background:#26211D"></div><b>Бакелит</b><code>bakelite #26211D</code></div>
+        <div class="sw"><div class="chip" style="background:#5E554B"></div><b>Вторичный</b><code>ink2 #5E554B</code></div>
+        <div class="sw"><div class="chip" style="background:#B8321F"></div><b>Сигнальный</b><code>signal #B8321F</code></div>
+        <div class="sw"><div class="chip" style="background:#E8A33D;box-shadow:var(--raised-sm),0 0 18px rgba(232,163,61,.45)"></div><b>Лампа</b><code>lamp #E8A33D</code></div>
+        <div class="sw"><div class="chip" style="background:#F2B550"></div><b>Лампа горячая</b><code>lampHot #F2B550</code></div>
+        <div class="sw"><div class="chip" style="background:#9C7A45"></div><b>Лампа тусклая</b><code>lampDim #9C7A45</code></div>
+        <div class="sw"><div class="chip" style="background:#3FA65E;box-shadow:var(--raised-sm),0 0 14px rgba(111,212,140,.5)"></div><b>Глаз (только Пульт)</b><code>eye #3FA65E · eyeHot #6FD48C</code></div>
+        <div class="sw"><div class="chip" style="background:#CFC6B6"></div><b>Лампа выкл</b><code>lampOff #CFC6B6</code></div>
+        <div class="sw"><div class="chip" style="background:#1F1B18"></div><b>Эфир</b><code>ether #1F1B18</code></div>
+        <div class="sw"><div class="chip" style="background:#EFE7D6"></div><b>Текст эфира</b><code>etherText #EFE7D6</code></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:28px">
+      <div>
+        <h3>Добавлено для звонка <span class="tag new">NEW</span></h3>
+        <div class="table-wrap"><table style="min-width:0">
+          <thead><tr><th>ТОКЕН</th><th>ЗНАЧЕНИЕ</th><th>ГДЕ</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">wave</td><td class="mono">= signal</td><td>Линия волны в знаке</td></tr>
+            <tr><td class="mono">waveStroke</td><td class="mono">5.5 / 120</td><td>Толщина волны</td></tr>
+            <tr><td class="mono">ringOff</td><td class="mono">= lampOff</td><td>Кольцо в покое</td></tr>
+            <tr><td class="mono">ringOn</td><td class="mono">= lamp</td><td>Кольцо при приёме и обработке</td></tr>
+            <tr><td class="mono">ringHot</td><td class="mono">= lampHot</td><td>Кольцо при речи</td></tr>
+            <tr><td class="mono">halo</td><td class="mono">0 0 44 lamp@38%</td><td>Свечение вокруг знака при речи</td></tr>
+            <tr><td class="mono">etherLine / etherMuted</td><td class="mono">lamp@22% / #CDBFA6</td><td>Карточка ответа на стекле</td></tr>
+            <tr><td class="mono">lampBlink</td><td class="mono">1.1 s</td><td>Мигание при соединении</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h3>Перенос в SwiftUI</h3>
+<pre><code>// Theme/WaveTheme.swift
+enum Volna {
+  enum Color {           // Asset Catalog: Colors.xcassets
+    static let ivory    = Color("ivory")
+    static let bakelite = Color("bakelite")
+    static let ink2     = Color("ink2")
+    static let signal   = Color("signal")
+    static let lamp     = Color("lamp")
+    static let lampHot  = Color("lampHot")
+    static let lampDim  = Color("lampDim")
+    static let lampOff  = Color("lampOff")
+    static let ether    = Color("ether")
+    static let etherText = Color("etherText")
+    static let shade    = Color("shade")
+    static let light    = Color("light")
+  }
+  enum Radius { static let sm: CGFloat = 14, md = 24, lg = 32 }
+  enum Space  { static let s4 = 4.0, s8 = 8.0, s12 = 12.0, s16 = 16.0,
+                s20 = 20.0, s24 = 24.0, s32 = 32.0, s40 = 40.0 }
+}
+
+// Тени: два .shadow() на одном фоне, свет слева сверху
+extension View {
+  func raised(_ size: RaisedSize = .md) -> some View  // 7/16, 5/12, 12/28
+  func pressed(_ size: PressedSize = .md) -> some View // inset через
+     // overlay с маской: RoundedRectangle stroke + blur, clipShape
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="type">
+  <div class="wrap">
+    <h2>Шрифт</h2>
+    <p class="lead">Три роли из драфта. Все гарнитуры под OFL и кладутся в бандл приложения: Unbounded 600/800, IBM Plex Sans 400/500/600, IBM Plex Mono 400/500.</p>
+    <div class="stage">
+      <div style="display:grid;gap:26px">
+        <div><div style="font:600 28px/1.15 var(--font-display)">Говорит Волна.</div><p class="cap">title · Unbounded 600 · 28 px · заголовок главного экрана и экрана звонка</p></div>
+        <div><div style="font:600 22px/1.15 var(--font-display)">Голос</div><p class="cap">titleSm · Unbounded 600 · 22 px · заголовки настроек и листов</p></div>
+        <div><div class="timer">02:14</div><p class="cap">timer · IBM Plex Mono 500 · 22 px · таймер под знаком <span class="tag new">NEW</span></p></div>
+        <div><div style="font:400 15px/1.5 var(--font-body);max-width:52ch">Говори свободно. Перебивай в любой момент, Волна остановится и дослушает.</div><p class="cap">body · IBM Plex Sans 400 · 15 px · подзаголовки, строки настроек, текст ответа</p></div>
+        <div><div style="font:600 15px var(--font-body)">Позвонить Волне</div><p class="cap">label · IBM Plex Sans 600 · 15 px · кнопки корпуса; CTA в Unbounded 600 · 15 px</p></div>
+        <div><div style="font:400 13px/1.4 var(--font-body);color:var(--ink-2)">Применяется со следующего звонка.</div><p class="cap">caption · IBM Plex Sans 400 · 13 px · подписи, футеры групп</p></div>
+        <div><div style="font:500 11px var(--font-mono);letter-spacing:.12em">ПРИЁМ · ГОЛОС MARIN</div><p class="cap">status · IBM Plex Mono 500 · 11 px · капс, разрядка 0.12em · статусы</p></div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:20px">Динамический шрифт: все размеры через <span class="mono">@ScaledMetric</span> относительно <span class="mono">.body</span>. Знак и клавиши не растут выше 1.35×, чтобы экран звонка помещался без прокрутки на iPhone SE.</p>
+  </div>
+</section>
+
+<section id="components">
+  <div class="wrap">
+    <h2>Компоненты</h2>
+    <p class="lead">Живые образцы. Все интерактивные элементы не меньше 44 pt. Нажатие переводит выпуклую тень во вдавленную.</p>
+    <div class="grid g2">
+      <div>
+        <h3>Статус-пилюля и лампы <span class="tag">StatusPill · Lamp</span></h3>
+        <div class="stage" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+
+
+
+
+
+        </div>
+        <p class="cap">Лампа горит только когда Волна реально слышит или говорит. Мигает только при соединении.</p>
+      </div>
+      <div>
+        <h3>Кнопки <span class="tag">SignalButton · RaisedButton · QuietButton</span></h3>
+        <div class="stage" style="display:flex;flex-direction:column;gap:20px">
+          <button class="btn btn-signal btn-cta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Позвонить Волне</button>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+            <button class="btn">Повторить</button>
+            <button class="btn" aria-pressed="true">Отменить</button>
+            <button class="btn btn-quiet">Текст ответа</button>
+            <span class="cap">перебивание голосом</span>
+          </div>
+        </div>
+        <p class="cap">SignalButton один на экран. Тихая кнопка без тени для второстепенных действий во время звонка.</p>
+      </div>
+      <div>
+        <h3>Клавиши управления звонком <span class="tag">RoundControl · EndCallButton</span></h3>
+        <div class="stage" style="display:flex;flex-direction:column;gap:26px;align-items:center">
+          <div class="ctls" style="width:100%;max-width:330px">
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></button>
+            <button class="ctl" aria-pressed="true"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span><span class="l">Динамик</span></button>
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="13" width="4" height="7" rx="2"/><rect x="17" y="13" width="4" height="7" rx="2"/></svg></span><span class="l">Аудио</span></button>
+          </div>
+          <button class="btn btn-signal round lg" aria-label="Завершить звонок"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></button>
+        </div>
+        <p class="cap">Вдавленная клавиша = включено (динамик). Иконка вдавленной клавиши окрашивается в сигнальный, как в драфте для :active.</p>
+      </div>
+      <div>
+        <h3>Строки голоса и карточка ответа <span class="tag">VoiceRow · AnswerCard</span></h3>
+        <div class="stage" style="display:flex;flex-direction:column;gap:14px">
+          <button class="voice" aria-pressed="true"><span class="n">Marin</span><span class="d">рекомендован</span><span class="lamp"></span></button>
+          <button class="voice" aria-pressed="false"><span class="n">Cedar</span><span class="d">рекомендован</span><span class="lamp off"></span></button>
+          <div class="card ether" style="margin-top:6px"><div class="who">ГОВОРИТ ВОЛНА · 02:03</div><div class="txt">Качели раскачиваются сильнее всего, если толкать их точно в такт. Это и есть резонанс, товарищ.</div><div class="res"><span>ГОЛОС MARIN</span><span>ПЕРЕДАЧА ИДЁТ</span></div></div>
+        </div>
+        <p class="cap">Голос выбирается вдавливанием, без шкалы. Текст Волны всегда на тёмном стекле.</p>
+      </div>
+      <div>
+        <h3>Поле и группа настроек <span class="tag">PressedField · SettingsGroup</span></h3>
+        <div class="stage" style="display:flex;flex-direction:column;gap:18px">
+          <div class="field"><span class="mono">https://</span><span class="ph">volna.example.com</span></div>
+          <div>
+            <p class="gh">Подключение</p>
+            <div class="group">
+              <div class="row">Проверить подключение<span class="v"><span class="lamp"></span><span class="mono">ЯДРО В ЭФИРЕ</span></span></div>
+              <div class="row sub">Ядро доступно, ключ задан. Доступ к модели проверится при звонке.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Ошибка и Siri-карточка <span class="tag">ErrorCard · SiriCard</span></h3>
+        <div class="stage" style="display:flex;flex-direction:column;gap:18px">
+          <div class="card err" role="alert">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="lamp off"></span><span class="mono" style="font-size:11px;letter-spacing:.12em;font-weight:500">ПОМЕХИ В ЭФИРЕ</span></div>
+            <div style="font-size:14px;line-height:1.45">Подключение заняло слишком долго. Проверь ядро и сеть, потом нажми «Повторить».</div>
+          </div>
+        </div>
+        <p class="cap">Ошибка вдавлена, лампа погашена, красного нет: красный остаётся за кнопкой действия.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="states">
+  <div class="wrap">
+    <h2>Состояния знака</h2>
+    <p class="lead">Семь фаз из <span class="mono">CallCoordinator.Phase</span> плюс mute. У каждой своя форма волны, своё кольцо и свой текст. Все образцы живые.</p>
+    <div class="states">
+      <div class="tile"><div class="mark md" data-state="idle" aria-hidden="true"></div><span class="status"><span class="lamp off"></span>ЭФИР ОТКРЫТ</span><p class="cap" style="margin:0;text-align:center">idle · логотип, кольцо погашено</p></div>
+      <div class="tile"><div class="mark md" data-state="connecting" aria-hidden="true"></div><span class="status"><span class="lamp blink"></span>НАСТРОЙКА…</span><p class="cap" style="margin:0;text-align:center">connecting · волна мелкая и бежит, кольцо медленно вращается, метка мигает</p></div>
+      <div class="tile"><div class="mark md" data-state="listening" aria-hidden="true"></div><span class="status"><span class="lamp"></span>ПРИЁМ</span><p class="cap" style="margin:0;text-align:center">listening · волна дышит, кольцо янтарное</p></div>
+      <div class="tile"><div class="mark md" data-state="thinking" aria-hidden="true"></div><span class="status"><span class="lamp"></span>ОБРАБОТКА…</span><p class="cap" style="margin:0;text-align:center">thinking · волна притихла, метка бежит по кольцу</p></div>
+      <div class="tile"><div class="mark md" data-state="speaking" aria-hidden="true"></div><span class="status"><span class="lamp hot"></span>ГОВОРИТ ВОЛНА</span><p class="cap" style="margin:0;text-align:center">speaking · волна бежит и растёт от голоса, кольцо сплошное с пульсом, свечение</p></div>
+      <div class="tile"><div class="mark md" data-state="muted" aria-hidden="true"></div><span class="status"><span class="lamp off"></span>МИКРОФОН ВЫКЛ</span><p class="cap" style="margin:0;text-align:center">listening + isMuted · волна почти прямая и бледная</p></div>
+      <div class="tile"><div class="mark md" data-state="failed" aria-hidden="true"></div><span class="status"><span class="lamp off"></span>ПОМЕХИ</span><p class="cap" style="margin:0;text-align:center">failed · мелкая дрожь, кольцо рваное</p></div>
+      <div class="tile"><div class="mark md" data-state="ended" aria-hidden="true"></div><span class="status"><span class="lamp off"></span>КОНЕЦ СВЯЗИ</span><p class="cap" style="margin:0;text-align:center">ended · логотип, как в покое</p></div>
+    </div>
+    <div class="table-wrap" style="margin-top:32px">
+      <table>
+        <thead><tr><th>PHASE</th><th>СТАТУС-ПИЛЮЛЯ</th><th>ВОЛНА</th><th>КОЛЬЦО</th><th>ЗАГОЛОВОК / ПОДЗАГОЛОВОК</th><th>КРАСНЫЙ ЭЛЕМЕНТ</th><th>ДОСТУПНО</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">idle</td><td>пилюля скрыта</td><td>логотип, статична</td><td>выкл</td><td>Говорит Волна. / случайная строка самопроверки: «Лампы прогреты.», «Все системы в норме.», «Станция готова.», «Канал открыт.», «Готовность номер один.», «Питание подано. Эфир чист.»</td><td>Позвонить Волне</td><td>Настройки</td></tr>
+          <tr><td class="mono">connecting</td><td>пилюля скрыта</td><td>амплитуда 0.35, бежит</td><td>вращается, метка мигает</td><td>Волна / Соединяю… (иконка antenna)</td><td>Завершить (отмена)</td><td>Только завершение</td></tr>
+          <tr><td class="mono">listening</td><td>пилюля скрыта</td><td>0.6 ± 0.15, дышит</td><td>янтарное</td><td>Волна / Слушаю (иконка ear)</td><td>Завершить</td><td>Микрофон (52) слева, Стенограмма (52) справа</td></tr>
+          <tr><td class="mono">listening + mute</td><td>пилюля скрыта</td><td>0.08, бледная</td><td>выкл</td><td>Волна / Волна тебя не слышит.</td><td>Завершить</td><td>Клавиша микрофона вдавлена</td></tr>
+          <tr><td class="mono">thinking</td><td>пилюля скрыта</td><td>0.4, статична</td><td>янтарное, метка бежит</td><td>Волна / Думаю (иконка ellipsis)</td><td>Завершить</td><td>Те же</td></tr>
+          <tr><td class="mono">speaking</td><td>пилюля скрыта</td><td>0.55 + 0.6·level, бежит</td><td>сплошное горячее, пульс, свечение</td><td>Волна / Говорю (иконка waveform, красная)</td><td>Завершить</td><td>Те же; перебивание только голосом (GPT-Live), кнопки нет</td></tr>
+          <tr><td class="mono">ended</td><td>пилюля скрыта</td><td>логотип, как в покое, тот же размер</td><td>выкл</td><td>Конец связи. / Разговор 02:14 · соединение 1.8 с</td><td>Позвонить снова</td><td>Настройки</td></tr>
+          <tr><td class="mono">failed</td><td>пилюля скрыта</td><td>0.15 + дрожь</td><td>рваный пунктир</td><td>Помехи в эфире. / текст ошибки из <span class="mono">call.error</span></td><td>Повторить</td><td>Настройки</td></tr>
+          <tr><td class="mono">demo</td><td>ДЕМО · БЕЗ ЭФИРА</td><td>как listening</td><td>янтарное</td><td>как listening + подпись «без микрофона и API»</td><td>Завершить</td><td>Микрофон</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:20px">Тексты в интерфейсе на «ты», как в драфте. Сейчас приложение говорит «вы» («Слушаю вас», «Разрешите микрофон»). Это решение вынесено в «Вопросы».</p>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Экраны</h2>
+    <p class="lead">Базовый размер 390 × 844, поля 24 pt. Знак в центре, статус наверху, кнопки внизу в зоне большого пальца. Экран звонка без прокрутки.</p>
+    <p class="note"><strong>Правки 22.09.2026</strong> (внедрены): статусы в звонке односложные с иконкой («Соединяю…», «Слушаю», «Думаю», «Говорю»), знак в звонке 272 pt с плоской тенью, метка «думаю» 9 с/оборот и плавный возврат наверх при выходе из фазы, ряд клавиш Микрофон (52) · Завершить (72) · Стенограмма (52), клавиш «Динамик» и «Аудио» нет: громкая связь по умолчанию, у уха переключается датчик. Лист «Стенограмма» показывает всю историю реплик. Макеты экранов 02–04 и 09 ниже устарели в этих деталях; актуальные в <a href="volna-call-refresh.html">volna-call-refresh.html</a>.</p>
+    <p class="note">Экран «Память» (регулятор близости, профиль на стекле, записи со свайпом, режим отладки) описан в отдельном документе <a href="volna-memory-screen.html">volna-memory-screen.html</a>; снимок 11-memory в <span class="mono">DesignScreenshots</span>.</p>
+    <div class="screens">
+
+      <!-- 01 idle -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            <div style="display:flex;gap:10px;align-items:center"><button class="icobtn" aria-label="Настройки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26211D" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg></button></div>
+          </div>
+          <div class="title">Говорит Волна.</div>
+          <p class="subtitle">Лампы прогреты.</p>
+          <div class="stagearea"><div class="mark lg" data-state="idle" aria-hidden="true"></div></div>
+          <div>
+            <button class="btn btn-signal btn-cta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Позвонить Волне</button>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">01 · Эфир открыт (idle). Знак в покое = логотип. Единственный красный: кнопка звонка.</p>
+      </div>
+
+      <!-- 02 connecting -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            
+          </div>
+          <div class="title">Волна</div>
+          <p class="subtitle">Настраиваюсь на частоту…</p>
+          <div class="stagearea"><div class="mark lg" data-state="connecting" aria-hidden="true"></div><span class="timer muted">00:00</span></div>
+          <div class="ctls" style="opacity:.45;margin-bottom:28px">
+            <span class="ctl"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></span>
+            <span class="ctl"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span><span class="l">Динамик</span></span>
+            <span class="ctl"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="13" width="4" height="7" rx="2"/><rect x="17" y="13" width="4" height="7" rx="2"/></svg></span><span class="l">Аудио</span></span>
+          </div>
+          <div class="center" style="gap:12px">
+            <button class="btn btn-signal round lg" aria-label="Отменить звонок"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></button>
+            <span style="font-size:12.5px;color:var(--ink-2)">Отменить</span>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">02 · Настройка (connecting). Волна мелкая и бежит, кольцо вращается. Клавиши недоступны.</p>
+      </div>
+
+      <!-- 03 listening -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            
+          </div>
+          <div class="title">Волна</div>
+          <p class="subtitle">Слушаю. Говори свободно.</p>
+          <div class="stagearea"><div class="mark lg" data-state="listening" aria-hidden="true"></div><span class="timer">00:41</span></div>
+          <div class="ctls" style="margin-bottom:28px">
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></button>
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span><span class="l">Динамик</span></button>
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="13" width="4" height="7" rx="2"/><rect x="17" y="13" width="4" height="7" rx="2"/></svg></span><span class="l">Аудио</span></button>
+          </div>
+          <div class="center" style="gap:12px">
+            <button class="btn btn-signal round lg" aria-label="Завершить звонок"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></button>
+            <button class="btn btn-quiet">Текст ответа</button>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">03 · Приём (listening). Волна дышит, кольцо янтарное, лампа горит.</p>
+      </div>
+
+      <!-- 04 speaking -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            
+          </div>
+          <div class="title">Волна</div>
+          <p class="subtitle">Можно перебить в любой момент.</p>
+          <div class="stagearea"><div class="mark lg" data-state="speaking" aria-hidden="true"></div><span class="timer">02:14</span></div>
+          <div class="ctls" style="margin-bottom:28px">
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></button>
+            <button class="ctl" aria-pressed="true"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span><span class="l">Динамик</span></button>
+            <button class="ctl" aria-pressed="false"><span class="k"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="13" width="4" height="7" rx="2"/><rect x="17" y="13" width="4" height="7" rx="2"/></svg></span><span class="l">Аудио</span></button>
+          </div>
+          <div class="center" style="gap:12px">
+            <button class="btn btn-signal round lg" aria-label="Завершить звонок"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></button>
+            <div style="display:flex;gap:6px"><button class="btn btn-quiet">Текст ответа</button></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">04 · Говорит Волна (speaking). Волна бежит по голосу, кольцо горячее со свечением. Перебивание голосом: модель полнодуплексная, кнопки нет (с 22.09.2026).</p>
+      </div>
+
+      <!-- 05 failed -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            <div style="display:flex;gap:10px;align-items:center"><button class="icobtn" aria-label="Настройки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26211D" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg></button></div>
+          </div>
+          <div class="title">Помехи в эфире.</div>
+          <p class="subtitle">Звонок не состоялся, микрофон выключен.</p>
+          <div class="stagearea" style="gap:22px"><div class="mark md" data-state="failed" aria-hidden="true"></div>
+            <div class="card err" role="alert" style="width:100%">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span class="lamp off"></span><span class="mono" style="font-size:11px;letter-spacing:.12em;font-weight:500">ЧТО СЛУЧИЛОСЬ</span></div>
+              <div style="font-size:14px;line-height:1.45">Подключение заняло слишком долго. Проверь ядро и сеть.</div>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-signal btn-cta">Повторить</button>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">05 · Помехи (failed). Знак меньше и дрожит, текст ошибки из <span class="mono">call.error</span>.</p>
+      </div>
+
+      <!-- 06 ended -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            <div style="display:flex;gap:10px;align-items:center"><button class="icobtn" aria-label="Настройки"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26211D" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg></button></div>
+          </div>
+          <div class="title">Конец связи.</div>
+          <p class="subtitle">Разговор 02:14 · соединение 1.8 с</p>
+          <div class="stagearea" style="gap:22px"><div class="mark md" data-state="ended" aria-hidden="true"></div></div>
+          <div>
+            <button class="btn btn-signal btn-cta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Позвонить снова</button>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">06 · Конец связи (ended). Знак в покое, без пилюли в шапке и без карточки ответа: заголовок говорит всё, повторный звонок одной кнопкой. Текст последнего ответа остаётся только в листе «Текст ответа».</p>
+      </div>
+
+      <!-- 07 settings -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone" style="padding-top:54px;overflow:hidden">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar" style="min-height:40px"><button class="btn btn-quiet" style="padding:0;height:auto">Закрыть</button><span style="font:600 15px var(--font-display)">Настройки</span><button class="btn btn-quiet" style="padding:0;height:auto;color:var(--signal);font-weight:600">Готово</button></div>
+          <div style="display:flex;flex-direction:column;gap:22px;margin-top:16px;overflow:hidden">
+            <div><p class="gh">Голос Волны</p><div class="group"><div class="row">Голос<span class="v">Marin <span style="opacity:.55">›</span></span></div><div class="row sub">Применяется со следующего звонка. Marin и Cedar рекомендованы по качеству звучания.</div></div></div>
+            <div><p class="gh">Подключение</p><div class="group"><div class="row" style="padding-top:12px"><div class="field" style="flex:1;height:44px;box-shadow:var(--pressed-sm)"><span class="mono" style="font-size:13.5px">https://volna.example.com</span></div></div><div class="row" style="padding-bottom:12px"><div class="field" style="flex:1;height:44px;box-shadow:var(--pressed-sm)"><span class="ph">Токен ядра (если задан)</span><span class="mono" style="margin-left:auto;letter-spacing:.2em">••••••</span></div></div><div class="row">Проверить подключение<span class="v"><span class="lamp"></span><span class="mono">В ЭФИРЕ</span></span></div><div class="row sub">Ядро доступно, ключ задан. Доступ к модели проверится при звонке.</div></div></div>
+            <div><p class="gh">Первый запуск</p><div class="group"><div class="row">Микрофон<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЁН</span></span></div><div class="row">Siri<span class="v"><span class="lamp off"></span><span class="mono">РАЗРЕШИТЬ</span></span></div><div class="row">Siri, позвони Волне<span class="v"><span class="mono">RU</span> <span style="opacity:.55">›</span></span></div></div></div>
+            <div><p class="gh">Доступ к телефону</p><div class="group"><div class="row">Напоминания<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЕНЫ</span></span></div><div class="row">Календарь<span class="v"><span class="lamp off"></span><span class="mono" style="color:var(--signal);font-weight:500">В НАСТРОЙКАХ IOS</span></span></div><div class="row">Контакты<span class="v"><span class="lamp off"></span><span class="mono">РАЗРЕШИТЬ</span></span></div></div></div>
+            <div><p class="gh">Проверка интерфейса</p><div class="group"><div class="row">Открыть демо звонка<span class="v"><span style="opacity:.55">›</span></span></div><div class="row sub">Без микрофона, сетевых запросов и расходов API.</div></div></div>
+            <div><p class="gh">Последний звонок</p><div class="group"><div class="row">Подключение<span class="v"><span class="mono">1.8 С</span></span></div><div class="row">Запуск<span class="v">Siri</span></div></div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">07 · Настройки. Группы как выпуклые блоки, поля вдавлены, статусы лампами.</p>
+      </div>
+
+      <!-- 08 voice -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone" style="padding-top:54px">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar" style="min-height:40px"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Настройки</button><span style="font:600 15px var(--font-display)">Голос</span><span style="width:44px"></span></div>
+          <div class="center" style="margin:18px 0 20px;gap:12px"><div class="mark md" data-state="speaking" aria-hidden="true"></div><span class="status"><span class="lamp hot"></span>ПРОБА ГОЛОСА MARIN</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden">
+            <button class="voice" aria-pressed="true"><span class="n">Marin</span><span class="d">рекомендован</span><span class="lamp"></span></button>
+            <button class="voice"><span class="n">Cedar</span><span class="d">рекомендован</span><span class="lamp off"></span></button>
+            <button class="voice"><span class="n">Alloy</span><span class="lamp off"></span></button>
+            <button class="voice"><span class="n">Ash</span><span class="lamp off"></span></button>
+            <button class="voice"><span class="n">Ballad</span><span class="lamp off"></span></button>
+            <button class="voice"><span class="n">Coral</span><span class="lamp off"></span></button>
+          </div>
+          <p class="hint" style="margin-top:auto">Применяется со следующего звонка · 10 голосов</p>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">08 · Голос. Знак наверху показывает, как «говорит» выбранный голос. Список вместо шкалы.</p>
+      </div>
+
+      <!-- 09 transcript sheet -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            
+          </div>
+          <div class="title">Волна</div>
+          <p class="subtitle">Можно перебить в любой момент.</p>
+          <div class="stagearea"><div class="mark lg" data-state="speaking" aria-hidden="true"></div><span class="timer">02:14</span></div>
+          <div class="dim"></div>
+          <div class="sheet" style="height:520px">
+            <div class="grab"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><span style="font:600 17px var(--font-display)">Текст ответа</span><button class="btn btn-quiet" style="color:var(--signal);font-weight:600">Готово</button></div>
+            <div class="card ether"><div class="who">ГОВОРИТ ВОЛНА · 02:03</div><div class="txt">Качели раскачиваются сильнее всего, если толкать их точно в такт. Это и есть резонанс, товарищ. Внешний толчок совпадает с собственной частотой системы, и амплитуда растёт.</div><div class="res"><span>ГОЛОС MARIN</span><span>ПЕРЕДАЧА ИДЁТ</span></div></div>
+            <p class="hint" style="margin-top:14px">Речь человека не записывается. Только текущий ответ, только в памяти.</p>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">09 · Текст ответа. Лист поверх звонка, ответ на стекле, растёт по мере передачи.</p>
+      </div>
+
+      <!-- 10 audio route sheet -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar">
+            <div class="brand"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+            
+          </div>
+          <div class="title">Волна</div>
+          <p class="subtitle">Слушаю. Говори свободно.</p>
+          <div class="stagearea"><div class="mark lg" data-state="listening" aria-hidden="true"></div><span class="timer">00:41</span></div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div style="font:600 17px var(--font-display);margin-bottom:6px">Аудиоустройство</div>
+            <p class="hint" style="text-align:left;margin:0 0 16px">Сейчас: iPhone. Для AirPods подключи гарнитуру в настройках iOS.</p>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="voice" aria-pressed="true"><span class="n">Автоматически</span><span class="lamp"></span></button>
+              <button class="voice"><span class="n">iPhone</span><span class="d">микрофон</span><span class="lamp off"></span></button>
+              <button class="voice"><span class="n">AirPods Pro</span><span class="d">Bluetooth HFP</span><span class="lamp off"></span></button>
+              <button class="btn" style="margin-top:6px">Отмена</button>
+            </div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">10 · Аудиоустройство. Вместо системного confirmationDialog: лист со строками маршрутов.</p>
+      </div>
+
+    </div>
+    <p class="note" style="margin-top:32px">Системный экран CallKit на заблокированном iPhone не стилизуется: там имя «Волна» и иконка приложения. Иконка по драфту: красный диск с волной без пунктира и метки.</p>
+  </div>
+</section>
+
+<section id="motion">
+  <div class="wrap">
+    <h2>Движение</h2>
+    <p class="lead">Всё движение живёт в знаке и в лампах, корпус статичен. Знак рисуется через <span class="mono">TimelineView</span> с частотой 30 кадров, как сейчас VoiceMark.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ЧТО</th><th>КОГДА</th><th>КАК</th><th>REDUCE MOTION</th></tr></thead>
+        <tbody>
+          <tr><td>Волна в знаке</td><td>connecting</td><td>Амплитуда 0.35, фаза бежит 1.2 рад/с. Кольцо вращается 6 с/оборот, метка мигает 1.1 с.</td><td>Волна статична на 0.35, метка мигает 1 раз в 1.1 с</td></tr>
+          <tr><td>Волна в знаке</td><td>listening</td><td>Амплитуда 0.6 ± 0.15 по синусу 1.6 рад/с. С реальным уровнем микрофона: 0.4 + 0.5·level.</td><td>Статична на 0.6, кольцо янтарное</td></tr>
+          <tr><td>Волна в знаке</td><td>thinking</td><td>Амплитуда 0.4, статична. Метка идёт по кольцу 9 с/оборот; при выходе из фазы плавно докручивается до верха (0.9 с), а не прыгает.</td><td>Метка стоит, кольцо янтарное</td></tr>
+          <tr><td>Волна в знаке</td><td>speaking</td><td>Амплитуда 0.55 + 0.6·level, фаза бежит 3.2 рад/с. Уровень с удалённого трека, сглаживание 80 мс. Пока уровня нет: синтетика из двух синусов 5.1 и 2.3 рад/с. Кольцо сплошное, пульс 1.6 с, свечение halo.</td><td>Статична на 0.9, кольцо горячее без пульса</td></tr>
+          <tr><td>Волна в знаке</td><td>failed</td><td>Амплитуда 0.15 + шум ±1.5 на точку, 8 кадров/с.</td><td>Статична на 0.15</td></tr>
+          <tr><td>Смена фазы</td><td>любая</td><td>Амплитуда и цвет кольца интерполируются 250 мс, easeInOut. Halo появляется 300 мс.</td><td>Мгновенно</td></tr>
+          <tr><td>Лампа в пилюле</td><td>connecting</td><td>Мигание 1.1 с, opacity 1 → 0.25. При переходе в listening загорается ровно с fade 200 мс.</td><td>Без мигания, только смена цвета</td></tr>
+          <tr><td>Клавиши</td><td>нажатие</td><td>Клавиша прогибается: сжатие 0.90–0.97 за 80 мс и тень внутрь (красные темнеют), отпускание пружиной с лёгким перелётом (response 0.32, damping 0.55). Щелчок на касании: <span class="mono">.light</span> у светлых, <span class="mono">.medium</span> у красных, <span class="mono">.rigid</span> у клавиш звонка, <span class="mono">.selection</span> у строк. Общий стиль <span class="mono">KeyPressStyle</span> и <span class="mono">PressMotion</span> в <span class="mono">UI/Components/Haptics.swift</span>. Mute держит pressed пока включён.</td><td>Без сжатия, тень и щелчок остаются</td></tr>
+          <tr><td>Переключатель</td><td>нажатие, смена</td><td>Пока держишь, ручка вытягивается 22 → 28 pt; при смене щелчок <span class="mono">.light</span>.</td><td>Без изменений</td></tr>
+          <tr><td>Соединение установлено</td><td>connecting → listening</td><td>Haptic <span class="mono">.success</span>, кольцо загорается, волна за 400 мс переходит к дыханию.</td><td>Haptic и цвет, без перехода формы</td></tr>
+          <tr><td>События звонка</td><td>конец, сбой, карточка</td><td>Конец разговора <span class="mono">.medium</span>, сбой <span class="mono">.error</span>, новая карточка подтверждения <span class="mono">.warning</span>. Смена реплик (слушаю, думаю, говорю) без вибрации: телефон у уха. Правила в <span class="mono">CallFeedback</span> с unit-тестом. Во время звонка вибрацию разрешает <span class="mono">setAllowHapticsAndSystemSoundsDuringRecording</span>.</td><td>Без изменений</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="a11y">
+  <div class="wrap">
+    <h2>Доступность и тесты</h2>
+    <div class="grid g2">
+      <div>
+        <h3>Что сохраняем</h3>
+        <ul class="dos">
+          <li>Все <span class="mono">accessibilityIdentifier</span> без изменений, UI-тесты остаются зелёными: <span class="mono">settings, callStatus, callError, mute, endCall, startCall, voicePicker, serverURL, connectionResult, preview</span>.</li>
+          <li><span class="mono">callStatus</span> остаётся на подзаголовке и продолжает отдавать <span class="mono">call.status</span>. Статус-пилюля добавляется отдельным элементом.</li>
+          <li>Цели касания не меньше 44 pt: круглые клавиши 64, завершение 72, строки списка 56, кнопка настроек 44.</li>
+          <li>Знак <span class="mono">accessibilityHidden</span>, как сейчас VoiceMark. Таймер и фаза озвучиваются через подзаголовок.</li>
+          <li>Reduce Motion уже читается в <span class="mono">CallView</span>, правила по таблице «Движение».</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Контраст</h3>
+        <div class="table-wrap"><table style="min-width:0">
+          <thead><tr><th>ПАРА</th><th>КОЭФФ.</th><th>ИТОГ</th></tr></thead>
+          <tbody>
+            <tr><td>bakelite на ivory</td><td class="mono">11.9 : 1</td><td>AAA</td></tr>
+            <tr><td>ink2 на ivory</td><td class="mono">5.6 : 1</td><td>AA, минимум для текста корпуса</td></tr>
+            <tr><td>signal на ivory (волна)</td><td class="mono">5.4 : 1</td><td>AA, графика</td></tr>
+            <tr><td>light на signal</td><td class="mono">6.1 : 1</td><td>AA, CTA</td></tr>
+            <tr><td>etherText на ether</td><td class="mono">13.4 : 1</td><td>AAA</td></tr>
+            <tr><td>lampHot на ether</td><td class="mono">8.2 : 1</td><td>AAA</td></tr>
+          </tbody>
+        </table></div>
+        <p class="cap">Значения посчитаны по WCAG 2 relative luminance для указанных hex.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="plan">
+  <div class="wrap">
+    <h2>План внедрения в SwiftUI</h2>
+    <p class="lead">Четыре шага, каждый собирается и проходит тесты отдельно. Логика <span class="mono">CallCoordinator</span> не меняется.</p>
+    <div class="grid g2">
+      <div>
+        <h3>Шаг 1 · Фундамент</h3>
+        <ul class="dos">
+          <li><span class="mono">Resources/Fonts/</span>: Unbounded, IBM Plex Sans, IBM Plex Mono (.ttf, OFL) + <span class="mono">UIAppFonts</span> в Info.plist. Обновить <span class="mono">scripts/generate-project.rb</span>.</li>
+          <li><span class="mono">Resources/Colors.xcassets</span>: 12 цветов драфта.</li>
+          <li><span class="mono">UI/Theme/WaveTheme.swift</span>: токены, Font-роли, модификаторы <span class="mono">raised / pressed</span>.</li>
+          <li>Иконка приложения: красный диск с волной на корпусе.</li>
+        </ul>
+        <h3 style="margin-top:20px">Шаг 2 · Компоненты</h3>
+        <ul class="dos">
+          <li><span class="mono">UI/Components/WaveMark.swift</span>: <span class="mono">WaveShape</span> (процедурная волна), кольцо, метка, состояния по фазе. Заменяет VoiceMark.</li>
+          <li><span class="mono">UI/Components/</span>: Lamp, StatusPill, SignalButton, RaisedButton, QuietButton, RoundControl, EndCallButton, VoiceRow, AnswerCard, PressedField, SettingsGroup, ErrorCard, SiriCard.</li>
+          <li>Уровень голоса для знака: новый <span class="mono">@Published level</span> в <span class="mono">RealtimeClient</span> от локального и удалённого трека. До этого синтетика.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Шаг 3 · Экраны</h3>
+        <ul class="dos">
+          <li><span class="mono">CallView</span>: переписать вёрстку на компоненты, состояния по таблице. Идентификаторы сохранить.</li>
+          <li><span class="mono">SettingsView</span>: с <span class="mono">Form</span> на кастомный ScrollView с группами. Логика check/save без изменений.</li>
+          <li>Новый <span class="mono">VoicePickerView</span>: знак в фазе «говорит» + список голосов, замена <span class="mono">Picker(.navigationLink)</span>. Идентификатор <span class="mono">voicePicker</span> на строке «Голос».</li>
+          <li><span class="mono">TranscriptSheet</span> и <span class="mono">AudioRouteSheet</span> вместо системных sheet-текста и confirmationDialog.</li>
+        </ul>
+        <h3 style="margin-top:20px">Шаг 4 · Проверка</h3>
+        <ul class="dos">
+          <li>UI-тесты 3/3, тесты ядра 9/9, сборка Simulator.</li>
+          <li>Снимки экранов idle / connecting / speaking / failed / settings в Simulator для сверки с этим документом.</li>
+          <li>Dynamic Type xxxLarge и iPhone SE: экран звонка без прокрутки.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <h2>Вопросы на одобрение</h2>
+    <p class="lead">Ответы меняют вёрстку, поэтому нужны до начала кода. По каждому есть рекомендация.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>ВОПРОС</th><th>РЕКОМЕНДАЦИЯ</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Знак на экране звонка: выпуклый диск корпуса с красной волной (как здесь) или красный диск с волной цвета корпуса, как иконка приложения?</td><td>Диск корпуса: красный остаётся за кнопкой, знак не спорит с CTA, а лампа-кольцо читается.</td></tr>
+          <tr><td>2</td><td>Обращение «ты» по драфту или «вы», как сейчас в приложении и в характере Волны с «товарищ»?</td><td>«Ты» в интерфейсе по драфту, характер голоса Волны не трогаем.</td></tr>
+          <tr><td>3</td><td>Светлый корпус основной, тёмный бакелит фаза 2. Или сразу поддержать обе темы по системной настройке?</td><td>Сначала светлый. Тёмный после того, как светлый проверен на iPhone.</td></tr>
+          <tr><td>4</td><td>Кастомный экран настроек вместо системного <span class="mono">Form</span>. Больше кода, полный контроль над видом.</td><td>Кастомный, иначе настройки выпадают из стиля.</td></tr>
+          <tr><td>5</td><td>Реальная амплитуда голоса для знака требует доработки <span class="mono">RealtimeClient</span>. Делать в этой итерации или оставить синтетику?</td><td>Сначала синтетика, амплитуду отдельной задачей.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="json">
+  <div class="wrap">
+    <h2>Токены в JSON</h2>
+<pre><code>{
+  "name": "volna-1-call",
+  "extends": "volna-1",
+  "color": {
+    "ivory": "#E7E0D2", "bakelite": "#26211D", "ink2": "#5E554B",
+    "signal": "#B8321F", "signalDeep": "#8E2415",
+    "lamp": "#E8A33D", "lampHot": "#F2B550", "lampDim": "#9C7A45", "lampOff": "#CFC6B6",
+    "ether": "#1F1B18", "etherText": "#EFE7D6", "etherMuted": "#CDBFA6",
+    "shade": "#BFB6A6", "light": "#FBF6EC"
+  },
+  "mark": {
+    "sizes": { "xl": 272, "lg": 236, "md": 150, "sm": 96 },
+    "wave": { "color": "signal", "stroke": 5.5, "viewBox": 120,
+              "x": [16, 104], "center": 62, "wavelength": 36, "ampMax": 26, "envelope": 2.8 },
+    "ring": { "radius": 57, "stroke": 1.6, "dash": [2, 5], "off": "lampOff", "on": "lamp", "hot": "lampHot" },
+    "halo": "0 0 44 lamp@0.38",
+    "amp": { "idle": 1.0, "connecting": 0.35, "listening": [0.6, 0.15], "thinking": 0.4,
+             "speaking": [0.55, 0.6], "muted": 0.08, "failed": 0.15, "ended": 1.0 },
+    "travel": { "connecting": 1.2, "speaking": 3.2 },
+    "fps": 30
+  },
+  "type": {
+    "title": [28, 600, "display"], "titleSm": [22, 600, "display"],
+    "timer": [22, 500, "mono"], "body": [15, 400, "body"],
+    "label": [15, 600, "body"], "cta": [15, 600, "display"],
+    "caption": [13, 400, "body"], "status": [11, 500, "mono"]
+  },
+  "size": {
+    "cta": 64, "endCall": 72, "roundControl": 64, "iconButton": 44,
+    "voiceRow": 56, "field": 52
+  },
+  "phase": {
+    "idle": "ЭФИР ОТКРЫТ", "connecting": "НАСТРОЙКА…", "listening": "ПРИЁМ",
+    "muted": "МИКРОФОН ВЫКЛ", "thinking": "ОБРАБОТКА…", "speaking": "ГОВОРИТ ВОЛНА",
+    "ended": "КОНЕЦ СВЯЗИ", "failed": "ПОМЕХИ", "demo": "ДЕМО · БЕЗ ЭФИРА"
+  }
+}</code></pre>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">ВОЛНА-1 · дизайн-система голосового звонка · версия 2 для одобрения · 21 сентября 2026 · основа: драфт «Бакелит и лампа»</div>
+</footer>
+
+<script>
+(function(){
+  // ===== Знак-волна: процедурная волна, совпадающая с логотипом в покое =====
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var STATES = {
+    idle:       {amp:1.0,  travel:0,   breathe:0,    jitter:0, live:false},
+    ended:      {amp:1.0,  travel:0,   breathe:0,    jitter:0, live:false},
+    connecting: {amp:0.35, travel:1.2, breathe:0,    jitter:0, live:true},
+    listening:  {amp:0.6,  travel:0,   breathe:0.15, jitter:0, live:true},
+    thinking:   {amp:0.4,  travel:0,   breathe:0,    jitter:0, live:false},
+    speaking:   {amp:0.55, travel:3.2, breathe:0,    jitter:0, live:true, voice:true},
+    muted:      {amp:0.08, travel:0,   breathe:0,    jitter:0, live:false},
+    failed:     {amp:0.15, travel:0,   breathe:0,    jitter:1.5, live:true}
+  };
+  function wavePath(t, s){
+    var amp = s.amp;
+    if (s.breathe) amp += s.breathe * Math.sin(t * 1.6);
+    if (s.voice) amp += 0.6 * Math.abs(Math.sin(t * 5.1) * Math.sin(t * 2.3) + 0.35 * Math.sin(t * 7.7));
+    var k = 2 * Math.PI / 36, d = '';
+    for (var x = 16; x <= 104; x += 2){
+      var u = (x - 60) / 44, env = Math.exp(-2.8 * u * u);
+      var y = 60 - 26 * amp * env * Math.sin(k * (x - 62) + s.travel * t);
+      if (s.jitter) y += (Math.random() - 0.5) * s.jitter * 2;
+      d += (x === 16 ? 'M' : ' L') + x + ' ' + y.toFixed(2);
+    }
+    return d;
+  }
+  function build(el){
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 120 120');
+    var ring = document.createElementNS(SVG_NS, 'circle');
+    ring.setAttribute('class', 'ring'); ring.setAttribute('cx', 60); ring.setAttribute('cy', 60); ring.setAttribute('r', 57);
+    var g = document.createElementNS(SVG_NS, 'g'); g.setAttribute('class', 'orbit');
+    var orb = document.createElementNS(SVG_NS, 'circle');
+    orb.setAttribute('class', 'orb'); orb.setAttribute('cx', 60); orb.setAttribute('cy', 3); orb.setAttribute('r', 3);
+    g.appendChild(orb);
+    var path = document.createElementNS(SVG_NS, 'path'); path.setAttribute('class', 'wv');
+    svg.appendChild(ring); svg.appendChild(g); svg.appendChild(path);
+    el.appendChild(svg);
+    return path;
+  }
+  var marks = [];
+  document.querySelectorAll('.mark').forEach(function(el){
+    var path = build(el);
+    var s = STATES[el.getAttribute('data-state')] || STATES.idle;
+    path.setAttribute('d', wavePath(0, s));
+    if (s.live && !reduce) marks.push({path: path, s: s, phase: Math.random() * 10});
+  });
+  var start = performance.now();
+  function frame(now){
+    var t = (now - start) / 1000;
+    for (var i = 0; i < marks.length; i++){
+      var m = marks[i];
+      if (m.s.jitter && (Math.floor(t * 8) === m.last)) continue;
+      m.last = Math.floor(t * 8);
+      m.path.setAttribute('d', wavePath(t + m.phase, m.s));
+    }
+    requestAnimationFrame(frame);
+  }
+  if (marks.length) requestAnimationFrame(frame);
+
+  // Масштаб рамок телефона под ширину колонки
+  function fit(){
+    document.querySelectorAll('.phone-wrap').forEach(function(w){
+      var s = w.clientWidth / 390;
+      w.querySelector('.phone').style.transform = 'scale(' + s + ')';
+    });
+  }
+  fit(); window.addEventListener('resize', fit);
+  document.querySelectorAll('.ctl[aria-pressed], .voice[aria-pressed]').forEach(function(b){
+    b.addEventListener('click', function(){ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
+  });
+})();
+</script>
+</body>
+</html>

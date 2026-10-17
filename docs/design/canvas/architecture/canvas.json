@@ -1,0 +1,39 @@
+{
+ "v": 3,
+ "title": "Архитектура Волны · 25.09.2026",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "1-topology.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1600,
+   "h": 1100,
+   "title": "1. Кто с кем говорит"
+  },
+  "2-request.html": {
+   "x": 1680,
+   "y": 0,
+   "w": 1600,
+   "h": 1180,
+   "title": "2. Путь одной просьбы"
+  }
+ },
+ "order": [
+  "1-topology.html",
+  "2-request.html"
+ ],
+ "notes": {
+  "t": {
+   "x": 0,
+   "y": -240,
+   "text": "Архитектура Волны · 25.09.2026",
+   "kind": "title1",
+   "maxW": 3280
+  }
+ },
+ "annotations": [],
+ "designSystems": []
+}

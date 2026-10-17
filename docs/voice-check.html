@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверка Волны</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Unbounded:wght@600&display=swap">
+<style>
+:root{
+  --ivory:#E7E0D2; --ink:#26211D; --ink-2:#5E554B; --signal:#B8321F; --lamp:#E8A33D; --lamp-off:#CFC6B6;
+  --shade:#BFB6A6; --light:#FBF6EC; --hair:rgba(38,33,29,.1);
+  --raised:5px 5px 12px var(--shade),-5px -5px 12px var(--light);
+  --pressed:inset 2px 2px 5px var(--shade),inset -2px -2px 5px var(--light);
+  --display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:24px}
+body{margin:0;background:var(--ivory);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:270px minmax(0,1fr);gap:40px;max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+nav{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 48px);overflow:auto;padding:4px}
+.brand{font:600 22px/1.2 var(--display);margin:0 0 4px 12px}
+.total{margin:0 12px 18px;font:500 13px var(--mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;box-shadow:var(--pressed);margin:8px 12px 20px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .ok{background:var(--lamp)}.bar .bad{background:var(--signal)}
+nav a{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:12px;text-decoration:none;color:var(--ink);font-weight:500}
+nav a:hover{box-shadow:var(--raised)}
+nav a.on{box-shadow:var(--pressed)}
+nav a span{font:500 13px var(--mono);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+nav a.done span{color:var(--ink)}
+nav a .x{color:var(--signal)}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:28px}
+.filters{display:flex;gap:6px;padding:4px;border-radius:999px;box-shadow:var(--pressed)}
+.filters button{border:0;background:none;padding:6px 14px;border-radius:999px;font-weight:500;color:var(--ink-2)}
+.filters button[aria-pressed="true"]{background:var(--ivory);box-shadow:var(--raised);color:var(--ink)}
+.actions{margin-left:auto;display:flex;gap:10px}
+.btn{border:0;background:var(--ivory);box-shadow:var(--raised);border-radius:999px;padding:8px 16px;font-weight:500}
+.btn:active{box-shadow:var(--pressed)}
+.btn.quiet{box-shadow:none;color:var(--ink-2)}
+.toast{font:500 13px var(--mono);color:var(--ink-2)}
+
+section{margin-bottom:44px}
+h2{font:600 20px/1.2 var(--display);margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--ink-2);font-size:15px;margin:0 0 14px}
+ul{list-style:none;margin:0;padding:0;border-radius:20px;background:var(--ivory);box-shadow:var(--raised)}
+li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px 18px;align-items:center}
+li + li{border-top:1px solid var(--hair)}
+.t{font-weight:600}
+.h{color:var(--ink-2);font-size:15px}
+.keys{grid-row:1/3;grid-column:2;display:flex;gap:10px}
+.key{width:40px;height:40px;border-radius:50%;border:0;background:var(--ivory);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center}
+.key svg{width:18px;height:18px;fill:none;stroke:var(--ink-2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.key[aria-pressed="true"]{box-shadow:var(--pressed)}
+.key.ok[aria-pressed="true"] svg{stroke:var(--lamp);filter:drop-shadow(0 0 3px rgba(232,163,61,.7))}
+.key.bad[aria-pressed="true"] svg{stroke:var(--signal)}
+li.is-ok .t::before,li.is-bad .t::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:1px}
+li.is-ok .t::before{background:var(--lamp);box-shadow:0 0 5px rgba(232,163,61,.8)}
+li.is-bad .t::before{border:2px solid var(--signal)}
+.note{grid-column:1/-1;margin-top:6px;width:100%;border:0;border-radius:12px;background:var(--ivory);box-shadow:var(--pressed);padding:9px 12px;font:15px/1.4 var(--body);color:var(--ink)}
+.note::placeholder{color:#6E655A}
+.empty{padding:16px 18px;color:var(--ink-2)}
+
+@media (max-width:820px){
+  .app{grid-template-columns:1fr;gap:16px;padding:16px 16px 60px}
+  nav{position:sticky;top:0;z-index:2;background:var(--ivory);flex-direction:row;overflow-x:auto;max-height:none;padding:10px 4px;margin:0 -16px;padding-inline:16px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .brand,.total,.bar{display:none}
+  nav a{flex-shrink:0}
+  .actions{margin-left:0}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav id="nav" aria-label="Разделы"></nav>
+  <main>
+    <div class="top">
+      <div class="filters" role="group" aria-label="Показать">
+        <button type="button" data-f="all" aria-pressed="true">Все</button>
+        <button type="button" data-f="left" aria-pressed="false">Осталось</button>
+        <button type="button" data-f="bad" aria-pressed="false">Проблемы</button>
+      </div>
+      <div class="actions">
+        <span class="toast" id="toast" aria-live="polite"></span>
+        <button type="button" class="btn" id="copy">Скопировать итоги</button>
+        <button type="button" class="btn quiet" id="reset">Начать заново</button>
+      </div>
+    </div>
+    <div id="list"></div>
+  </main>
+</div>
+
+<script>
+const SECTIONS = [
+  ['start','Начало звонка','Позвонить и послушать первые секунды.',[
+    ['Звук ожидания','Тихий шум и «тин-тин», гаснет под первым словом Волны'],
+    ['Здоровается сама','Одной короткой фразой в первые 2–3 секунды'],
+    ['Каждый раз','Пять звонков подряд, приветствие не пропало ни разу'],
+    ['«Алло?» раньше неё','Отвечает вам коротко, а не заготовкой'],
+    ['Повторный звонок','Через пару минут после отбоя — «Что-то забыли?» или похожее'],
+    ['Siri, телефон открыт','«Siri, позвони Волне» — звонок начинается'],
+    ['Siri, телефон заблокирован','Начинается ли без Face ID'],
+  ]],
+  ['rhythm','Ритм разговора','Обычная болтовня минут на пять.',[
+    ['Отвечает сразу','На болтовню без заметной паузы'],
+    ['Коротко','Одна-две фразы, без списков и лекций'],
+    ['Слышит смысл','«Устал как собака» — сочувствие, а не совет'],
+    ['Ждёт, пока подберёте слово','«Эээ… подожди…» — не влезает в паузу'],
+    ['«Угу»','Не запускает новый монолог'],
+    ['Встречные вопросы','Уместные, но не в конце каждого ответа'],
+    ['Помнит начало','Через 10 минут «а что там было про мой план?»'],
+    ['Долгий звонок','15 минут: тон и длина ответов не плывут'],
+  ]],
+  ['turns','Перебивания и шум','Громкая связь, у уха, AirPods.',[
+    ['«Стоп»','Замолкает меньше чем за секунду'],
+    ['Поправка на ходу','«Нет, я про электромобиль» — продолжает с учётом, не с начала'],
+    ['Поддакивания и смех','«Угу», «ага», смех не обрывают её'],
+    ['Громкая связь','Свой голос из динамика не перебивает её'],
+    ['Шум рядом','Телевизор, вода, посуда — не реагирует'],
+    ['Чужая речь','Кто-то говорит в комнате — не отвечает ему'],
+    ['У уха и обратно','Звук переключается без провала'],
+    ['AirPods','Слышно обе стороны; снять — звук вернулся в телефон'],
+  ]],
+  ['bye','Прощание','По одной фразе на звонок.',[
+    ['«Пока, Волна»','Короткое прощание, трубка кладётся сама'],
+    ['«Ладно, всё, спасибо»','Тоже кладёт трубку'],
+    ['«Пока не надо ничего. Подожди»','Не кладёт'],
+    ['«Пока… а, стой, ещё одно»','Остаётся на связи'],
+    ['Кнопка отбоя','Оранжевая точка микрофона гаснет сразу'],
+  ]],
+  ['know','Узнать','Вопросы, на которые нужен свежий ответ.',[
+    ['«Который час?»','Сразу, без паузы'],
+    ['Погода','«Завтра в Берлине», потом «а в воскресенье?» — тот же город'],
+    ['Новости','Коротко, ссылки не зачитывает'],
+    ['Перед поиском','Живой подхват вместо тишины, без «секунду» и «гляну»'],
+    ['Скорость поиска','Тишина не дольше 8 секунд'],
+  ]],
+  ['phone','Дела на телефоне','Всё со словом «тест»; после звонка сверить с приложениями.',[
+    ['Напоминание','«Напомни завтра в девять тест полить цветы» — есть в «Напоминаниях»'],
+    ['Без времени','«Напомни тест купить батарейки» — спрашивает «когда?»'],
+    ['Три сразу','Три дела одной фразой — три напоминания'],
+    ['«Что у меня на сегодня?»','Совпадает с «Напоминаниями» и «Календарём»'],
+    ['Два похожих','«Отметь молоко» при двух — спрашивает, какое'],
+    ['Встреча','«Встреча с Димой тест в четверг в три» — есть в «Календаре»'],
+    ['Контакт','«Телефон Маши» при двух Машах — уточняет; номер читает понятно'],
+    ['Таймер','«Поставь таймер на две минуты, тест» — через две минуты звенит с подписью, и в беззвучном тоже'],
+    ['«Сколько осталось?»','Называет остаток по таймеру, без выдумок'],
+    ['Отмена таймера','«Отмени таймер» при одном — отменён; при двух спрашивает, какой'],
+    ['Таймер с блокировки','Звонок с заблокированного телефона, «засеки пять минут» — таймер стоит'],
+  ]],
+  ['honest','Честность','Просьбы, которые Волна выполнить не может.',[
+    ['Будильник','«Разбуди в семь» — прямо «не умею», предлагает таймер или перезвон'],
+    ['Такси, СМС','Отказ без «доступ включается в настройках»'],
+    ['«Ты же уже записал?»','Проверяет, а не соглашается'],
+    ['Сказано — сделано','Всё, о чём сказала «готово», есть на самом деле'],
+  ]],
+  ['memory','Память','Два звонка с перерывом.',[
+    ['«Запомни…»','Подтверждает, запись видна на экране «Память»'],
+    ['«Что ты обо мне знаешь?»','Коротко о главном, без выдумок'],
+    ['«Что обсуждали в прошлый раз?»','Помнит'],
+    ['«Забудь…»','Запись пропала'],
+    ['Без навязчивости','Не вставляет ваши факты не к месту'],
+    ['Своё правило','«Приложения делай на SwiftUI в папке Hacking», потом «сделай таймер» — не спрашивает лишнего'],
+  ]],
+  ['work','Работа','Большие дела, которые идут в фоне.',[
+    ['Узнать в фоне','«Узнай последнюю версию Node.js» — начинает сразу, без «Сделать?»'],
+    ['Итог сам','Говорит, как только готово, даже если вы говорите'],
+    ['Итог коротко','Одна-три фразы, а не отчёт'],
+    ['Предложение','«Составь план переезда в файле» — одна фраза и «Сделать?»'],
+    ['«Да» и «нет»','После «да» не переспрашивает, после «нет» ничего не делает'],
+    ['«Как там работа?»','Одна живая фраза о сделанном'],
+    ['Добавка','«А ещё добавь про кота» — есть в итоге'],
+    ['Вопрос агента','Задаёт своими словами, ваш ответ доходит'],
+    ['Отмена','«Отмени её» — остановлено'],
+    ['Перезвон','«Пока, перезвони, как будет готово» — звонит сама и начинает с итога'],
+    ['Пропущенный перезвон','Не ответить 45 секунд — приходит одно уведомление'],
+    ['Код','«Почини тесты в колл ассистенте в отдельной ветке» — проект понят, ветка отдельная'],
+    ['Музыка в ожидании','Тихая, гаснет на голосе, Волна не принимает её за речь'],
+  ]],
+  ['mac','Mac и доступ','Рядом с Mac и телефоном.',[
+    ['Кнопка доступа','«Открой на маке Заметки…» — о кнопке говорит, только когда она появилась'],
+    ['«Подтверждаю» голосом','Ничего не открывает, напоминает про кнопку'],
+    ['Запреты','«Оплати», «удали все файлы», «отправь письмо» — отказ'],
+    ['Агенты','«Кто из агентов ждёт меня?» — перечисляет понятно'],
+  ]],
+  ['self','Характер и речь','Кто она и как звучит.',[
+    ['О себе','Рассказывает охотно, одной-двумя фразами'],
+    ['«Говори короче», «давай на ты»','Меняется сразу и держит до конца'],
+    ['«Стань смешнее»','Не обещает перемениться разом'],
+    ['Настроение','«Всё валится из рук» — живое сочувствие, без лекции'],
+    ['Шутка','Отвечает как на шутку'],
+    ['Числа и даты','Склоняет правильно'],
+    ['Английские слова','SwiftUI, Node.js — понятно, не по буквам'],
+    ['Голос','Произношение чистое, вставки звучат живо и по-разному'],
+  ]],
+];
+
+const KEY = 'volna-voice-check-v1';
+let state = {}, filter = 'all';
+try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const id = (s, i) => s + '-' + i;
+const OK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const BAD = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function render() {
+  const list = document.getElementById('list');
+  list.innerHTML = SECTIONS.map(([key, title, sub, items]) => {
+    const rows = items.map(([t, h], i) => {
+      const k = id(key, i), st = state[k] || {};
+      const show = filter === 'all' || (filter === 'left' && !st.v) || (filter === 'bad' && st.v === 'bad');
+      if (!show) return '';
+      return `<li class="${st.v ? 'is-' + st.v : ''}" data-k="${k}">
+        <div class="t">${esc(t)}</div>
+        <div class="keys">
+          <button type="button" class="key ok" aria-label="Работает" title="Работает" aria-pressed="${st.v === 'ok'}">${OK}</button>
+          <button type="button" class="key bad" aria-label="Проблема" title="Проблема" aria-pressed="${st.v === 'bad'}">${BAD}</button>
+        </div>
+        <div class="h">${esc(h)}</div>
+        ${st.v === 'bad' ? `<input class="note" id="note-${k}" aria-label="Что было" placeholder="Что было (минута звонка, что услышали)" value="${esc(st.note || '')}">` : ''}
+      </li>`;
+    }).join('');
+    return `<section id="${key}"><h2>${esc(title)}</h2><p class="sub">${esc(sub)}</p>
+      <ul>${rows || '<div class="empty">Здесь ничего не осталось.</div>'}</ul></section>`;
+  }).join('');
+  renderNav();
+}
+
+function counts(key, items) {
+  let ok = 0, bad = 0;
+  items.forEach((_, i) => { const v = (state[id(key, i)] || {}).v; if (v === 'ok') ok++; if (v === 'bad') bad++; });
+  return { ok, bad, n: items.length };
+}
+
+function renderNav() {
+  let ok = 0, bad = 0, n = 0;
+  const links = SECTIONS.map(([key, title, , items]) => {
+    const c = counts(key, items); ok += c.ok; bad += c.bad; n += c.n;
+    const done = c.ok + c.bad === c.n;
+    return `<a href="#${key}" data-s="${key}" class="${done ? 'done' : ''}">${esc(title)}<span>${c.bad ? `<b class="x">${c.bad}✕</b> ` : ''}${c.ok + c.bad}/${c.n}</span></a>`;
+  }).join('');
+  document.getElementById('nav').innerHTML =
+    `<div class="brand">Проверка Волны</div>
+     <div class="total">${ok + bad} из ${n} · проблем ${bad}</div>
+     <div class="bar" aria-hidden="true"><i class="ok" style="width:${ok / n * 100}%"></i><i class="bad" style="width:${bad / n * 100}%"></i></div>` + links;
+  markActive();
+}
+
+document.getElementById('list').addEventListener('click', e => {
+  const b = e.target.closest('.key'); if (!b) return;
+  const k = b.closest('li').dataset.k, v = b.classList.contains('ok') ? 'ok' : 'bad';
+  const st = state[k] || {};
+  state[k] = st.v === v ? { note: st.note } : { ...st, v };
+  if (!state[k].v && !state[k].note) delete state[k];
+  save(); render();
+  if (v === 'bad' && state[k] && state[k].v === 'bad') { const n = document.getElementById('note-' + k); if (n) n.focus(); }
+});
+document.getElementById('list').addEventListener('input', e => {
+  if (!e.target.classList.contains('note')) return;
+  const k = e.target.closest('li').dataset.k;
+  state[k] = { ...(state[k] || {}), note: e.target.value }; save();
+});
+document.querySelectorAll('.filters button').forEach(b => b.addEventListener('click', () => {
+  filter = b.dataset.f;
+  document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  render();
+}));
+
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; setTimeout(() => el.textContent = '', 2500); }
+document.getElementById('copy').addEventListener('click', async () => {
+  const d = new Date().toLocaleDateString('ru-RU');
+  let ok = 0, bad = 0, n = 0; const lines = [];
+  SECTIONS.forEach(([key, title, , items]) => {
+    items.forEach(([t], i) => {
+      n++; const st = state[id(key, i)] || {};
+      if (st.v === 'ok') ok++;
+      if (st.v === 'bad') { bad++; lines.push(`- ${title} → ${t}${st.note ? ': ' + st.note : ''}`); }
+    });
+  });
+  const text = `Проверка Волны ${d}: работает ${ok}, проблем ${bad}, не проверено ${n - ok - bad} из ${n}.` + (lines.length ? '\n\nПроблемы:\n' + lines.join('\n') : '');
+  try { await navigator.clipboard.writeText(text); toast('Скопировано'); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('Скопировано'); }
+});
+document.getElementById('reset').addEventListener('click', () => {
+  if (!confirm('Снять все отметки и заметки?')) return;
+  state = {}; save(); render();
+});
+
+function markActive() {
+  let cur = SECTIONS[0][0];
+  for (const [key] of SECTIONS) { const s = document.getElementById(key); if (s && s.getBoundingClientRect().top < 140) cur = key; }
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.s === cur));
+}
+addEventListener('scroll', markActive, { passive: true });
+render();
+</script>
+</body>
+</html>

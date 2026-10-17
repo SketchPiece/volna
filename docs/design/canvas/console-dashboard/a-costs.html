@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="1440x900">
+<title>А. Расходы: сколько, на что, какие модели</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.tiles{grid-template-columns:1.35fr 1fr 1fr 1fr 1fr}
+.row2{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:14px}
+.chart{position:relative;height:222px;margin-top:10px}
+.chart svg{display:block}
+.svc{display:flex;flex-direction:column;gap:11px;margin-top:12px}
+.svc .it{display:grid;grid-template-columns:1fr auto;gap:3px 10px;align-items:baseline}
+.svc .it .n{font-size:13px}
+.svc .it .n small{color:var(--muted);font-size:12px;margin-left:6px}
+.svc .it .c{font:500 13px var(--font-mono)}
+.svc .it .b{grid-column:1 / -1;height:6px;background:var(--surface-2);border-radius:0 3px 3px 0}
+.svc .it .b i{display:block;height:6px;border-radius:0 3px 3px 0}
+.svc .it.sub .n{color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="brand">Консоль</span>
+  <div class="seg"><span>Сводка</span><span>Эфир</span><span>История</span><span class="on">Расходы</span><span>Работа</span></div>
+  <span class="pill"><span class="lamp off"></span>звонка нет</span>
+  <span class="sp"></span>
+  <div class="seg"><span>Сегодня</span><span>7 дней</span><span>30 дней</span><span class="on">Сентябрь</span></div>
+</header>
+<div class="page">
+  <div class="tiles">
+    <div class="tile hero"><span class="k">Потрачено в сентябре</span><span class="v num">$24,10</span><span class="s">за 27 дней · <span class="up">+22%</span> к августу</span></div>
+    <div class="tile"><span class="k">К концу месяца</span><span class="v num">~$27</span><span class="s">если так же</span></div>
+    <div class="tile"><span class="k">Звонок в среднем</span><span class="v num">$0,40</span><span class="s">61 звонок · 4 ч 12 мин</span></div>
+    <div class="tile"><span class="k">OpenAI по счёту</span><span class="v num">$12,71</span><span class="s">по секундам $12,60 · счёт до 26.09</span></div>
+    <div class="tile"><span class="k">Баланс OpenRouter</span><span class="v num">$21,60</span><span class="s">хватит примерно на 60 дней</span></div>
+  </div>
+
+  <div class="row2">
+    <div class="box">
+      <div class="ch"><span>По дням</span></div>
+      <div class="legend" id="legend" style="margin-top:10px"></div>
+      <div class="chart" id="chart"></div>
+    </div>
+    <div class="box">
+      <div class="ch"><span>По службам</span><span>доля</span></div>
+      <div class="svc" id="svc"></div>
+    </div>
+  </div>
+
+  <div class="box" style="padding-bottom:6px">
+    <div class="ch" style="margin-bottom:10px"><span>По моделям</span><span>дороже сверху</span></div>
+    <table>
+      <thead><tr><th>Модель</th><th>Где работает</th><th class="r">Вызовов</th><th class="r">Объём вход</th><th class="r">из кэша</th><th class="r">Выход</th><th class="r">За вызов</th><th class="r">Итого</th><th style="width:210px">Доля</th></tr></thead>
+      <tbody id="models"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>{
+const S = [
+  { n: 'Голос', d: 'GPT-Live', c: 'var(--s1)', t: 12.60 },
+  { n: 'Делегирование', d: 'и поиск', c: 'var(--s2)', t: 3.10 },
+  { n: 'Память', d: 'разбор и сон', c: 'var(--s3)', t: 6.20 },
+  { n: 'Jev', d: 'маршрут', c: 'var(--s4)', t: 1.20 },
+  { n: 'Служебное', d: 'названия, сводки', c: 'var(--s5)', t: 1.00 }
+];
+const money = v => '$' + v.toFixed(2).replace('.', ',');
+const total = S.reduce((a, s) => a + s.t, 0);
+
+// Легенда в порядке стопки снизу вверх.
+document.getElementById('legend').innerHTML = S.map(s => `<span><i style="background:${s.c}"></i>${s.n}</span>`).join('');
+
+// По службам.
+document.getElementById('svc').innerHTML = [...S].sort((a, b) => b.t - a.t).map(s => `<div class="it"><span class="n">${s.n}<small>${s.d}</small></span><span class="c">${money(s.t)} <span class="muted">${Math.round(s.t / total * 100)}%</span></span><span class="b"><i style="width:${s.t / S[0].t * 100}%;background:${s.c}"></i></span></div>`).join('') + `<div class="it sub"><span class="n">Работа<small>T3 по подписке, не в итоге</small></span><span class="c muted">17 заданий · 6 ч 40 мин</span></div>`;
+
+// По дням: 27 дней, стопка по службам.
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const days = 27;
+const calls = Array.from({ length: days }, (_, i) => (i % 7 === 5 || i % 7 === 6 ? 0.5 : 1) * (0.4 + rnd() * 1.2));
+const dream = Array.from({ length: days }, (_, i) => i % 3 === 2 ? 1 : 0.15);
+const shape = [calls, calls, dream.map((d, i) => d + calls[i] * .4), calls, calls.map(c => c * .6 + .2)];
+const data = S.map((s, k) => { const sum = shape[k].reduce((a, b) => a + b, 0); return shape[k].map(v => v / sum * s.t); });
+const W = 870, H = 222, L = 34, B = 20, top = 8;
+const tot = i => data.reduce((a, d) => a + d[i], 0);
+const max = 2.5;
+const y = v => top + (H - top - B) * (1 - v / max);
+const bw = (W - L) / days;
+let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="IBM Plex Mono" font-size="10" fill="#A3968A">`;
+for (const g of [0, 1, 2]) svg += `<line x1="${L}" x2="${W}" y1="${y(g)}" y2="${y(g)}" stroke="rgba(239,231,214,${g ? .07 : .2})"/><text x="${L - 8}" y="${y(g) + 3}" text-anchor="end">$${g}</text>`;
+const hot = 21;
+for (let i = 0; i < days; i++) {
+  let acc = 0; const x = L + i * bw + 3, w = bw - 6;
+  if (i === hot) svg += `<rect x="${L + i * bw}" y="${top}" width="${bw}" height="${H - top - B}" fill="rgba(239,231,214,.05)"/>`;
+  data.forEach((d, k) => {
+    const v = d[i]; if (v < .01) return;
+    const y0 = y(acc), y1 = y(acc + v); acc += v;
+    const isTop = data.slice(k + 1).every(dd => dd[i] < .01);
+    const h = Math.max(0, y0 - y1 - 2);
+    if (isTop && h > 6) svg += `<path d="M${x},${y0 - 2} v${-(h - 4)} q0,-4 4,-4 h${w - 8} q4,0 4,4 v${h - 4} z" fill="${getComputedStyle(document.documentElement).getPropertyValue(S[k].c.slice(4, -1))}"/>`;
+    else svg += `<rect x="${x}" y="${y1}" width="${w}" height="${h}" fill="${getComputedStyle(document.documentElement).getPropertyValue(S[k].c.slice(4, -1))}"/>`;
+  });
+  if (i % 3 === 0 || i === days - 1) svg += `<text x="${L + i * bw + bw / 2}" y="${H - 5}" text-anchor="middle">${String(i + 1).padStart(2, '0')}.09</text>`;
+}
+svg += '</svg>';
+const chart = document.getElementById('chart');
+chart.innerHTML = svg;
+const tip = document.createElement('div');
+tip.className = 'tip';
+tip.style.left = (L + hot * bw - 214) + 'px'; tip.style.top = '4px';
+tip.innerHTML = `<div class="h"><span>22.09, вторник</span><b>${money(tot(hot))}</b></div>` +
+  S.map((s, k) => `<div class="r"><i style="background:${s.c}"></i><span>${s.n}</span><b>${money(data[k][hot])}</b></div>`).reverse().join('');
+chart.appendChild(tip);
+
+// По моделям.
+const M = [
+  ['gpt-live-1', 'Голос', '61 зв.', '4 ч 12 мин', '', '', '$0,21', 12.60, 's1'],
+  ['claude-opus-5.5', 'Память: сон, характер', 9, '612 тыс.', '71%', '48 тыс.', '$0,43', 3.90, 's3'],
+  ['gpt-5.6-luna', 'Делегирование, названия', 180, '698 тыс.', '0%', '15 тыс.', '$0,017', 3.05, 's2'],
+  ['claude-sonnet-5', 'Память: разбор звонка', 58, '511 тыс.', '64%', '16 тыс.', '$0,040', 2.30, 's3'],
+  ['jev-1.13', 'Jev', '2 140', '3,1 млн', '', '41 тыс.', '$0,0006', 1.20, 's4'],
+  ['gemini-3.5-flash-lite', 'Делегирование, поиск, сводки', 410, '930 тыс.', '0%', '9 тыс.', '$0,003', 1.05, 's2']
+];
+document.getElementById('models').innerHTML = M.map((m, i) => `<tr${i === 1 ? ' class="hov"' : ''}><td class="m"><span class="sw" style="background:var(--${m[8]})"></span>${m[0]}</td><td class="muted">${m[1]}</td><td class="r">${m[2]}</td><td class="r">${m[3]}</td><td class="r muted">${m[4]}</td><td class="r">${m[5]}</td><td class="r muted">${m[6]}</td><td class="r mono" style="font-weight:600">${money(m[7])}</td><td><span class="share" style="width:${m[7] / M[0][7] * 150}px;background:var(--${m[8]})"></span> <span class="muted mono" style="font-size:11px;margin-left:6px">${Math.round(m[7] / total * 100)}%</span></td></tr>`).join('');
+}</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x1000">
+<title>Б. Техкарта как единица маршрута</title>
+<link rel="stylesheet" href="_shared.css">
+</head><body>
+
+<div class="head"><h1>Предложение: Jev выбирает техкарту</h1><p>уровень записан в техкарте при создании; Jev только выбирает</p></div>
+
+<svg class="wires" viewBox="0 0 1600 1000">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="rgba(38,33,29,.5)"/></marker>
+  <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8A33D"/></marker>
+  <marker id="ars" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B8321F"/></marker></defs>
+  <path class="hot" d="M280,520 L596,520" marker-end="url(#arh)"/>
+  <path style="stroke:#B8321F;stroke-width:2.5" d="M1330,738 L1330,776" marker-end="url(#ars)"/>
+  <path class="hot" d="M930,520 C975,520 965,215 1006,215" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,367 1006,367" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 L1006,519" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,671 1006,671" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,823 1006,823" marker-end="url(#arh)"/>
+  <path d="M1390,215 L1436,215" marker-end="url(#ar)"/>
+  <path d="M1390,367 L1436,367" marker-end="url(#ar)"/>
+  <path d="M1390,519 L1436,519" marker-end="url(#ar)"/>
+  <path d="M1390,671 L1436,671" marker-end="url(#ar)"/>
+  <path d="M1390,823 L1436,823" marker-end="url(#ar)"/>
+  <path class="dash" d="M1500,892 L1500,950 L170,950 L170,604" marker-end="url(#ar)"/>
+  <text x="620" y="940">ответ или вопрос звучит голосом Волны</text>
+</svg>
+
+<div class="box" style="left:60px;top:440px;width:220px;height:160px">
+  <div class="t">вход</div>
+  <h2>GPT-Live</h2>
+  <p>слышит просьбу и решает отдать её ядру</p>
+</div>
+
+<div class="box lamp" style="left:600px;top:290px;width:330px;height:460px">
+  <div class="t"><span>система 1</span><span>~300 мс</span></div>
+  <h2>Jev</h2>
+  <p>один запрос, до трёх вопросов</p>
+  <ul>
+    <li><b>техкарта</b><span>какая из всех, проверено до 100</span></li>
+    <li><b>класс</b><span>только если его нет в техкарте</span></li>
+    <li><b>входы</b><span>названо ли время? суть? да или нет по каждому <span class="new">новое</span></span></li>
+  </ul>
+  <p style="margin-top:14px;font-size:13px">Jev не пишет текст, только выбирает и отвечает да или нет</p>
+</div>
+
+<div class="box lane" style="left:1010px;top:150px;width:380px;height:130px">
+  <div class="k">instant<small>0,3 с</small></div>
+  <div><h3>Ядро само вызывает инструмент</h3><p>время, агенты, «кто ты»; только чтение</p></div>
+</div>
+<div class="box lane" style="left:1010px;top:302px;width:380px;height:130px">
+  <div class="k">ask<small>0,35 с</small></div>
+  <div><h3>Нет данных: вопрос сразу в Live<span class="new">новое</span></h3><p>«О чём напомнить?» берётся из техкарты, модель не нужна</p></div>
+</div>
+<div class="box lane" style="left:1010px;top:454px;width:380px;height:130px">
+  <div class="k">fill<small>~0,8 с</small></div>
+  <div><h3>Извлекатель → инструмент<span class="new">новое</span></h3><p>JSON по схеме без рассуждений; напоминание, событие, контакт</p></div>
+</div>
+<div class="box lane" style="left:1010px;top:606px;width:380px;height:130px">
+  <div class="k">think<small>1–3 с</small></div>
+  <div><h3>Flash Lite или Sonnet</h3><p>инструменты техкарты; если нужна работа, предлагает её<span class="new">новое</span></p></div>
+</div>
+<div class="box lane dark" style="left:1010px;top:758px;width:380px;height:130px">
+  <div class="k">work<small>фон</small></div>
+  <div><h3>«Делаем?», «да», T3 Code<span class="new">новое</span></h3>
+    <div class="chips"><span class="chip">T3 Code</span><span class="chip" style="opacity:.45;text-decoration:line-through">Claude Desktop · Codex</span></div></div>
+</div>
+
+<div class="ret" style="left:1440px;top:150px;width:110px;height:738px"><span>обратно в Live</span></div>
+
+</body></html>

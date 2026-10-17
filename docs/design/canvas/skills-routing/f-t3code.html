@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x1000">
+<title>Ж. Работа через T3 Code</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .api{font:13.5px/1.75 var(--mono);color:var(--ether-text)}
+  .api .m{color:var(--lamp)}
+  .api .d{color:var(--ether-muted);font-family:var(--body);font-size:13px}
+  .risk{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .risk:last-child{border-bottom:0}
+  .risk b{font:600 15px var(--display);color:var(--signal)}
+</style>
+</head><body>
+
+<div class="head"><h1>Работа через T3 Code</h1><p>ядро говорит с сервером T3 Code так же, как его окно; версия 0.0.42</p></div>
+
+<svg class="wires" viewBox="0 0 1600 1000">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="rgba(38,33,29,.5)"/></marker>
+  <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8A33D"/></marker>
+  <marker id="ars" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B8321F"/></marker></defs>
+  <path d="M300,300 L346,300" marker-end="url(#ar)"/>
+  <path class="hot" d="M620,280 L706,280" marker-end="url(#arh)"/>
+  <path d="M706,340 L626,340" marker-end="url(#ar)"/>
+  <text x="628" y="268">dispatch</text>
+  <text x="640" y="366">опрос</text>
+  <path class="hot" d="M1170,300 L1216,300" marker-end="url(#arh)"/>
+  <path d="M480,420 C480,500 300,520 300,566" marker-end="url(#ar)"/>
+  <path style="stroke:#B8321F" d="M480,420 C480,500 700,520 700,566" marker-end="url(#ars)"/>
+  <path d="M540,420 C560,500 1060,520 1080,566" marker-end="url(#ar)"/>
+</svg>
+
+<div class="box" style="left:60px;top:220px;width:240px;height:170px">
+  <div class="t">волна</div>
+  <h2>«Да, запускай»</h2>
+  <p>после пересказа задания, как сейчас</p>
+</div>
+
+<div class="box" style="left:350px;top:190px;width:270px;height:230px">
+  <div class="t">ядро · новое</div>
+  <h2>Адаптер t3code</h2>
+  <p>zod-схемы только нужных полей; при старте сверяет версию сервера</p>
+</div>
+
+<div class="box lamp" style="left:710px;top:170px;width:460px;height:270px">
+  <div class="t"><span>T3 Code · 127.0.0.1:3773</span><span>bearer</span></div>
+  <div class="api">
+    <span class="m">thread.turn.start</span> <span class="d">новый тред или сообщение</span><br>
+    <span class="m">thread.user-input.respond</span> <span class="d">ответ на вопрос</span><br>
+    <span class="m">thread.approval.respond</span> <span class="d">разрешение</span><br>
+    <span class="m">thread.turn.interrupt</span> <span class="d">отмена голосом</span><br>
+    <span class="m">GET /api/orchestration/shell</span> <span class="d">статусы</span><br>
+    <span class="m">GET …/threads/:id</span> <span class="d">последний ответ</span>
+  </div>
+</div>
+
+<div class="box" style="left:1220px;top:200px;width:320px;height:200px">
+  <div class="t">агенты</div>
+  <h2>Claude или Codex</h2>
+  <p>modelSelection в каждом треде; по умолчанию Claude Opus 5.5</p>
+</div>
+
+<div class="box" style="left:160px;top:570px;width:300px;height:170px">
+  <div class="t">вопрос агента</div>
+  <h3>Голосом Волны</h3>
+  <p>user-input.requested: на звонке спрашивает, иначе уведомление; ответ как есть</p>
+</div>
+<div class="box" style="left:520px;top:570px;width:340px;height:170px;border:2px solid var(--signal)">
+  <div class="t" style="color:var(--signal)">разрешение агенту</div>
+  <h3>Только кнопкой на телефоне</h3>
+  <p>approval.requested: доступ не даётся голосом, как доверие папке</p>
+</div>
+<div class="box" style="left:920px;top:570px;width:320px;height:170px">
+  <div class="t">ход закончен</div>
+  <h3>Итог в звонок или пушем</h3>
+  <p>latestTurn.state = completed; как у нынешних заданий</p>
+</div>
+
+<div class="box" style="left:60px;top:790px;width:1480px;height:170px">
+  <div class="t">риски</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:40px">
+    <div class="risk"><b>1</b><span>API внутренний: протокол меняют почти каждый день, приложение обновляется само</span></div>
+    <div class="risk"><b>2</b><span>Токен сервера только административный, узкие права не выпускаются</span></div>
+    <div class="risk"><b>3</b><span>Сервер слушает все интерфейсы, не только 127.0.0.1, и открыт туннель T3 Connect</span></div>
+    <div class="risk"><b>4</b><span>Вопрос или разрешение может закрыть и окно T3 Code: побеждает первый ответ</span></div>
+  </div>
+</div>
+
+</body></html>

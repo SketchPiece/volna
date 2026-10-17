@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>Г. Разговоры, переключатель здесь</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<script src="_shared.js"></script>
+<script>
+Volna.idle({ stageClass: 'top', stage: `<div class="seg"><span class="${'talk'==='talk'?'on':''}">Разговоры</span><span class="${'talk'==='work'?'on':''}">Работа <em class="cnt" style="font-style:normal">2</em></span></div><div class="card list plain">${[
+  ['Сегодня, 9:12 · 3 мин', 'Что купить к ужину на шестерых'],
+  ['Вчера, 21:40 · 4 мин', 'Что такое резонанс, по-простому'],
+  ['Вчера, 18:05 · 2 мин', 'Перенести встречу с Олегом на пятницу'],
+  ['Пн, 22:30 · 11 мин', 'План переезда: что везти первым'],
+  ['Пн, 8:47 · 1 мин', 'Погода в Тбилиси на выходные'],
+  ['Вс, 19:15 · 6 мин', 'Идеи подарка маме'],
+].map(([k, t]) => `<div class="item"><div class="body"><div class="k">${k}</div><div class="t">${t}</div></div></div>`).join('')}</div>` });
+</script>
+</body>
+</html>

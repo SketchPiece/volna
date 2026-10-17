@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>Д3. Красный, изгиб как у волны знака</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.ghost .item .k,.ghost .item .t{color:transparent;border-radius:4px}
+.ghost .item .k{width:118px;height:9px;margin:4px 0 8px;background:rgba(38,33,29,.07)}
+.ghost .item .t{height:11px;background:rgba(38,33,29,.06)}
+.say .item .t{font-weight:500}
+.say .item .t::before{content:"«";color:var(--ink-2)} .say .item .t::after{content:"»";color:var(--ink-2)}
+.foot{font:13px/1.45 var(--font-body);color:var(--ink-2);margin:14px 4px 0}
+</style>
+</head>
+<body>
+<script src="_shared.js"></script>
+<script src="_arrow.js"></script>
+<script>
+const mast = `<svg width="156" height="156" viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M22 57 L32 31 L42 57" stroke="#26211D" stroke-width="2.6"/><path d="M27 44 H37 M27 44 L42 57 M37 44 L22 57" stroke="#26211D" stroke-width="1.8"/>
+  <circle cx="32" cy="26" r="4.2" fill="#E8A33D" style="filter:drop-shadow(0 0 4px rgba(232,163,61,.9))"/>
+  <path class="w1" d="M22 16 a14 14 0 0 0 0 20 M42 16 a14 14 0 0 1 0 20" stroke="#E8A33D" stroke-width="2.4"/>
+  <path class="w2" d="M15 9 a24 24 0 0 0 0 34 M49 9 a24 24 0 0 1 0 34" stroke="#E8A33D" stroke-width="2.4"/>
+</svg>`;
+Volna.idle({ stage: `<div class="hero">
+  <div class="badge">${mast}</div>
+  <h2>Первый выход в эфир</h2>
+  <p>Позвони и спроси что угодно.</p>
+  <div style="margin:26px 0 26px">${arrowSVG({ width: 5, shape: 'logo' })}</div>
+</div>` });
+</script>
+</body>
+</html>

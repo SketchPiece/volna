@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Волна · Техкарты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F; --signal-deep:#8E2415;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --ether:#1F1B18; --ether-text:#EFE7D6; --ether-line:rgba(232,163,61,.22); --ether-muted:#CDBFA6;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised:7px 7px 16px var(--shade),-7px -7px 16px var(--light);
+  --raised-sm:5px 5px 12px var(--shade),-5px -5px 12px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed:inset 5px 5px 12px var(--shade),inset -5px -5px 12px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --glow:0 0 8px var(--lamp);
+  --r-sm:14px; --r-md:24px; --r-lg:32px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-bg:var(--ivory); --page-fg:var(--bakelite); --page-muted:var(--ink-2); --page-line:rgba(38,33,29,.14);
+}
+/* Документ показывается в светлом корпусе всегда: экраны сверяются с макетом, а не с темой читателя. */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --page-bg:#141210; --page-fg:#EFE7D6; --page-muted:#B7AB98; --page-line:rgba(239,231,214,.14); } }
+:root[data-theme="dark"]{ --page-bg:#141210; --page-fg:#EFE7D6; --page-muted:#B7AB98; --page-line:rgba(239,231,214,.14); }
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page-bg);color:var(--page-fg);font:16px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+@media (min-width:600px){.wrap{padding:0 24px}}
+section{padding:48px 0;border-top:1px solid var(--page-line)}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0}
+h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+h3{font-size:16px;margin-bottom:8px}
+p{margin:0 0 12px;max-width:70ch}
+.lead{color:var(--page-muted);margin-bottom:28px}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--page-muted)}
+.cap{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--page-muted);margin:0}
+.hero{padding:48px 0 40px;border-top:0}
+.wordmark{font:800 clamp(36px,6vw,64px)/1 var(--font-display);letter-spacing:-.01em;margin:14px 0 8px}
+.wordmark span{color:var(--signal)}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--page-muted);margin-bottom:18px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font-family:var(--font-mono);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--page-muted)}
+.note{border-left:3px solid var(--lamp);padding:10px 16px;background:rgba(232,163,61,.09);border-radius:0 var(--r-sm) var(--r-sm) 0;max-width:70ch}
+ol li,ul li{margin-bottom:8px}
+.rec{font:500 11px var(--font-mono);letter-spacing:.1em;color:var(--signal);margin-right:6px}
+
+/* Компоненты продукта (как в дизайн-системе) */
+.lamp{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:var(--glow);display:inline-block;flex-shrink:0}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 2px 2px 3px #A89F90}
+.status{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 11px var(--font-mono);letter-spacing:.12em;white-space:nowrap;color:var(--bakelite)}
+.status .lamp{width:9px;height:9px}
+.btn{font:600 15px var(--font-body);color:var(--bakelite);border:0;height:48px;padding:0 24px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised);display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn-quiet{box-shadow:none;background:transparent;font-weight:500;font-size:13px;color:var(--ink-2);height:40px;padding:0 12px}
+.group{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--raised);padding:6px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 20px;font-size:15px;color:var(--bakelite)}
+.row + .row{border-top:1px solid rgba(38,33,29,.08)}
+.row .v{margin-left:auto;color:var(--ink-2);font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.row .v .mono{font-size:12.5px;letter-spacing:.06em}
+.row.sub{display:block;font-size:13px;color:var(--ink-2);min-height:0;padding-top:8px;padding-bottom:10px;line-height:1.4}
+.gh{font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin:0 0 10px 20px;text-transform:uppercase}
+.level{width:100%;min-height:56px;border:0;border-radius:var(--r-sm);background:var(--ivory);box-shadow:var(--raised-sm);display:flex;align-items:center;gap:14px;padding:10px 18px;text-align:left;font:inherit;color:var(--bakelite)}
+.level[aria-pressed="true"]{box-shadow:var(--pressed)}
+.level .t{flex:1;display:flex;flex-direction:column;gap:2px}
+.level .n{font-weight:600;font-size:15px}
+.level[aria-pressed="true"] .n{color:var(--signal)}
+.level .d{font-size:12px;color:var(--ink-2);line-height:1.35}
+.card.ether{border-radius:var(--r-md);background:var(--ether);color:var(--ether-text);box-shadow:var(--raised),inset 0 0 40px rgba(232,163,61,.08);padding:18px 20px}
+.card.ether .who{font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--lamp);margin-bottom:10px}
+.card.ether .txt{font:14.5px/1.5 var(--font-body)}
+.card.ether .res{border-top:1px solid var(--ether-line);margin-top:12px;padding-top:10px;font:10px var(--font-mono);color:var(--ether-muted);letter-spacing:.1em;display:flex;justify-content:space-between}
+.card.err{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--pressed);padding:16px 20px;color:var(--bakelite);font-size:14px}
+.card.err b{display:block;font:600 13px var(--font-display);margin-bottom:6px}
+.fact{display:flex;flex-direction:column;gap:5px;padding:10px 20px;color:var(--bakelite)}
+.fact + .fact{border-top:1px solid rgba(38,33,29,.08)}
+.fact .x{font-size:14.5px;line-height:1.4}
+.fact .m{display:flex;gap:10px;font:500 10.5px var(--font-mono);letter-spacing:.1em;color:var(--ink-2);text-transform:uppercase}
+.fact .m .k{padding:2px 8px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm)}
+.fact .m .k.ex{color:var(--signal)}
+.swipe{position:relative;overflow:hidden}
+.swipe .fact{transform:translateX(-76px);background:var(--ivory)}
+.swipe .act{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;background:var(--signal);color:var(--light);box-shadow:var(--raised-sm);display:flex;align-items:center;justify-content:center;font:500 9.5px var(--font-mono);letter-spacing:.1em}
+.empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 20px;text-align:center;color:var(--ink-2);font-size:13.5px}
+.empty .lamp{width:10px;height:10px}
+
+/* Рамка телефона 390 × 844 */
+.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:36px 28px;align-items:start}
+.shot{display:flex;flex-direction:column;gap:12px}
+.phone-wrap{width:100%;aspect-ratio:390/844;position:relative}
+.phone-wrap > .phone{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:top left;border-radius:46px;background:var(--ivory);color:var(--bakelite);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(38,33,29,.12);overflow:hidden;display:flex;flex-direction:column;padding:54px 24px 30px}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#0C0A09}
+.phone .sb{position:absolute;top:16px;left:34px;right:34px;display:flex;justify-content:space-between;font:600 14px var(--font-body)}
+.phone .home{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--bakelite);opacity:.75}
+.topbar{display:flex;align-items:center;justify-content:space-between;min-height:40px}
+.topbar .ttl{font:600 15px var(--font-display)}
+.stack{display:flex;flex-direction:column;gap:22px;margin-top:16px;overflow:hidden}
+.mark-mini{width:56px;height:56px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center}
+.mark-mini svg{width:82%;height:82%}
+
+/* Новое: техкарты и характер */
+.tc{display:flex;align-items:center;gap:12px;padding:10px 20px;min-height:58px;color:var(--bakelite)}
+.tc + .tc{border-top:1px solid rgba(38,33,29,.08)}
+.tc .t{flex:1;display:flex;flex-direction:column;gap:3px}
+.tc .n{font-weight:600;font-size:15px}
+.tc .d{font-size:12px;color:var(--ink-2);line-height:1.35}
+.tc .c{font:500 10.5px var(--font-mono);letter-spacing:.1em;color:var(--ink-2);white-space:nowrap}
+.rule{display:flex;gap:12px;padding:10px 20px;font-size:14.5px;line-height:1.4;color:var(--bakelite)}
+.rule + .rule{border-top:1px solid rgba(38,33,29,.08)}
+.rule .i{font:500 12px/1.6 var(--font-mono);color:var(--ink-2);min-width:18px}
+.rule.new .i{color:var(--signal)}
+.when{padding:14px 20px;font-size:13.5px;color:var(--ink-2);line-height:1.45}
+.when b{display:block;font:500 10.5px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin-bottom:4px;font-weight:500}
+.hint{font-size:12.5px;color:var(--ink-2);line-height:1.45;padding:0 8px}
+.hint .say{font-family:var(--font-mono);font-size:11.5px;color:var(--bakelite)}
+.chg{padding:12px 20px;display:flex;flex-direction:column;gap:6px}
+.chg + .chg{border-top:1px solid rgba(38,33,29,.08)}
+.chg .m{font:500 10.5px var(--font-mono);letter-spacing:.1em;color:var(--ink-2)}
+.chg .why{font-size:13.5px;line-height:1.4;color:var(--bakelite)}
+.chg .to{font-size:13px;line-height:1.4;color:var(--ink-2);padding-left:12px;border-left:2px solid var(--lamp)}
+.chg .to.factory{border-left-color:var(--lamp-off)}
+.card.ether .txt.factory{color:var(--ether-muted)}
+</style>
+</head>
+<body>
+<main>
+<section class="hero">
+  <div class="wrap">
+    <p class="mono muted" style="font-size:13px">Дизайн-система «Бакелит и лампа» · дополнение к экрану «Память» · одобрено и внедрено 23.09.2026</p>
+    <h1 class="wordmark">ТЕХКАРТЫ<span>.</span></h1>
+    <div class="decode">ПРАВИЛА ХОЗЯИНА · ХАРАКТЕР ВОЛНЫ · ИСТОРИЯ · ЗАВОДСКОЙ</div>
+    <p>Две новые группы на экране «Память». <b>Техкарты</b> — правила хозяина, как делать дела одного рода. Волна читает их перед работой, а если ответа нет, спрашивает и дописывает. <b>Характер</b> — личный слой поверх заводского: он складывается сам после разговоров, раз в несколько дней и понемногу. Ядро уже умеет и то и другое (<span class="mono">GET /memory</span> отдаёт техкарты). Экран нужен, чтобы видеть это и откатывать.</p>
+    <p class="muted">Новых цветов, теней и шрифтов нет. Новые компоненты: строка техкарты, строка правила с номером, строка изменения характера. Стекло только для слов Волны: профиль и характер. Техкарты — слова хозяина, поэтому на корпусе.</p>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Экраны</h2>
+    <p class="lead">Экран «Память» становится длиннее: уровень, профиль, техкарты, характер, записи, чувствительные темы. Техкарта и история характера открываются кнопкой назад, как «Голос».</p>
+    <div class="screens">
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Настройки</button><span class="ttl">Память</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div class="card ether"><div class="who">ВОЛНА О ТЕБЕ</div><div class="txt">Инженер, живёт в Берлине, делает голосового ассистента. Любит короткие ответы и лёгкую иронию.</div><div class="res"><span>ОБНОВЛЕНО 23.09 · 09:41</span><span>13 ЗАПИСЕЙ</span></div></div>
+            <div><p class="gh">Техкарты</p><div class="group" style="padding:2px 0">
+              <div class="tc"><span class="t"><span class="n">Разработка Волны</span><span class="d">Когда просишь поправить или доработать Волну</span></span><span class="c">6 ПРАВИЛ</span><span style="opacity:.55">›</span></div>
+              <div class="tc"><span class="t"><span class="n">Новые приложения</span><span class="d">Когда просишь сделать приложение</span></span><span class="c">3 ПРАВИЛА</span><span style="opacity:.55">›</span></div>
+            </div></div>
+            <div><p class="gh">Характер</p>
+              <div class="card ether"><div class="who">ВОЛНА О СЕБЕ</div><div class="txt">С ним я прямее, чем задумано: не смягчаю, когда что-то не выйдет. Шучу суше и реже по утрам. Про код говорю его словами.</div><div class="res"><span>ИЗМЕНЁН 26.09</span><span>2 ИЗМЕНЕНИЯ ›</span></div></div>
+            </div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">05 · Память. После профиля две новые группы. Техкарты — правила хозяина, поэтому обычные строки. Характер — слова Волны о себе, поэтому стекло; тап открывает историю.</p>
+      </div>
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Память</button><span class="ttl">Техкарта</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div class="group"><div class="when"><b>РАЗРАБОТКА ВОЛНЫ · КОГДА</b>Когда просишь поправить или доработать Волну</div></div>
+            <div><p class="gh">Правила</p><div class="group" style="padding:2px 0">
+              <div class="rule"><span class="i">1</span><span>Проект CallAssistant в папке Hacking</span></div>
+              <div class="rule"><span class="i">2</span><span>Задачу отдавать Claude в новом чате</span></div>
+              <div class="rule"><span class="i">3</span><span>Интерфейс сначала HTML-макетом на одобрение</span></div>
+              <div class="rule"><span class="i">4</span><span>Сначала читать AGENTS.md</span></div>
+              <div class="rule"><span class="i">5</span><span>Готово, когда npm test зелёный</span></div>
+              <div class="rule new"><span class="i">6</span><span>Ядро не перезапускать без меня</span></div>
+            </div></div>
+            <p class="hint">Правится голосом: <span class="say">«Волна, в техкарту разработки добавь…»</span>. Изменено 23.09 · 3 версии.</p>
+            <div style="display:flex;justify-content:center"><button class="btn btn-quiet" style="color:var(--signal);font-weight:600;font-size:14px">Удалить техкарту</button></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">06 · Техкарта. Только чтение: правила меняются голосом, как и заводятся. Номера правил из последней правки красные. Удаление с подтверждением.</p>
+      </div>
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Память</button><span class="ttl">Характер</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div class="card ether"><div class="who">ВОЛНА О СЕБЕ · СЕЙЧАС</div><div class="txt">С ним я прямее, чем задумано: не смягчаю, когда что-то не выйдет. Шучу суше и реже по утрам. Про код говорю его словами.</div></div>
+            <div><p class="gh">Как менялся</p><div class="group" style="padding:2px 0">
+              <div class="chg"><span class="m">26.09 · ПОСЛЕ 6 РАЗГОВОРОВ</span><span class="why">Трижды перебивал утренние шутки и отвечал только по делу.</span><span class="to">Шучу суше и реже по утрам.</span></div>
+              <div class="chg"><span class="m">23.09 · ПОСЛЕ 5 РАЗГОВОРОВ</span><span class="why">Дважды просил не смягчать плохие новости про сборку.</span><span class="to">С ним я прямее, чем задумано.</span></div>
+            </div></div>
+            <p class="hint">Характер складывается сам, раз в несколько дней и понемногу. Просьбу «говори короче» Волна исполняет сразу, это в записях памяти.</p>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><button class="btn btn-quiet" style="font-weight:600;font-size:14px;color:var(--bakelite)">Вернуть заводской</button><span class="cap" style="font-size:11px">ИСТОРИЯ ОСТАНЕТСЯ</span></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">07 · Характер. Текущий слой на стекле, ниже история: когда, на что Волна опиралась и что стало. «Вернуть заводской» не красный: это не удаление, история сохраняется.</p>
+      </div>
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Настройки</button><span class="ttl">Память</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div><p class="gh">Техкарты</p><div class="group"><div class="empty"><span class="lamp off"></span><span>Техкарт пока нет. Скажи Волне: <span class="mono" style="font-size:12px;color:var(--bakelite)">«когда я прошу сделать приложение, делай так…»</span> или ответь на её вопрос, и она заведёт.</span></div></div></div>
+            <div><p class="gh">Характер</p>
+              <div class="card ether"><div class="who">ВОЛНА О СЕБЕ</div><div class="txt factory">Заводской характер. Свои черты с тобой появятся после нескольких разговоров.</div><div class="res"><span>ЗАВОДСКОЙ</span><span></span></div></div>
+            </div>
+            <div class="group"><div class="empty"><span class="lamp off"></span><span>На уровне «Холодная» Волна не читает ни техкарт, ни своего характера: говорит заводским.</span></div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">08 · Состояния. Пустые техкарты с подсказкой фразы. Заводской характер приглушённым текстом на стекле. На «Холодной» одна строка вместо обеих групп (показана здесь вместе для сравнения).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="components">
+  <div class="wrap">
+    <h2>Компоненты и соответствие в коде</h2>
+    <div class="table-wrap"><table>
+      <tr><th>Элемент</th><th>Как</th><th>SwiftUI</th></tr>
+      <tr><td>Строка техкарты</td><td>Название 15 pt, под ним «когда» 12 pt, справа число правил mono и стрелка. Высота от 58 pt.</td><td>Новый <span class="mono">TechCardRow</span> рядом с <span class="mono">LevelRow</span></td></tr>
+      <tr><td>Карточка «когда»</td><td>Группа с подписью mono «НАЗВАНИЕ · КОГДА» и текстом 13.5 pt.</td><td><span class="mono">SettingsGroup</span></td></tr>
+      <tr><td>Строка правила</td><td>Номер mono 12, текст 14.5 pt. Номер нового правила (добавлено после прошлого открытия) красный.</td><td>Новый <span class="mono">RuleRow</span></td></tr>
+      <tr><td>Характер на стекле</td><td><span class="mono">AnswerCard</span>: «ВОЛНА О СЕБЕ», текст слоя, внизу дата и число изменений. Заводской: приглушённый текст.</td><td><span class="mono">AnswerCard(title:text:footer:)</span></td></tr>
+      <tr><td>Строка изменения</td><td>Дата и число разговоров mono, причина 13.5 pt, «что стало» с лампой-чертой слева (серой, если это возврат к заводскому).</td><td>Новый <span class="mono">PersonaChangeRow</span></td></tr>
+      <tr><td>«Удалить техкарту»</td><td><span class="mono">QuietButton</span> красным, confirmationDialog.</td><td><span class="mono">QuietButtonStyle</span></td></tr>
+      <tr><td>«Вернуть заводской»</td><td><span class="mono">QuietButton</span> обычного цвета с подписью «ИСТОРИЯ ОСТАНЕТСЯ», confirmationDialog.</td><td><span class="mono">QuietButtonStyle</span></td></tr>
+    </table></div>
+    <h3 style="margin-top:24px">Ядро</h3>
+    <ul>
+      <li>Есть: техкарты в <span class="mono">GET /memory</span>, <span class="mono">DELETE /memory/techcards/:id</span>.</li>
+      <li>Характер приходит в том же <span class="mono">GET /memory</span> (поле <span class="mono">persona</span>: слой и история с числом разговоров), сброс <span class="mono">POST /memory/persona/reset</span>.</li>
+      <li>Идентификаторы доступности: <span class="mono">memoryTechCards, techCard.&lt;id&gt;, techCardRules, deleteTechCard, memoryPersona, personaHistory, personaReset</span>.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <h2>Решения владельца · 23.09.2026</h2>
+    <ol>
+      <li><b>Править техкарту пальцем?</b> Нет, только голосом.</li>
+      <li><b>Говорить ли о смене характера?</b> Нет, Волна меняется молча, видно только на этом экране.</li>
+      <li><b>Место на экране.</b> Обе группы в «Памяти», после профиля.</li>
+      <li><b>Дизайн одобрен и внедрён</b> (<span class="mono">TechCardView</span>, <span class="mono">PersonaView</span>, снимки 14, 14b, 15 в <span class="mono">DesignScreenshots</span>). Отличие от макета: красным отмечаются правила, появившиеся в последней правке (поле <span class="mono">fresh</span> из ядра), а не «до следующего открытия». Иначе телефону пришлось бы хранить текст правил.</li>
+    </ol>
+  </div>
+</section>
+</main>
+<script>
+function fit(){document.querySelectorAll('.phone-wrap').forEach(function(w){var s=w.clientWidth/390;w.querySelector('.phone').style.transform='scale('+s+')';});}
+window.addEventListener('resize',fit);fit();document.fonts&&document.fonts.ready.then(fit);
+</script>
+</body>
+</html>

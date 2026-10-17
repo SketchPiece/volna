@@ -1,0 +1,426 @@
+<title>Инструменты Волны</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F; --signal-deep:#8E2415;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --ether:#1F1B18; --ether-text:#EFE7D6; --ether-line:rgba(232,163,61,.22); --ether-muted:#CDBFA6;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised:7px 7px 16px var(--shade),-7px -7px 16px var(--light);
+  --raised-sm:5px 5px 12px var(--shade),-5px -5px 12px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed:inset 5px 5px 12px var(--shade),inset -5px -5px 12px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --glow:0 0 8px var(--lamp);
+  --r-sm:14px; --r-md:24px; --r-lg:32px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-bg:var(--ivory); --page-fg:var(--bakelite); --page-muted:var(--ink-2); --page-line:rgba(38,33,29,.14); --page-soft:rgba(38,33,29,.05);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --page-bg:#141210; --page-fg:#EFE7D6; --page-muted:#B7AB98; --page-line:rgba(239,231,214,.14); --page-soft:rgba(239,231,214,.06); } }
+:root[data-theme="dark"]{ --page-bg:#141210; --page-fg:#EFE7D6; --page-muted:#B7AB98; --page-line:rgba(239,231,214,.14); --page-soft:rgba(239,231,214,.06); }
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page-bg);color:var(--page-fg);font:16px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+@media (min-width:600px){.wrap{padding:0 24px}}
+section{padding:48px 0;border-top:1px solid var(--page-line)}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:0 0 12px;max-width:70ch}
+.lead{color:var(--page-muted);margin-bottom:28px}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--page-muted)}
+.cap{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--page-muted);margin:0}
+.hero{padding:48px 0 40px;border-top:0}
+.wordmark{font:800 clamp(36px,6vw,64px)/1 var(--font-display);letter-spacing:-.01em;margin:14px 0 8px}
+.wordmark span{color:var(--signal)}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--page-muted);margin-bottom:18px}
+.table-wrap{overflow-x:auto;margin:12px 0 20px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font-family:var(--font-mono);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--page-muted)}
+td code,p code,li code{font:13px var(--font-mono);background:var(--page-soft);padding:1px 6px;border-radius:6px;white-space:nowrap}
+.note{border-left:3px solid var(--lamp);padding:10px 16px;background:rgba(232,163,61,.09);border-radius:0 var(--r-sm) var(--r-sm) 0;max-width:70ch;margin:14px 0}
+.warn{border-left-color:var(--signal);background:rgba(184,50,31,.07)}
+ol li,ul li{margin-bottom:8px}
+ul,ol{max-width:75ch;padding-left:22px}
+.rec{font:500 11px var(--font-mono);letter-spacing:.1em;color:var(--signal);margin-right:6px}
+.where{display:inline-block;font:500 10.5px var(--font-mono);letter-spacing:.1em;padding:2px 8px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);color:var(--ink-2);background:var(--ivory);white-space:nowrap}
+.where.dev{color:var(--signal)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start}
+
+/* Схема: два места исполнения */
+.diagram{display:grid;grid-template-columns:1fr auto 1fr;gap:14px 18px;align-items:center;max-width:820px;margin:18px 0 8px}
+.box{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--raised);padding:16px 18px;color:var(--bakelite)}
+.box h4{font:600 13px var(--font-display);margin:0 0 6px}
+.box p{font-size:13px;color:var(--ink-2);margin:0;max-width:none}
+.box.ether{background:var(--ether);color:var(--ether-text);box-shadow:var(--raised),inset 0 0 40px rgba(232,163,61,.08)}
+.box.ether h4{color:var(--lamp)}
+.box.ether p{color:var(--ether-muted)}
+.link{font:500 10.5px var(--font-mono);letter-spacing:.1em;color:var(--page-muted);text-align:center;line-height:1.5}
+.link b{display:block;color:var(--lamp);font-weight:500}
+@media (max-width:640px){.diagram{grid-template-columns:1fr}.link{padding:4px 0}}
+
+/* Компоненты продукта */
+.lamp{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:var(--glow);display:inline-block;flex-shrink:0}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 2px 2px 3px #A89F90}
+.lamp.blink{animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.lamp.blink{animation:none}}
+.status{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 11px var(--font-mono);letter-spacing:.12em;white-space:nowrap;color:var(--bakelite);background:var(--ivory)}
+.status .lamp{width:9px;height:9px}
+.btn{font:600 15px var(--font-body);color:var(--bakelite);border:0;height:48px;padding:0 24px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised);display:inline-flex;align-items:center;justify-content:center;cursor:default}
+.btn-quiet{box-shadow:none;background:transparent;font-weight:500;font-size:13px;color:var(--ink-2);height:40px;padding:0 12px}
+.group{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--raised);padding:6px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 20px;font-size:15px;color:var(--bakelite)}
+.row + .row{border-top:1px solid rgba(38,33,29,.08)}
+.row .v{margin-left:auto;color:var(--ink-2);font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.row .v .mono{font-size:12.5px;letter-spacing:.06em}
+.row .v .mono.sig{color:var(--signal);font-weight:500}
+.row.sub{display:block;font-size:13px;color:var(--ink-2);min-height:0;padding-top:8px;padding-bottom:10px;line-height:1.4}
+.gh{font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin:0 0 10px 20px;text-transform:uppercase}
+.card.ether{border-radius:var(--r-md);background:var(--ether);color:var(--ether-text);box-shadow:var(--raised),inset 0 0 40px rgba(232,163,61,.08);padding:18px 20px}
+.card.ether .who{font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--lamp);margin:12px 0 6px}
+.card.ether .who:first-child{margin-top:0}
+.card.ether .who.u{color:var(--ether-muted)}
+.card.ether .txt{font:14.5px/1.5 var(--font-body)}
+.card.ether .res{border-top:1px solid var(--ether-line);margin-top:12px;padding-top:10px;font:10px var(--font-mono);color:var(--ether-muted);letter-spacing:.1em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+
+/* Рамка телефона 390 × 844 */
+.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:36px 28px;align-items:start;margin-top:8px}
+.shot{display:flex;flex-direction:column;gap:12px}
+.phone-wrap{width:100%;max-width:100%;aspect-ratio:390/844;position:relative;overflow:hidden;border-radius:46px}
+.phone{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:top left;border-radius:46px;background:var(--ivory);color:var(--bakelite);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(38,33,29,.12);overflow:hidden;padding:64px 20px 30px}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#0C0A09}
+.phone .sb{position:absolute;top:16px;left:34px;right:34px;display:flex;justify-content:space-between;font:600 14px var(--font-body)}
+.phone .home{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--bakelite);opacity:.75}
+.topbar{display:flex;align-items:center;justify-content:space-between;min-height:40px}
+.topbar .ttl{font:600 15px var(--font-display)}
+.stack{display:flex;flex-direction:column;gap:22px;margin-top:16px;overflow:hidden}
+.callmid{display:flex;flex-direction:column;align-items:center;gap:18px;margin-top:70px}
+.mark{width:180px;height:180px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-lg);display:flex;align-items:center;justify-content:center}
+.mark svg{width:70%;height:70%}
+.glass{margin-top:26px;border-radius:var(--r-md);background:var(--ether);color:var(--ether-text);padding:16px 18px;font:14px/1.5 var(--font-body);box-shadow:var(--raised),inset 0 0 40px rgba(232,163,61,.08)}
+.glass .who{font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--lamp);margin-bottom:6px}
+.hang{margin:34px auto 0;width:74px;height:74px;border-radius:50%;background:var(--signal);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center}
+.hang span{width:30px;height:8px;border-radius:4px;background:var(--light);display:block}
+.steps{counter-reset:s;list-style:none;padding:0;max-width:75ch}
+.steps li{position:relative;padding-left:44px;margin-bottom:12px}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;box-shadow:var(--pressed-sm);font:500 12px/30px var(--font-mono);text-align:center;color:var(--signal);background:var(--ivory)}
+.qa{display:grid;gap:14px;max-width:75ch}
+.q{border-radius:var(--r-md);box-shadow:var(--raised);background:var(--ivory);color:var(--bakelite);padding:16px 20px}
+.q b{display:block;font:600 14px var(--font-display);margin-bottom:8px}
+.q p{font-size:14px;color:var(--ink-2);max-width:none}
+.q p:last-child{margin:0}
+</style>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <p class="mono muted" style="font-size:13px">Волна · инструменты ассистента · дизайн-документ на одобрение · 22.09.2026</p>
+    <h1 class="wordmark">РУКИ<span>.</span></h1>
+    <div class="decode">ПОИСК · НАПОМИНАНИЯ · КАЛЕНДАРЬ · КОНТАКТЫ · ПОЧТА</div>
+    <p>Сейчас у Волны четыре инструмента: время и три инструмента памяти, все исполняются в ядре. Этот документ описывает следующий набор: поиск в интернете и работу с телефоном как с телефоном, через нативные «Напоминания», «Календарь» и «Контакты». Почта разобрана отдельно: у неё есть ограничение платформы, которое надо решить до кода.</p>
+    <p class="muted">Ниже: принцип двух мест исполнения, каждый инструмент с параметрами и правилами поведения, честные пределы почты, один новый экран настроек, протокол, безопасность, план работ и четыре вопроса владельцу. Новых цветов, шрифтов и теней нет.</p>
+  </div>
+</section>
+
+<section id="principle">
+  <div class="wrap">
+    <h2>Принцип: две пары рук</h2>
+    <p class="lead">OpenAI Realtime принимает в сессию только инструменты типа <code>function</code> (проверено по документации 22.09.2026: встроенных hosted-инструментов вроде web_search в Realtime нет). Значит, каждый инструмент кто-то должен исполнить сам. Сегодня это ядро. Для нативных приложений телефона ядро не годится: напоминания и календарь живут на iPhone. Поэтому появляется второе место исполнения, само приложение.</p>
+
+    <div class="diagram">
+      <div class="box">
+        <h4>iPhone · приложение</h4>
+        <p>Инструменты телефона: EventKit и Contacts. Слышит те же события Realtime по data channel, что и ядро. Исполняет только свои имена и отвечает по тому же каналу.</p>
+      </div>
+      <div class="link"><b>WebRTC</b>звук + data channel</div>
+      <div class="box ether">
+        <h4>OpenAI Realtime</h4>
+        <p>Одна сессия, один список инструментов. Модели всё равно, кто ответит на вызов: телефон или ядро.</p>
+      </div>
+      <div class="box" style="grid-column:1">
+        <h4>Ядро · core/</h4>
+        <p>Инструменты с сетью и секретами: поиск, почта, память, время. Собирает список инструментов сессии, включая те, что исполнит телефон.</p>
+      </div>
+      <div class="link"><b>SIDEBAND</b>wss · call_id</div>
+      <div class="box ether" style="visibility:hidden" aria-hidden="true"></div>
+    </div>
+
+    <p>Правило распределения простое. <strong>На телефоне</strong> исполняется всё, что читает или пишет данные самого телефона. <strong>В ядре</strong> исполняется всё, чему нужен ключ, пароль или интернет. Модель получает единый список; ядро знает, какие имена принадлежат телефону, и пропускает их в sideband; телефон обрабатывает только свои имена и игнорирует остальные.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Инструмент</th><th>Где</th><th>Что нужно</th><th>Пример фразы</th></tr></thead>
+      <tbody>
+        <tr><td><code>web_search</code></td><td><span class="where">ЯДРО</span></td><td>Ключ OpenAI, Responses API</td><td>«Что сегодня с курсом юаня», «Во сколько закрывается Ленинка»</td></tr>
+        <tr><td><code>create_reminder</code>, <code>list_reminders</code>, <code>complete_reminder</code></td><td><span class="where dev">ТЕЛЕФОН</span></td><td>Доступ к «Напоминаниям»</td><td>«Напомни завтра в девять позвонить маме», «Что у меня на сегодня», «Отметь молоко»</td></tr>
+        <tr><td><code>create_event</code>, <code>list_events</code></td><td><span class="where dev">ТЕЛЕФОН</span></td><td>Доступ к «Календарю»</td><td>«Поставь встречу с Димой в четверг в три», «Что у меня в пятницу»</td></tr>
+        <tr><td><code>find_contact</code></td><td><span class="where dev">ТЕЛЕФОН</span></td><td>Доступ к «Контактам»</td><td>«Напиши Маше письмо» (адрес берётся из контактов)</td></tr>
+        <tr><td><code>check_inbox</code>, <code>read_email</code>, <code>send_email</code></td><td><span class="where">ЯДРО</span></td><td>IMAP/SMTP и пароль приложения Gmail в <code>.env</code></td><td>«Что нового на почте», «Прочитай письмо от банка», «Ответь, что буду в среду»</td></tr>
+        <tr class="muted"><td><code>current_time</code>, <code>remember</code>, <code>forget</code>, <code>recall</code></td><td><span class="where">ЯДРО</span></td><td>Уже есть</td><td>Без изменений</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="search">
+  <div class="wrap">
+    <h2>Поиск в интернете</h2>
+    <p class="lead">Инструмент ядра <code>web_search</code>. Внутри один вызов Responses API с hosted-инструментом <code>web_search</code>, который сам ищет, читает и сводит ответ. Волне возвращается готовый короткий ответ и список источников. Настраивать сторонний поисковик не нужно.</p>
+    <div class="cols">
+      <div>
+        <h3>Контракт</h3>
+        <ul>
+          <li>Параметры: <code>query</code> (что искать, на любом языке), <code>recency</code> (<code>any | day | week</code>, по умолчанию <code>any</code>).</li>
+          <li>Запрос к Responses: модель из <code>OPENAI_SEARCH_MODEL</code> (по умолчанию <code>gpt-5-mini</code>), <code>tools: [{ type: 'web_search', search_context_size: 'low', user_location: { timezone } }]</code>, инструкция «ответь для голоса: два-три предложения по-русски, без списков и ссылок, с датой, если она важна».</li>
+          <li>Результат модели Realtime: <code>{ answer, sources: [{ title, url }], searchedAt }</code>. Источники не читаются вслух, но если спросят «откуда», Волна назовёт сайт.</li>
+          <li>Тайм-аут 15 с через <code>context.signal</code>; при ошибке модели уходит <code>{ error }</code>, и она говорит, что поиск не удался.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Поведение в разговоре</h3>
+        <ul>
+          <li>Поиск занимает 3–8 с. В инструкции персоны добавляется правило: перед долгим инструментом одна короткая реплика вроде «Сейчас посмотрю», потом вызов.</li>
+          <li>Волна ищет, когда ответ зависит от свежих или проверяемых данных, и не ищет о себе, о памяти пользователя и о том, что знает уверенно.</li>
+          <li>Стоимость: один вызов Responses с поиском за запрос. Лимит два поиска на один вопрос пользователя, чтобы модель не уходила в цикл.</li>
+        </ul>
+        <div class="card ether">
+          <div class="who u">ПОЛЬЗОВАТЕЛЬ</div><div class="txt">Во сколько сегодня закат в Москве?</div>
+          <div class="who">ВОЛНА</div><div class="txt">Сейчас посмотрю.</div>
+          <div class="who">ВОЛНА · после web_search</div><div class="txt">В 18:32. Темнеет примерно к семи.</div>
+          <div class="res"><span>WEB_SEARCH · 4.1 С</span><span>ИСТОЧНИК ПО ЗАПРОСУ</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="phone">
+  <div class="wrap">
+    <h2>Напоминания, календарь, контакты</h2>
+    <p class="lead">Инструменты телефона исполняет приложение через EventKit и Contacts. Это настоящие системные «Напоминания» и «Календарь»: созданное появится на часах, в виджетах и на Mac через iCloud. Никакого своего списка дел в Волне не будет.</p>
+
+    <h3>Напоминания</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Инструмент</th><th>Аргументы</th><th>Что делает</th><th>Возвращает</th></tr></thead>
+      <tbody>
+        <tr><td><code>create_reminder</code></td><td><code>title</code>, <code>due</code> (ISO 8601 с зоной или null), <code>notes</code> (null)</td><td>Создаёт напоминание в списке по умолчанию; при <code>due</code> ставит будильник на это время</td><td><code>{ id, title, due, list }</code></td></tr>
+        <tr><td><code>list_reminders</code></td><td><code>scope</code>: <code>today | overdue | upcoming | open</code>; <code>query</code> (null)</td><td>До 10 незавершённых, ближайшие первыми</td><td><code>{ reminders: [{ id, title, due, list }] }</code></td></tr>
+        <tr><td><code>complete_reminder</code></td><td><code>id</code> или <code>query</code></td><td>Отмечает выполненным; при нескольких совпадениях возвращает варианты, не угадывает</td><td><code>{ completed }</code> или <code>{ candidates }</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Календарь</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Инструмент</th><th>Аргументы</th><th>Что делает</th><th>Возвращает</th></tr></thead>
+      <tbody>
+        <tr><td><code>create_event</code></td><td><code>title</code>, <code>start</code>, <code>end</code> (null: час), <code>allDay</code>, <code>location</code>, <code>notes</code></td><td>Создаёт событие в календаре по умолчанию, напоминание за 10 минут</td><td><code>{ id, title, start, end, calendar }</code></td></tr>
+        <tr><td><code>list_events</code></td><td><code>from</code>, <code>to</code> (ISO 8601; по умолчанию сегодня)</td><td>До 15 событий в промежутке, включая события на весь день</td><td><code>{ events: [{ id, title, start, end, location, allDay }] }</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Контакты</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Инструмент</th><th>Аргументы</th><th>Что делает</th><th>Возвращает</th></tr></thead>
+      <tbody>
+        <tr><td><code>find_contact</code></td><td><code>name</code></td><td>Ищет по имени в «Контактах»; отдаёт только имя, e-mail и телефон найденных, не больше трёх</td><td><code>{ contacts: [{ name, emails, phones }] }</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Правила поведения</h3>
+    <ul>
+      <li><strong>Даты считает модель, время даёт телефон.</strong> «Завтра в девять» модель переводит в ISO с зоной устройства, опираясь на <code>current_time</code>. Приложение не парсит естественный язык.</li>
+      <li><strong>Создание без переспроса, подтверждение вслух после.</strong> «Напомню завтра в девять: позвонить маме». Если время не названо, напоминание без срока, и Волна говорит об этом.</li>
+      <li><strong>Никаких удалений в первой версии.</strong> Отметить выполненным можно, удалить событие или напоминание нельзя: ошибка распознавания дороже, чем лишняя запись. Удаление и перенос во второй версии, через подтверждение.</li>
+      <li><strong>Нет доступа, нет инструмента.</strong> Если разрешение не дано, приложение не объявляет инструмент, и модель честно говорит, что до напоминаний не дотягивается, и что доступ включается в настройках Волны. Запрос разрешения посреди звонка не показывается: с экрана блокировки его некому нажать.</li>
+      <li><strong>Работает без экрана.</strong> Во время звонка через CallKit процесс жив, EventKit доступен и в фоне. Значит, «Siri, позвони Волне» с блокировки и «напомни купить хлеб» работают без разблокировки, если доступ дан заранее.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="mail">
+  <div class="wrap">
+    <h2>Почта: где кончается «нативно»</h2>
+    <p class="lead">Здесь платформа ставит предел, и его нужно назвать до кода. iOS не даёт приложениям читать почтовый ящик системной «Почты»: такого API не существует. Нативно можно только открыть окно нового письма, и отправить его должен сам пользователь тапом, в активном приложении. С экрана блокировки и во время фонового звонка это окно не покажется.</p>
+
+    <div class="note warn"><strong>Чтение почты через приложение «Почта» невозможно ни при каких разрешениях.</strong> Читать письма можно только у провайдера: для Gmail это IMAP или Gmail API. Это работа ядра, а не телефона.</div>
+
+    <h3>Три варианта</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Вариант</th><th>Чтение</th><th>Отправка</th><th>Настройка</th><th>Оценка</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rec">РЕКОМЕНДУЮ</span> А. IMAP + SMTP в ядре</td><td>Да, входящие Gmail</td><td>Да, с голосовым подтверждением</td><td>Двухфакторка в Google и «пароль приложения» в <code>.env</code>; две зависимости в ядре (<code>imapflow</code>, <code>nodemailer</code>)</td><td>Работает откуда угодно, включая блокировку. Пароль лежит на Mac рядом с ключом OpenAI, как и задумано ядром</td></tr>
+        <tr><td>Б. Gmail API с OAuth</td><td>Да</td><td>Да</td><td>Проект в Google Cloud, экран согласия, хранение refresh-токена</td><td>Правильнее для продукта, дороже для прототипа одного пользователя. Можно перейти позже, контракт инструментов тот же</td></tr>
+        <tr><td>В. Нативное окно письма</td><td>Нет</td><td>Черновик, отправляет пользователь тапом</td><td>Ничего</td><td>Только когда приложение на экране. Полезно как дополнение к А: «покажи черновик» открывает окно после звонка</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Контракт (вариант А)</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Инструмент</th><th>Аргументы</th><th>Что делает</th><th>Возвращает</th></tr></thead>
+      <tbody>
+        <tr><td><code>check_inbox</code></td><td><code>unreadOnly</code> (true), <code>from</code> (null), <code>limit</code> (5)</td><td>Заголовки последних писем: без тел, чтобы Волна назвала «три письма: от банка, от Маши, рассылка»</td><td><code>{ messages: [{ id, from, subject, date, unread }] }</code></td></tr>
+        <tr><td><code>read_email</code></td><td><code>id</code></td><td>Текст письма, обрезанный до 2 000 знаков, без HTML и подписей; помечает прочитанным только по просьбе</td><td><code>{ from, subject, date, text, truncated }</code></td></tr>
+        <tr><td><code>send_email</code></td><td><code>to</code>, <code>subject</code>, <code>body</code>, <code>replyTo</code> (id письма, null)</td><td>Отправляет через SMTP от имени пользователя</td><td><code>{ sent: true, to }</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Правило отправки</h3>
+    <p>Отправка письма необратима, поэтому единственный инструмент с обязательным подтверждением. Правило в инструкциях персоны: перед <code>send_email</code> Волна вслух называет адресата, тему и суть в одном предложении и ждёт явного «да» или «отправляй». Без подтверждения инструмент не вызывается. Адрес берётся из <code>find_contact</code> на телефоне или произносится пользователем; Волна не угадывает адреса.</p>
+
+    <div class="card ether" style="max-width:70ch">
+      <div class="who u">ПОЛЬЗОВАТЕЛЬ</div><div class="txt">Напиши Маше, что я задержусь на полчаса.</div>
+      <div class="who">ВОЛНА · find_contact на телефоне</div><div class="txt">Маше Ивановой на m.ivanova@example.com, тема «Задержусь», текст: буду на полчаса позже. Отправлять?</div>
+      <div class="who u">ПОЛЬЗОВАТЕЛЬ</div><div class="txt">Да.</div>
+      <div class="who">ВОЛНА · send_email в ядре</div><div class="txt">Отправил.</div>
+      <div class="res"><span>КОНТАКТ С ТЕЛЕФОНА · ПИСЬМО ИЗ ЯДРА</span><span>ТЕКСТ ПИСЬМА НЕ ЛОГИРУЕТСЯ</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Экраны</h2>
+    <p class="lead">Один новый элемент: группа «Доступ к телефону» в настройках, рядом с «Первым запуском». Три строки с лампами, как у микрофона и Siri. Экран звонка получает необязательную фазу «работает»: статус-пилюля показывает, что Волна занята инструментом, лампа мигает. Это вопрос 3 ниже; без неё звонок выглядит как сейчас.</p>
+    <div class="screens">
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">Закрыть</button><span class="ttl">Настройки</span><button class="btn btn-quiet" style="padding:0;height:auto;color:var(--signal);font-weight:600">Готово</button></div>
+          <div class="stack">
+            <div><p class="gh">Первый запуск</p><div class="group"><div class="row">Микрофон<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЁН</span></span></div><div class="row">Siri<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЕНА</span></span></div></div></div>
+            <div><p class="gh">Доступ к телефону</p><div class="group">
+              <div class="row">Напоминания<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЕНЫ</span></span></div>
+              <div class="row">Календарь<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЁН</span></span></div>
+              <div class="row">Контакты<span class="v"><span class="lamp off"></span><span class="mono">РАЗРЕШИТЬ</span></span></div>
+              <div class="row sub">Волна создаёт напоминания и встречи в системных приложениях и ищет адреса в контактах. Без доступа она скажет, что не дотягивается.</div>
+            </div></div>
+            <div><p class="gh">Подключение</p><div class="group"><div class="row" style="padding-top:12px"><div style="flex:1;height:44px;border-radius:22px;box-shadow:var(--pressed-sm);display:flex;align-items:center;padding:0 18px"><span class="mono" style="font-size:13.5px">https://volna.example.com</span></div></div><div class="row">Проверить подключение<span class="v"><span class="lamp"></span><span class="mono">В ЭФИРЕ</span></span></div></div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">01 · НАСТРОЙКИ · ГРУППА «ДОСТУП К ТЕЛЕФОНУ»</p>
+        <p class="muted" style="font-size:14px">Три состояния строки: не спрашивали (лампа выключена, «РАЗРЕШИТЬ», тап показывает системный запрос), разрешено (лампа горит), отказано (лампа выключена, красная надпись «В НАСТРОЙКАХ IOS», тап открывает настройки системы).</p>
+      </div>
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">Закрыть</button><span class="ttl">Настройки</span><button class="btn btn-quiet" style="padding:0;height:auto;color:var(--signal);font-weight:600">Готово</button></div>
+          <div class="stack">
+            <div><p class="gh">Доступ к телефону</p><div class="group">
+              <div class="row">Напоминания<span class="v"><span class="lamp off"></span><span class="mono sig">В НАСТРОЙКАХ IOS</span></span></div>
+              <div class="row">Календарь<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЁН</span></span></div>
+              <div class="row">Контакты<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЕНЫ</span></span></div>
+              <div class="row sub">Доступ к напоминаниям отклонён. Включить: Настройки iOS → Волна → Напоминания.</div>
+            </div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">02 · СОСТОЯНИЕ «ОТКАЗАНО»</p>
+        <p class="muted" style="font-size:14px">Единственное место, где сигнальный красный появляется в тексте настроек: отказ, который приложение не может снять само.</p>
+      </div>
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><span class="btn btn-quiet" style="padding:0;height:auto">Настройки</span><span class="ttl">ВОЛНА</span><span class="mono" style="font-size:12px;letter-spacing:.08em">02:14</span></div>
+          <div class="callmid">
+            <div class="mark"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#B8321F" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="status"><span class="lamp blink"></span>СМОТРЮ В КАЛЕНДАРЬ</span>
+          </div>
+          <div class="glass"><div class="who">ВОЛНА</div>Сейчас посмотрю.</div>
+          <div class="hang"><span></span></div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">03 · ЗВОНОК · ФАЗА «РАБОТАЕТ» (ВОПРОС 3)</p>
+        <p class="muted" style="font-size:14px">Тексты пилюли из <code>CallCopy</code>: «ИЩУ В СЕТИ», «СМОТРЮ В КАЛЕНДАРЬ», «СМОТРЮ НАПОМИНАНИЯ», «ЧИТАЮ ПОЧТУ», общий «РАБОТАЮ». Знак-волна остаётся в состоянии «слушает», мигает только лампа. Фаза начинается при вызове инструмента и кончается, когда приходит ответ модели.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="protocol">
+  <div class="wrap">
+    <h2>Протокол</h2>
+    <div class="cols">
+      <div>
+        <h3>Объявление инструментов телефона</h3>
+        <ol class="steps">
+          <li>Перед <code>POST /session</code> приложение смотрит, какие доступы даны, и шлёт заголовок <code>X-Device-Tools: create_reminder,list_reminders,complete_reminder,create_event,list_events,find_contact</code>. Только имена, никаких схем.</li>
+          <li>Ядро держит определения инструментов телефона у себя (<code>assistant/tools/device/*.ts</code>, флаг <code>runsOn: 'device'</code>), чтобы описания и схемы были в одном месте и покрывались тестами. В сессию попадают только те, что телефон назвал в заголовке; неизвестные имена игнорируются.</li>
+          <li>Инструкции персоны получают список всех инструментов, как сейчас; модель не знает, где что исполняется.</li>
+          <li>Sideband при <code>function_call</code> с именем инструмента телефона ничего не делает: не отвечает и не пишет ошибку.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Исполнение на телефоне</h3>
+        <ol class="steps">
+          <li><code>RealtimeClient</code> уже отдаёт координатору событие <code>response.done</code>. Новый <code>DeviceToolRunner</code> берёт из него элементы <code>function_call</code> с известными именами.</li>
+          <li>Аргументы разбираются в типизированные структуры (<code>Codable</code>), исполняются через протокол <code>DeviceToolStore</code> поверх EventKit и Contacts. В тестах он подменяется.</li>
+          <li>Ответ уходит по data channel: <code>conversation.item.create</code> с <code>function_call_output</code>, затем <code>response.create</code>. Это те же два события, что шлёт ядро, поэтому в <code>RealtimeTransport</code> появляется один метод <code>sendToolOutput(callId:json:)</code>.</li>
+          <li>Ошибки уходят модели как <code>{ error }</code>: <code>permission_denied</code>, <code>not_found</code>, <code>ambiguous</code>, <code>invalid_arguments</code>. Тайм-аут исполнения 10 с. После завершения звонка ответы не отправляются.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="note">Sideband и телефон получают одно и то же событие. Двойного ответа не будет: у каждого имени ровно один исполнитель, и распределение фиксировано в ядре в момент сборки сессии. Тест в ядре проверяет, что sideband молчит на имена телефона; тест в приложении проверяет, что раннер молчит на имена ядра.</div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="wrap">
+    <h2>Безопасность и инварианты</h2>
+    <ul>
+      <li><strong>Секреты остаются на Mac.</strong> Ключ OpenAI и пароль приложения Gmail только в <code>core/.env</code>. Телефон не получает ни ключей, ни доступа к почте напрямую.</li>
+      <li><strong>Аргументы и результаты не логируются.</strong> Как и сейчас: в лог попадают имена инструментов, статусы и длительность. Тексты писем, названия напоминаний и контакты не пишутся ни в ядре, ни в <code>CallLaunchDiagnostics</code>.</li>
+      <li><strong>Контакты не покидают телефон целиком.</strong> <code>find_contact</code> возвращает не больше трёх совпадений, только имя, адреса и телефоны. Адресная книга не выгружается.</li>
+      <li><strong>Необратимое только с подтверждения.</strong> Отправка письма требует явного «да» вслух. Создание напоминаний и событий обратимо руками в системных приложениях, поэтому без подтверждения. Удаления нет.</li>
+      <li><strong>Память и инструменты не смешиваются.</strong> Извлечение памяти после звонка видит транскрипт, как и раньше; результаты инструментов в транскрипт не попадают. То, что Волна прочитала из почты вслух, там окажется, поэтому чувствительное отсекается существующим фильтром.</li>
+      <li><strong>Разрешения только в активном приложении.</strong> Системные запросы EventKit и Contacts показываются из группы «Доступ к телефону», никогда посреди звонка.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="plan">
+  <div class="wrap">
+    <h2>План работ</h2>
+    <p class="lead">Пять шагов, каждый со своими тестами, каждый полезен сам по себе. Порядок выбран так, чтобы первый результат появился быстро и без изменений клиента.</p>
+    <ol class="steps">
+      <li><strong>Поиск в ядре.</strong> <code>tools/web-search.ts</code>, переменная <code>OPENAI_SEARCH_MODEL</code>, правило «сейчас посмотрю» в персоне. Тесты с поддельным <code>fetch</code>: успех, тайм-аут, ошибка API. Клиент не меняется. Первая проверка на iPhone: настоящий поиск в настоящем звонке.</li>
+      <li><strong>Протокол инструментов телефона в ядре.</strong> Определения устройственных инструментов, заголовок <code>X-Device-Tools</code>, фильтр в сессии, молчание sideband. Тесты в <code>app.test.ts</code> и <code>sideband.test.ts</code>.</li>
+      <li><strong>Приложение: напоминания и календарь.</strong> <code>Services/DeviceTools/</code> (раннер, EventKit-хранилище, протокол для тестов), <code>Permissions</code> для EventKit и Contacts, строки в <code>Info.plist</code>, группа «Доступ к телефону» в настройках, заголовок в <code>RealtimeClient</code>, метод <code>sendToolOutput</code>. Unit-тесты раннера на поддельном хранилище, снимок настроек в <code>DesignScreenshots</code>, <code>sync-project.rb</code>.</li>
+      <li><strong>Контакты и почта.</strong> <code>find_contact</code> на телефоне; <code>mail/</code> в ядре с IMAP/SMTP за протоколом и поддельным сервером в тестах; правило подтверждения в персоне; переменные <code>MAIL_IMAP_HOST</code>, <code>MAIL_SMTP_HOST</code>, <code>MAIL_USER</code>, <code>MAIL_APP_PASSWORD</code>.</li>
+      <li><strong>Фаза «работает»</strong> (если одобрена): <code>CallPhase.working</code>, события <code>toolStarted/toolFinished</code> в редьюсере, тексты в <code>CallCopy</code>, строка в таблице состояний дизайн-системы, unit-тест перехода.</li>
+    </ol>
+    <p class="muted">Документы: <code>docs/core.md</code> (новые инструменты, раздел про место исполнения), <code>docs/architecture.md</code> (граница «инструмент только в ядре» меняется на «инструмент в ядре или на телефоне», новый поток, инварианты), <code>README</code> (переменные почты и поиска). Проверка на iPhone: поиск, напоминание с блокировки через Siri, событие в календаре, письмо с подтверждением. До неё всё считается проверенным только в симуляторе и тестами.</p>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <h2>Решения владельца · 22.09.2026</h2>
+    <div class="note">Принято 22.09.2026: почта откладывается (вопрос 1), первая версия без удаления и переноса (2), экран разговора не меняется, фаза «работает» не делается (3), контакты входят в первую версию (4). Реализованы поиск, инструменты телефона и группа «Доступ к телефону».</div>
+    <div class="note">Тем же днём проект перешёл с Realtime на GPT-Live. Схема «две пары рук» сохранилась, но инструменты теперь исполняет бэкенд-модель делегирования, а не голосовая: <code>web_search</code> стал встроенным инструментом бэкенда (свой <code>tools/web-search.ts</code> удалён), вызовы функций приходят в конверте <code>response.event</code>, ответ уходит <code>response.item.create</code>. Кнопка «Перебить» убрана: перебивание голосом делает сама модель.</div>
+    <div class="qa">
+      <div class="q"><b>1. Почта: вариант А (IMAP/SMTP с паролем приложения Gmail в ядре)?</b><p>Это единственный способ читать почту голосом и с блокировки. Нативное окно письма (В) можно добавить сверху как «покажи черновик». Если нужен Gmail API (Б), контракт инструментов тот же, но настройка дольше. Если почту пока не делать, шаги 1–3 не зависят от неё.</p></div>
+      <div class="q"><b>2. Объём первой версии телефона: создать, посмотреть, отметить; без удаления и переноса?</b><p>Предлагаю так: ошибка при удалении дороже лишней записи. Перенос и удаление через подтверждение во второй версии.</p></div>
+      <div class="q"><b>3. Фаза «работает» на экране звонка?</b><p>Мигающая лампа и текст «СМОТРЮ В КАЛЕНДАРЬ» делают паузу понятной, стоит один шаг работы. Без неё пауза при поиске выглядит как молчание Волны.</p></div>
+      <div class="q"><b>4. Контакты в первой версии?</b><p>Нужны только ради адресов для писем. Если почта откладывается, доступ к контактам тоже можно отложить и не просить лишнего разрешения.</p></div>
+    </div>
+  </div>
+</section>
+</main>
+<script>
+function fit(){document.querySelectorAll('.phone-wrap').forEach(function(w){var s=w.clientWidth/390;w.querySelector('.phone').style.transform='scale('+s+')';});}
+window.addEventListener('resize',fit);fit();document.fonts&&document.fonts.ready.then(fit);
+</script>

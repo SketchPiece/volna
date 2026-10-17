@@ -1,0 +1,35 @@
+# После деплоя Railway проверяет, что в облаке работает именно этот коммит и ядро готово к звонкам.
+# Устройство и порядок работы: docs/ci-cd.md.
+name: Verify deploy
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    # Из этого репозитория Railway выкатывает только ядро; окружение на GitHub называется «volna / production».
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'volna / production'
+    runs-on: ubuntu-latest
+    env:
+      HEALTH_URL: ${{ vars.CORE_HEALTH_URL }}
+      SHA: ${{ github.event.deployment.sha }}
+    steps:
+      - name: Wait for the new version
+        if: env.HEALTH_URL != ''
+        run: |
+          for i in $(seq 1 30); do
+            health=$(curl -fsS --max-time 10 "$HEALTH_URL" || true)
+            commit=$(echo "$health" | jq -r '.commit // empty' 2>/dev/null || true)
+            if [ "$commit" = "$SHA" ]; then
+              echo "$health" | jq '{ready, commit, model, tools: (.tools | length), memory}'
+              [ "$(echo "$health" | jq -r .ready)" = "true" ] || { echo "::error::Core $SHA is live but not ready (keys missing?)"; exit 1; }
+              exit 0
+            fi
+            echo "waiting: live commit ${commit:-unknown}"
+            sleep 10
+          done
+          echo "::error::Core did not switch to $SHA within 5 minutes."
+          exit 1

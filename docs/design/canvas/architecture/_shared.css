@@ -1,0 +1,45 @@
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B; --signal:#B8321F;
+  --lamp:#E8A33D; --ether:#1F1B18; --ether-text:#EFE7D6; --ether-muted:#CDBFA6;
+  --panel:#EFE8DA; --cell:#F7F2E8; --line:rgba(38,33,29,.18);
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--ivory);color:var(--bakelite);font-family:var(--font-body)}
+body{padding:40px 48px 0;overflow:hidden}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:20px}
+h1{font-family:var(--font-display);font-weight:600;font-size:34px;letter-spacing:-.01em}
+.lede{font-size:18px;color:var(--ink-2);margin-top:8px;max-width:820px;line-height:1.4}
+.legend{display:flex;gap:26px;font-size:15px;color:var(--ink-2);white-space:nowrap}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{display:inline-block;width:34px;height:0;border-top:2px solid var(--bakelite)}
+.legend i.audio{border-top:4px solid var(--signal)}
+.legend i.hold{border-top:2px dashed var(--bakelite)}
+figure{margin:0}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-size:16px;color:var(--ink-2);margin-top:10px;line-height:1.4}
+
+/* svg */
+.zone{fill:var(--panel);stroke:var(--bakelite);stroke-width:1.5}
+.zone.dark{fill:var(--ether);stroke:var(--ether)}
+.cell{fill:var(--cell);stroke:var(--line);stroke-width:1}
+.cell.store{stroke-dasharray:5 4;stroke:var(--ink-2)}
+.note{fill:var(--cell);stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 4}
+.t-zone{font-family:var(--font-display);font-weight:600;font-size:19px;fill:var(--bakelite)}
+.t-sub{font-size:15px;fill:var(--ink-2)}
+.t-cell{font-weight:600;font-size:16px;fill:var(--bakelite)}
+.t-small{font-size:14.5px;fill:var(--ink-2)}
+.t-edge{font-size:15px;fill:var(--bakelite)}
+.t-edge.mono,.mono{font-family:var(--font-mono);font-size:14px}
+.t-audio{font-size:15px;font-weight:600;fill:var(--signal)}
+.dark-t{fill:var(--ether-text)}
+.dark-s{fill:var(--ether-muted)}
+.lamp{fill:var(--lamp)}
+.e{fill:none;stroke:var(--bakelite);stroke-width:1.8}
+.e.hold{stroke-dasharray:7 5}
+.e.audio{stroke:var(--signal);stroke-width:4}
+.life{stroke:var(--ink-2);stroke-width:1;stroke-dasharray:3 5}
+.num{fill:var(--bakelite)}
+.num-t{fill:var(--ivory);font-weight:600;font-size:14px}

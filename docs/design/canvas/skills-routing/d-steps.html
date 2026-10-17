@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x520">
+<title>Д. Порядок работ</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  html,body{height:520px}
+  .row{position:absolute;left:60px;right:60px;top:150px;display:grid;grid-template-columns:repeat(8,1fr);gap:18px}
+  .row .box{position:static;height:300px;display:flex;flex-direction:column}
+  .n{font:800 34px var(--display);color:var(--lamp-dim);margin-bottom:10px}
+  .row .box p{flex:1}
+  .gain{font:500 12.5px var(--mono);color:var(--bakelite);border-top:1px solid var(--line);padding-top:10px}
+  .row .box.first{box-shadow:var(--raised),0 0 0 2px var(--lamp)}
+</style>
+</head><body>
+<div class="head"><h1>Порядок работ</h1><p>каждый шаг отдельно: тесты, замеры, документы; на iPhone проверяет владелец</p></div>
+<div class="row">
+  <div class="box first"><div class="n">1</div><h3>Техкарта вместо набора</h3><p>наборы становятся техкартами; уровень в metadata.tier</p><div class="gain">поведение прежнее</div></div>
+  <div class="box first"><div class="n">2</div><h3>Работа в T3 Code</h3><p>запуск, статус, вопросы голосом, разрешения кнопкой</p><div class="gain">нужен токен T3</div></div>
+  <div class="box"><div class="n">3</div><h3>Из «подумать» в работу</h3><p>«Мне кажется, это большая работа… Сделать?»</p><div class="gain">«да» запускает за 0,3 с</div></div>
+  <div class="box"><div class="n">4</div><h3>Вопросы о входах</h3><p>недостающее спрашивает Live, без модели</p><div class="gain">путь ask</div></div>
+  <div class="box"><div class="n">5</div><h3>Извлекатель</h3><p>напоминания и календарь без рассуждений</p><div class="gain">путь fill</div></div>
+  <div class="box"><div class="n">6</div><h3>«История»</h3><p>что было вчера: звонки и задания по дате</p><div class="gain">«сделай как вчера»</div></div>
+  <div class="box"><div class="n">7</div><h3>Плагины с MCP</h3><p>первой почта; название ещё выбираем</p><div class="gain">новое без кода</div></div>
+  <div class="box"><div class="n">8</div><h3>Техкарты голосом</h3><p>skill-creator в T3 Code; уровень решает он</p><div class="gain">Волна растёт сама</div></div>
+</div>
+</body></html>

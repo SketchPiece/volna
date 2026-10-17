@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x1000">
+<title>Е. Плагины: вариант «Лампы» (отклонён)</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .chassis{position:absolute;left:60px;top:150px;width:860px;height:640px;border-radius:32px;background:var(--bakelite);box-shadow:var(--raised),inset 0 2px 0 rgba(255,255,255,.06)}
+  .chassis .lbl{position:absolute;left:36px;top:30px;font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ether-muted)}
+  .row{position:absolute;left:36px;right:36px;top:110px;display:flex;justify-content:space-between}
+  .sock{width:136px;display:flex;flex-direction:column;align-items:center}
+  .tube{position:relative;width:104px;height:190px;border-radius:52px 52px 16px 16px;border:1.5px solid rgba(239,231,214,.25)}
+  .tube::before,.tube::after{content:"";position:absolute;bottom:26px;width:2px;height:92px;background:rgba(239,231,214,.25)}
+  .tube::before{left:38px}.tube::after{right:38px}
+  .tube i{position:absolute;left:30px;right:30px;bottom:110px;height:16px;border:2px solid rgba(239,231,214,.25);border-bottom:0;border-radius:10px 10px 0 0}
+  .on .tube{background:radial-gradient(ellipse at 50% 62%,rgba(242,181,80,.95),rgba(232,163,61,.45) 38%,rgba(31,27,24,.85) 78%);box-shadow:0 0 46px rgba(232,163,61,.55);border-color:rgba(242,181,80,.6)}
+  .on .tube::before,.on .tube::after,.on .tube i{background:rgba(255,236,200,.9);border-color:rgba(255,236,200,.9)}
+  .on .tube i{background:none}
+  .warm .tube{background:radial-gradient(ellipse at 50% 70%,rgba(184,50,31,.7),rgba(31,27,24,.9) 65%);box-shadow:0 0 24px rgba(184,50,31,.35);border-color:rgba(184,50,31,.6)}
+  .off .tube{border-style:dashed;background:transparent}
+  .off .tube::before,.off .tube::after,.off .tube i{display:none}
+  .base{width:124px;height:30px;margin-top:-2px;border-radius:6px 6px 12px 12px;background:#15120F;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+  .name{margin-top:18px;font:600 15px var(--display);color:var(--ether-text);text-align:center}
+  .what{margin-top:6px;font-size:12.5px;line-height:1.35;color:var(--ether-muted);text-align:center;min-height:52px}
+  .state{margin-top:10px;font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px}
+  .on .state{color:var(--lamp-hot);border:1px solid rgba(232,163,61,.5)}
+  .warm .state{color:#F0A08F;border:1px solid rgba(184,50,31,.6)}
+  .off .state{color:var(--ether-muted);border:1px dashed rgba(205,191,166,.5)}
+  .rule{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .rule:last-child{border-bottom:0}
+  .rule b{font:600 15px var(--display);color:var(--lamp-dim)}
+  .tree{font:14px/1.9 var(--mono)}
+  .tree span{color:var(--ink-2);font-family:var(--body);font-size:13.5px}
+</style>
+</head><body>
+
+<div class="head"><h1>Лампы: плагины Волны</h1><p>вставил лампу — Волна умеет больше; формат плагинов Claude Code</p></div>
+
+<div class="chassis">
+  <div class="lbl">волна · гнёзда</div>
+  <div class="row">
+    <div class="sock on"><div class="tube"><i></i></div><div class="base"></div><div class="name">Почта</div><div class="what">техкарта почты + MCP Gmail</div><div class="state">горит</div></div>
+    <div class="sock on"><div class="tube"><i></i></div><div class="base"></div><div class="name">Планы</div><div class="what">напоминания, календарь; встроенная</div><div class="state">горит</div></div>
+    <div class="sock on"><div class="tube"><i></i></div><div class="base"></div><div class="name">Разработка</div><div class="what">техкарта «Разработка Волны»</div><div class="state">горит</div></div>
+    <div class="sock warm"><div class="tube"><i></i></div><div class="base"></div><div class="name">Figma</div><div class="what">MCP Figma; новое право</div><div class="state">ждёт кнопку</div></div>
+    <div class="sock off"><div class="tube"><i></i></div><div class="base"></div><div class="name">Notion</div><div class="what">есть в каталоге, не вставлена</div><div class="state">пусто</div></div>
+  </div>
+  <div style="position:absolute;left:36px;right:36px;bottom:34px;border-top:1px solid var(--ether-line);padding-top:18px;color:var(--ether-muted);font-size:14px">
+    Jev видит техкарты только горящих ламп. Погасшая лампа не тратит ни времени маршрута, ни подключений к MCP.
+  </div>
+</div>
+
+<div class="box" style="left:970px;top:150px;width:570px;height:300px">
+  <div class="t">лампа = папка плагина</div>
+  <h2>pochta/</h2>
+  <div class="tree" style="margin-top:10px">
+    .claude-plugin/plugin.json &nbsp;<span>имя, описание, версия</span><br>
+    skills/mail/SKILL.md &nbsp;<span>техкарта</span><br>
+    skills/mail/volna.yaml &nbsp;<span>маршрут для Jev</span><br>
+    .mcp.json &nbsp;<span>MCP-серверы лампы</span>
+  </div>
+</div>
+
+<div class="box" style="left:970px;top:490px;width:570px;height:300px">
+  <div class="t">правила</div>
+  <div class="rule"><b>1</b><span>Лампы ставятся из тех же каталогов, что плагины Claude Code, и из своей папки</span></div>
+  <div class="rule"><b>2</b><span>Вставить лампу с MCP-сервером можно только кнопкой на телефоне</span></div>
+  <div class="rule"><b>3</b><span>Погасить голосом можно всегда: «выключи почту»</span></div>
+  <div class="rule"><b>4</b><span>Правила владельца живут в техкартах лампы и переживают её обновление</span></div>
+</div>
+
+<div class="box ghost" style="left:60px;top:840px;width:1480px;height:110px">
+  <div class="t">почему лампы</div>
+  <p style="font-size:15px">Дизайн Волны — «Бакелит и лампа», корпус старого приёмника. Возможности вставляются в него, как радиолампы в гнёзда: горит — работает, греется — ждёт разрешения, пустое гнездо — можно поставить из каталога. Запасное имя: «кассеты».</p>
+</div>
+
+</body></html>

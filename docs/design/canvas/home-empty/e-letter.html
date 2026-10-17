@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>Д. Приветствие от Волны</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.ghost .item .k,.ghost .item .t{color:transparent;border-radius:4px}
+.ghost .item .k{width:118px;height:9px;margin:4px 0 8px;background:rgba(38,33,29,.07)}
+.ghost .item .t{height:11px;background:rgba(38,33,29,.06)}
+.say .item .t{font-weight:500}
+.say .item .t::before{content:"«";color:var(--ink-2)} .say .item .t::after{content:"»";color:var(--ink-2)}
+.foot{font:13px/1.45 var(--font-body);color:var(--ink-2);margin:14px 4px 0}
+</style>
+</head>
+<body>
+<script src="_shared.js"></script>
+<script>
+Volna.idle({ stageClass: 'top', stage: `
+  <div class="card letter">
+    <p>Здравствуй. Я Волна: отвечаю голосом, помню, о чём мы говорили, и беру долгие дела в работу, пока ты занимаешься другим.</p>
+    <p style="margin-bottom:6px">Позвони, когда будет удобно. Разговор начну я.</p>
+    <div class="sign"><span class="lamp on" style="width:9px;height:9px;border-radius:50%;display:inline-block"></span>ВОЛНА-1 · НА СВЯЗИ</div>
+  </div>` });
+</script>
+</body>
+</html>

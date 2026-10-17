@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x1000">
+<title>А. Сейчас: Jev выбирает набор</title>
+<link rel="stylesheet" href="_shared.css">
+</head><body>
+
+<div class="head"><h1>Сейчас: Jev выбирает набор инструментов</h1><p>маршрут в delegation/client.ts, наборы в packs.ts</p></div>
+
+<svg class="wires" viewBox="0 0 1600 1000">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="rgba(38,33,29,.5)"/></marker>
+  <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8A33D"/></marker></defs>
+  <path class="hot" d="M280,520 L596,520" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,215 1006,215" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,367 1006,367" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 L1006,519" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,671 1006,671" marker-end="url(#arh)"/>
+  <path class="hot" d="M930,520 C975,520 965,823 1006,823" marker-end="url(#arh)"/>
+  <path d="M1390,215 L1436,215" marker-end="url(#ar)"/>
+  <path d="M1390,367 L1436,367" marker-end="url(#ar)"/>
+  <path d="M1390,519 L1436,519" marker-end="url(#ar)"/>
+  <path d="M1390,671 L1436,671" marker-end="url(#ar)"/>
+  <path d="M1390,823 L1436,823" marker-end="url(#ar)"/>
+  <path class="dash" d="M1500,892 L1500,950 L170,950 L170,604" marker-end="url(#ar)"/>
+  <text x="620" y="940">ответ звучит голосом Волны</text>
+</svg>
+
+<div class="box" style="left:60px;top:440px;width:220px;height:160px">
+  <div class="t">вход</div>
+  <h2>GPT-Live</h2>
+  <p>слышит просьбу и решает отдать её ядру</p>
+</div>
+
+<div class="box ghost" style="left:300px;top:740px;width:260px;height:160px">
+  <div class="t">техкарты</div>
+  <h3>Техкарты — только текст</h3>
+  <p>модель читает их через techcard_read; в маршрут они не входят</p>
+</div>
+
+<div class="box lamp" style="left:600px;top:320px;width:330px;height:400px">
+  <div class="t"><span>система 1</span><span>~350 мс</span></div>
+  <h2>Jev</h2>
+  <p>один запрос, три вопроса</p>
+  <ul>
+    <li><b>инструмент</b><span>для быстрого ответа: время, агенты, «кто ты»</span></li>
+    <li><b>набор</b><span>один из 10: planner, web, contacts, code, work…</span></li>
+    <li><b>класс</b><span>simple или standard</span></li>
+  </ul>
+</div>
+
+<div class="box lane" style="left:1010px;top:150px;width:380px;height:130px">
+  <div class="k">instant<small>0,35 с</small></div>
+  <div><h3>Ядро само вызывает инструмент</h3><p>только чтение, только с карточкой Jev</p></div>
+</div>
+<div class="box lane" style="left:1010px;top:302px;width:380px;height:130px">
+  <div class="k">simple<small>~1,5 с</small></div>
+  <div><h3>Gemini Flash Lite</h3><p>видит инструменты набора; сама пишет аргументы, даже для напоминания</p></div>
+</div>
+<div class="box lane" style="left:1010px;top:454px;width:380px;height:130px">
+  <div class="k">standard<small>1–3 с</small></div>
+  <div><h3>Sonnet 5</h3><p>набор или все инструменты; сюда же при неуверенном Jev</p></div>
+</div>
+<div class="box lane dark" style="left:1010px;top:606px;width:380px;height:130px">
+  <div class="k">code<small>фон</small></div>
+  <div><h3>Claude Desktop через Пульт</h3><p>Sonnet пересказывает, после «да» agents_start</p></div>
+</div>
+<div class="box lane dark" style="left:1010px;top:758px;width:380px;height:130px">
+  <div class="k">work<small>фон</small></div>
+  <div><h3>Codex через Пульт</h3><p>Sonnet пересказывает, после «да» work_start</p></div>
+</div>
+
+<div class="ret" style="left:1440px;top:150px;width:110px;height:738px"><span>обратно в Live</span></div>
+
+</body></html>

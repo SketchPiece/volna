@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="1440x900">
+<title>В. «История»: цена звонка по кнопке</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.hgrid{flex:1;min-height:0;display:grid;grid-template-columns:230px minmax(0,1fr)}
+.calls{display:flex;flex-direction:column;gap:2px;padding:8px;border-right:1px solid var(--line)}
+.call{display:flex;flex-direction:column;padding:7px 10px;border-radius:var(--r-sm)}
+.call b{font:500 12.5px var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.call span{font:10.5px var(--font-mono);color:var(--muted)}
+.call em{font:500 11.5px var(--font-mono);font-style:normal;grid-row:1 / span 2;grid-column:2;align-self:center}
+.call.cur{background:var(--surface-2);box-shadow:inset 2px 0 0 var(--lamp)}
+.player{padding:12px 16px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.transport{display:flex;align-items:center;gap:8px}
+.clock{font:12px var(--font-mono);color:var(--muted)}
+.clock b{color:var(--text);font-weight:500}
+.ttl{font:600 15px var(--font-body);margin-left:6px}
+.ttl small{font:500 12px var(--font-mono);color:var(--muted);margin-left:10px}
+.tracks{position:relative;display:grid;grid-template-columns:70px 1fr;row-gap:6px;padding-bottom:18px}
+.tracks .lb{font:500 9.5px/18px var(--font-mono);letter-spacing:.12em;color:var(--muted)}
+.tracks .lb.new{color:var(--text)}
+.lane{position:relative;height:18px;border-bottom:1px solid var(--line)}
+.lane i{position:absolute;top:4px;height:10px;border-radius:2px;min-width:2px}
+.lane .u{background:var(--muted);opacity:.6}
+.lane .v{background:var(--lamp)}
+.lane .d{background:var(--eye);opacity:.8;min-width:4px}
+.lane .c{top:auto;bottom:0;border-radius:2px 2px 0 0;width:5px;margin-left:-2px}
+.lane.cost{height:30px}
+.ruler{position:absolute;left:70px;right:0;bottom:0;height:14px;font:9.5px var(--font-mono);color:var(--muted)}
+.ruler span{position:absolute;transform:translateX(-50%)}
+.head{position:absolute;top:-4px;bottom:14px;width:2px;margin-left:-1px;background:var(--signal-text)}
+.hview{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px}
+.feed{display:flex;flex-direction:column;gap:9px;margin-top:8px}
+.turn{display:grid;grid-template-columns:44px 1fr;gap:2px 10px}
+.turn time{font:10.5px/1.9 var(--font-mono);color:var(--muted)}
+.turn .who{font:500 9.5px var(--font-mono);letter-spacing:.14em;color:var(--muted);display:block}
+.turn.v .who{color:var(--lamp)}
+.turn p{margin:0;font-size:13.5px;line-height:1.45}
+.mark{margin-left:54px;font:10.5px/1.45 var(--font-mono);color:var(--muted);border-left:2px solid var(--line-2);padding:2px 0 2px 10px}
+.mark b{font-weight:500;color:var(--lamp-hot)}
+.mark em{font-style:normal;color:var(--text);float:right}
+.cost-sum{display:flex;align-items:baseline;gap:12px;margin-top:8px}
+.cost-sum .v{font:600 30px var(--font-display)}
+.stack{display:flex;gap:2px;height:10px;margin:10px 0 4px}
+.stack i{display:block;height:10px}
+.stack i:first-child{border-radius:2px 0 0 2px}
+.stack i:last-child{border-radius:0 3px 3px 0}
+table td{padding:6px 8px} table th{padding:0 8px 6px}
+.player{position:relative}
+.costbtn{font-family:var(--font-mono);background:var(--surface-2)}
+.pop{position:absolute;right:250px;top:50px;z-index:5;width:250px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:10px 12px;box-shadow:0 10px 28px rgba(0,0,0,.5);font-size:12.5px}
+.pop .h{display:flex;justify-content:space-between;font:500 11px var(--font-mono);color:var(--muted);letter-spacing:.06em;margin-bottom:6px}
+.pop .h b{color:var(--text);font-size:14px}
+.pop .r{display:grid;grid-template-columns:14px 1fr auto;align-items:center;line-height:1.85}
+.pop .r i{width:8px;height:8px;border-radius:2px}
+.pop .r small{color:var(--muted);margin-left:4px}
+.pop .r b{font:500 12px var(--font-mono)}
+.pop .f{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+.dl{border:1px solid var(--line);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:9px;margin-top:8px}
+.dl-h{display:flex;align-items:center;gap:9px}
+.dl-h .id{font:600 12.5px var(--font-mono)}
+.dl-h .st{font:500 10px var(--font-mono);letter-spacing:.12em;color:var(--muted)}
+.dl-h .tm{margin-left:auto;font:600 13px var(--font-mono);color:var(--lamp-hot)}
+.dl .ans{font-size:12.5px;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font:500 10.5px var(--font-mono);padding:1px 7px;border:1px solid var(--line-2);border-radius:var(--r-sm)}
+.chip i{font-style:normal;color:var(--muted)}
+.events{font:11px/1.5 var(--font-mono);margin-top:6px}
+.ev{display:grid;grid-template-columns:58px 12px 1fr;gap:6px;padding:3px 6px}
+.ev time{color:var(--muted)}
+.ev .dir{color:var(--lamp)}
+.ev .dir.m{color:var(--muted)}
+.ev small{color:var(--muted);margin-left:6px;font-size:10.5px}
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="brand">Консоль</span>
+  <div class="seg"><span>Сводка</span><span>Эфир</span><span class="on">История</span><span>Расходы</span><span>Работа</span></div>
+  <span class="pill"><span class="lamp off"></span>звонка нет</span>
+  <span class="sp"></span>
+</header>
+<div class="hgrid">
+  <nav class="calls">
+    <div class="call"><b>Карточки памяти и экран</b><span>сегодня 10:02 · 9:12</span></div>
+    <div class="call cur"><b>Тарифы операторов</b><span>сегодня 08:47 · 6:42</span></div>
+    <div class="call"><b>Напомни про садик</b><span>сегодня 08:15 · 1:18</span></div>
+    <div class="call"><b>Утренний план</b><span>сегодня 07:58 · 4:05</span></div>
+    <div class="call"><b>«Будь резче»</b><span>вчера 22:01 · 7:30</span></div>
+    <div class="call"><b>Встреча с Димой</b><span>вчера 19:20 · 2:44</span></div>
+    <div class="call"><b>Что по погоде в Берлине</b><span>вчера 13:40 · 0:52</span></div>
+    <div class="call"><b>Разбор приветствия</b><span>25.09 21:12 · 5:10</span></div>
+  </nav>
+  <div class="player">
+    <div class="transport">
+      <span class="btn">▶</span><span class="btn quiet">⏮</span><span class="btn quiet">⏭</span>
+      <span class="clock"><b>2:31,4</b> / 6:42</span>
+      <span class="ttl">Тарифы операторов<small>сегодня 08:47</small></span>
+      <span class="sp"></span>
+      <span class="btn costbtn">$0,52 ▾</span>
+      <div class="seg"><span>0,5×</span><span class="on">1×</span><span>2×</span><span>4×</span></div>
+      <span class="btn quiet">Удалить звонок</span>
+    </div>
+    <div class="pop">
+      <div class="h"><span>Цена звонка</span><b>$0,52</b></div>
+      <div class="r"><i style="background:var(--s1)"></i><span>Голос <small>6:42</small></span><b>$0,34</b></div>
+      <div class="r"><i style="background:var(--s2)"></i><span>Делегирование <small>4 раза</small></span><b>$0,07</b></div>
+      <div class="r"><i style="background:var(--s3)"></i><span>Память <small>после звонка</small></span><b>$0,06</b></div>
+      <div class="r"><i style="background:var(--s4)"></i><span>Jev <small>38 запросов</small></span><b>$0,03</b></div>
+      <div class="r"><i style="background:var(--s5)"></i><span>Служебное</span><b>$0,02</b></div>
+      <div class="f">Работа в T3 по подписке</div>
+    </div>
+    <div class="tracks" id="tracks"></div>
+    <div class="hview">
+      <div>
+        <div class="ch"><span>Стенограмма</span></div>
+        <div class="feed">
+          <div class="turn"><time>2:08</time><div><span class="who">ВЫ</span><p>Сравни тарифы Vodafone, Telekom и O2, мне нужен безлимит.</p></div></div>
+          <div class="turn v"><time>2:12</time><div><span class="who">ВОЛНА</span><p>Сравню три тарифа с безлимитом и соберу таблицу с ценой за месяц. Сделать?</p></div></div>
+          <div class="turn"><time>2:17</time><div><span class="who">ВЫ</span><p>Да, давай.</p></div></div>
+          <div class="mark"><b>d3</b> jev → work_start · openai/gpt-5.6-luna ×2 </div>
+          <div class="turn v"><time>2:24</time><div><span class="who">ВОЛНА</span><p>Уже в работе. Скажу, как будет готово.</p></div></div>
+          <div class="mark"><b>work</b> T3 · claude-opus-5-5 · тред «Сравнить тарифы»</div>
+        </div>
+      </div>
+      <div>
+        <div class="ch"><span>В этот момент</span></div>
+        <div class="dl"><div class="dl-h"><span class="id">d3</span><span class="st">ОТВЕЧЕНО · АВТО</span><span class="tm">2,1 с</span></div>
+          <div class="chips"><span class="chip">jev <i>work · 0,92</i></span><span class="chip">техкарта <i>Работа</i></span><span class="chip">модель <i>gpt-5.6-luna ×2</i></span><span class="chip">work_start</span></div>
+          <p class="ans">План принят, работа «Сравнить тарифы» отдана в T3.</p></div>
+        <div class="ch" style="margin-top:6px"><span>События</span></div>
+        <div class="events">
+          <div class="ev"><time>2:17,6</time><span class="dir">←</span><span>session.input_transcript.done</span></div>
+          <div class="ev"><time>2:17,9</time><span class="dir">→</span><span>session.commentary.append <small>d3 · план</small></span></div>
+          <div class="ev"><time>2:18,1</time><span class="dir m">·</span><span>jev.result <small>work 0,92 · 410 мс</small></span></div>
+          <div class="ev"><time>2:19,3</time><span class="dir m">·</span><span>client.llm <small>gpt-5.6-luna · круг 1 · 980 мс</small></span></div>
+          <div class="ev"><time>2:20,0</time><span class="dir m">·</span><span>tool.end <small>work_start · ok</small></span></div>
+          <div class="ev"><time>2:20,2</time><span class="dir">→</span><span>session.commentary.append <small>d3 · итог</small></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>{
+const dur = 402, at = 151.4;
+const pct = t => (t / dur * 100).toFixed(2) + '%';
+const u = [[3,9],[30,41],[75,83],[128,133],[137,139],[190,205],[260,268],[320,331],[370,380]];
+const v = [[10,28],[42,72],[84,125],[132,136],[144,152],[206,250],[270,316],[332,366],[381,398]];
+const d = [[50,53],[95,99],[137,142],[279,283]];
+const c = [[52,.009],[97,.021],[140,.021],[281,.012],[30,.004],[75,.004],[128,.004],[190,.004],[260,.004],[320,.004]];
+const lane = (items, cls) => items.map(([a, b]) => `<i class="${cls}" style="left:${pct(a)};width:${pct(b - a)}"></i>`).join('');
+const cost = c.map(([t, p]) => `<i class="c" style="left:${pct(t)};height:${Math.max(3, p / .021 * 26)}px;background:${p > .005 ? 'var(--s2)' : 'var(--s4)'}"></i>`).join('');
+const ruler = [0, 60, 120, 180, 240, 300, 360].map(t => `<span style="left:${pct(t)}">${Math.floor(t / 60)}:00</span>`).join('');
+document.getElementById('tracks').innerHTML =
+  `<span class="lb">ВЫ</span><div class="lane">${lane(u, 'u')}</div>` +
+  `<span class="lb">ВОЛНА</span><div class="lane">${lane(v, 'v')}</div>` +
+  `<span class="lb">ДЕЛЕГ.</span><div class="lane">${lane(d, 'd')}</div>` +
+  `<div class="ruler">${ruler}</div><div class="head" style="left:calc(70px + (100% - 70px) * ${at / dur})"></div>`;
+}</script>
+</body>
+</html>

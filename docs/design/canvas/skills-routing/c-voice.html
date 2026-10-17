@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x1000">
+<title>Г. Новая техкарта голосом</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .say{font:italic 500 17px/1.4 var(--body);color:var(--bakelite);margin-top:6px}
+  .step{font-size:14px;color:var(--ether-text);padding:9px 0;border-bottom:1px solid var(--ether-line)}
+  .step:last-child{border-bottom:0}
+  .ok h2{color:#3E7A3A}
+  .bubble{position:absolute;background:var(--light);border-radius:18px 18px 18px 4px;box-shadow:var(--raised-sm);padding:12px 16px;font-size:14px}
+  .bubble b{font:500 11.5px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);display:block;margin-bottom:3px}
+</style>
+</head><body>
+
+<div class="head"><h1>Новая техкарта голосом</h1><p>пишет Claude со скиллом skill-creator, Волна только передаёт вопросы и ответы</p></div>
+
+<svg class="wires" viewBox="0 0 1600 1000">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="rgba(38,33,29,.5)"/></marker>
+  <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8A33D"/></marker>
+  <marker id="ars" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B8321F"/></marker></defs>
+  <path d="M300,480 L336,480" marker-end="url(#ar)"/>
+  <path d="M580,480 L636,480" marker-end="url(#ar)"/>
+  <path class="hot" d="M980,480 L1026,480" marker-end="url(#arh)"/>
+  <path class="hot" d="M1270,480 C1310,480 1300,330 1336,330" marker-end="url(#arh)"/>
+  <path d="M1270,480 C1310,480 1300,640 1336,640" marker-end="url(#ar)"/>
+  <path class="hot" d="M760,330 C760,230 520,230 500,326" marker-end="url(#arh)"/>
+  <path class="dash" d="M420,330 C420,160 860,160 860,326" marker-end="url(#ar)"/>
+  <path class="dash" d="M1430,720 L1430,800 L810,800 L810,634" marker-end="url(#ar)"/>
+  <text x="900" y="790">Claude правит описание и пробует снова</text>
+</svg>
+
+<div class="bubble" style="left:560px;top:150px;width:300px"><b>вопрос Claude → голосом Волны</b>«Брать только законченные задачи или все?»</div>
+<div class="bubble" style="left:150px;top:180px;width:230px;border-radius:18px 18px 4px 18px"><b>ответ владельца → Claude</b>«Все, и отдельно зависшие»</div>
+
+<div class="box" style="left:60px;top:340px;width:240px;height:280px">
+  <div class="t">владелец</div>
+  <h2>Просьба</h2>
+  <p class="say">«Заведи техкарту: когда говорю „отчёт за неделю“, собирай задачи из Пульта и присылай сводку»</p>
+</div>
+
+<div class="box" style="left:340px;top:340px;width:240px;height:280px">
+  <div class="t">волна</div>
+  <h2>Передаёт</h2>
+  <p>отдаёт просьбу в T3 Code и сама не расспрашивает; вопросы агента задаёт голосом, ответы возвращает</p>
+</div>
+
+<div class="box lamp" style="left:640px;top:340px;width:340px;height:290px">
+  <div class="t"><span>T3 Code · Claude</span><span>фон</span></div>
+  <h2>skill-creator</h2>
+  <p>скилл Anthropic для создания скиллов, стоит как обычная техкарта</p>
+  <div style="margin-top:10px">
+    <div class="step">выясняет, чего не хватает</div>
+    <div class="step">пишет SKILL.md и уровень</div>
+    <div class="step">пишет пробные фразы: 8 да, 8 нет</div>
+  </div>
+</div>
+
+<div class="box lamp" style="left:1030px;top:370px;width:240px;height:220px">
+  <div class="t"><span>проверка</span></div>
+  <h2>Jev на пробах</h2>
+  <p>узнаёт ли техкарту по фразам; порог как у встроенных</p>
+</div>
+
+<div class="box ok" style="left:1340px;top:260px;width:200px;height:150px">
+  <div class="t">прошла</div>
+  <h2>В маршруте</h2>
+  <p>со следующей фразы</p>
+</div>
+<div class="box" style="left:1340px;top:560px;width:200px;height:160px">
+  <div class="t">не прошла</div>
+  <h2>Только текст</h2>
+  <p>модель читает её, но Jev не выбирает</p>
+</div>
+
+<div class="box" style="left:60px;top:840px;width:700px;height:120px">
+  <div class="t">так со всеми агентами</div>
+  <h3>Любой вопрос агента в T3 Code приходит в Волну</h3>
+  <p>на звонке Волна задаёт его голосом, без звонка присылает уведомление; ответ уходит агенту как есть</p>
+</div>
+
+<div class="box" style="left:800px;top:840px;width:740px;height:120px;border:2px solid var(--signal)">
+  <div class="t" style="color:var(--signal)">кнопка на телефоне</div>
+  <h3>Голос не даёт техкарте новых прав</h3>
+  <p>новая лампа с MCP-сервером или необратимое действие включаются только кнопкой, как доверие папке</p>
+</div>
+
+</body></html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>В. Знак вырастает из кнопки</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .abs{position:absolute}
+  .xf{position:absolute;left:0;top:0;white-space:nowrap}
+  #titles{left:24px;top:124px;height:34px;width:342px}
+  #statuses{left:24px;top:162px;height:22px;width:342px}
+  #statuses .status-line svg{stroke:var(--ink-2)}
+  #summary{left:24px;right:24px;top:220px}
+  #list{overflow:hidden;height:396px;border-radius:24px}
+  #fresh{height:66px;box-sizing:border-box}
+  #key{background:var(--signal);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center;overflow:hidden;will-change:left,width,height}
+  #key .lbl{display:flex;align-items:center;gap:12px;font:600 15px var(--font-display);color:var(--light);white-space:nowrap}
+  #key svg{width:18px;height:18px;fill:var(--light);flex-shrink:0}
+  #key .lbl span{display:inline-block;overflow:hidden}
+  .side{top:746px;width:104px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .side .k{width:52px;height:52px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-sm);display:flex;align-items:center;justify-content:center}
+  .side .l{font:500 12px var(--font-body);color:var(--ink-2)}
+  .side svg{stroke:var(--bakelite);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  #mark{left:59px;top:260px;width:272px;height:272px;transform-origin:50% 50%}
+  #timer{left:0;right:0;top:548px;text-align:center}
+  #tap{width:44px;height:44px;border-radius:50%;background:rgba(38,33,29,.18);pointer-events:none}
+</style>
+</head>
+<body>
+<script src="_shared.js"></script>
+<script>
+const V = Volna;
+const icon = {
+  ear: '<svg viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0c0 3-2 4-3 6s-1 4-3 4"/><path d="M9 10a3 3 0 0 1 6 0c0 2-2 2-2 4"/></svg>',
+  wave: '<svg viewBox="0 0 24 24" style="stroke:#B8321F"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>',
+  antenna: '<svg viewBox="0 0 24 24"><path d="M12 12v9M8.5 8.5a5 5 0 0 1 7 0M5.5 5.5a9 9 0 0 1 13 0"/><circle cx="12" cy="12" r="1.2"/></svg>',
+};
+document.body.innerHTML = `
+<div class="phone-wrap"><div class="phone">
+  <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+  <div class="topbar">${V.brand}ВОЛНА-1<span id="set" style="margin-left:auto">${V.settings}</span></div>
+  <div class="abs" id="titles">
+    <div class="xf title" style="margin:0" data-t="idle">Говорит Волна.</div>
+    <div class="xf title" style="margin:0" data-t="call">Волна</div>
+    <div class="xf title" style="margin:0" data-t="end">Конец связи</div>
+  </div>
+  <div class="abs" id="statuses">
+    <p class="xf status-line" data-s="idle">Лампы прогреты.</p>
+    <p class="xf status-line" data-s="conn">${icon.antenna}Соединяю…</p>
+    <p class="xf status-line" data-s="listen">${icon.ear}Слушаю</p>
+    <p class="xf status-line" data-s="speak">${icon.wave}Говорю</p>
+    <p class="xf status-line" data-s="ended">Разговор завершён</p>
+  </div>
+  <div class="abs" id="summary">
+    <div class="seg"><span class="on">Разговоры</span><span>Работа <em class="cnt" style="font-style:normal">2</em></span></div>
+    <div class="card list plain" id="list"><div id="rows" style="transition:none">
+      <div class="item" id="fresh"><div class="body"><div class="k">Только что · 0:06</div><div class="t">Напомнить про счётчики 25-го</div></div></div>
+      <div class="item"><div class="body"><div class="k">Вчера, 21:40 · 4 мин</div><div class="t">Что такое резонанс, по-простому</div></div></div><div class="item"><div class="body"><div class="k">Вчера, 18:05 · 2 мин</div><div class="t">Перенести встречу с Олегом на пятницу</div></div></div><div class="item"><div class="body"><div class="k">Пн, 22:30 · 11 мин</div><div class="t">План переезда: что везти первым</div></div></div><div class="item"><div class="body"><div class="k">Пн, 8:47 · 1 мин</div><div class="t">Погода в Тбилиси на выходные</div></div></div><div class="item"><div class="body"><div class="k">Вс, 19:15 · 6 мин</div><div class="t">Идеи подарка маме</div></div></div><div class="item"><div class="body"><div class="k">Сб, 12:02 · 2 мин</div><div class="t">Во сколько открывается рынок</div></div></div>
+    </div></div>
+  </div>
+  <div class="abs" id="mark">${V.mark(272, { amp: 0.4 })}</div>
+  <div class="abs timer" id="timer">00:00</div>
+  <div class="abs side" id="mute" style="left:39px"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></div>
+  <div class="abs side" id="tr" style="left:247px"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg></span><span class="l">Стенограмма</span></div>
+  <div class="abs" id="key"><div class="lbl"><span id="ph">${V.phoneIcon}</span><span id="cta">Позвонить Волне</span></div></div>
+  <div class="abs" id="tap"></div>
+  <div class="home"></div>
+</div></div>`;
+
+const $ = id => document.getElementById(id);
+const dashes = [...document.querySelectorAll('#mark .dash')];
+const wave = document.querySelector('#mark .wave');
+const disc = document.querySelector('#mark .disc');
+const clamp = x => Math.max(0, Math.min(1, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const ez = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const lerp = (a, b, p) => a + (b - a) * p;
+const show = (sel, key, attr) => document.querySelectorAll(sel).forEach(e => e.style.opacity = e.dataset[attr] === key ? 1 : 0);
+
+const LOOP = 11.5, KEY_CY = 772;
+function frame(now) {
+  const t = (now / 1000 + (parseFloat(location.hash.slice(1)) || 0)) % LOOP;
+  // Button → end-call key and back.
+  const out = ez(seg(t, 1.8, 2.6)), back = ez(seg(t, 8.5, 9.3));
+  const k = out * (1 - back);                          // 0 capsule, 1 round key
+  const press = (t > 1.55 && t < 1.8) || (t > 7.9 && t < 8.15) ? 0.96 : 1;
+  const w = lerp(342, 72, k), h = lerp(64, 72, k);
+  Object.assign($('key').style, { left: 195 - w / 2 + 'px', top: KEY_CY - h / 2 + 'px', width: w + 'px', height: h + 'px',
+    borderRadius: h / 2 + 'px', transform: `scale(${press})` });
+  $('cta').style.maxWidth = lerp(220, 0, k) + 'px';
+  $('cta').style.opacity = 1 - clamp(k * 2);
+  $('ph').style.transform = `rotate(${135 * k}deg)`;
+  $('ph').style.display = 'inline-flex';
+  $('ph').querySelector('svg').style.width = $('ph').querySelector('svg').style.height = lerp(18, 26, k) + 'px';
+  $('set').style.opacity = 1 - k;
+
+  // Tap marks.
+  const tapAt = t > 1.5 && t < 1.95 ? [195, KEY_CY, seg(t, 1.5, 1.95)] : t > 7.85 && t < 8.3 ? [195, KEY_CY, seg(t, 7.85, 8.3)] : null;
+  $('tap').style.opacity = tapAt ? Math.sin(Math.PI * tapAt[2]) : 0;
+  if (tapAt) Object.assign($('tap').style, { left: tapAt[0] - 22 + 'px', top: tapAt[1] - 22 + 'px' });
+
+  // Mark grows out of the key and sinks back into it.
+  const grow = ez(seg(t, 2.1, 3.0)) * (1 - ez(seg(t, 8.2, 8.9)));
+  const cy = lerp(KEY_CY, 396, grow);
+  Object.assign($('mark').style, { transform: `translateY(${cy - 396}px) scale(${lerp(72 / 272, 1, grow)})`, opacity: clamp(grow * 3) });
+  $('timer').style.opacity = clamp((grow - 0.85) * 7);
+  const secs = Math.max(0, Math.floor(t - 3.2));
+  $('timer').textContent = '00:' + String(secs).padStart(2, '0');
+
+  // Summary steps aside while the air is open; a new line waits after the call.
+  const hide = ez(seg(t, 1.8, 2.3)) * (1 - ez(seg(t, 8.9, 9.5)));
+  Object.assign($('summary').style, { opacity: 1 - hide, transform: `translateY(${16 * hide}px)` });
+  const after = t > 8.9;
+  // The new conversation slides in on top, the oldest one drops out of the six.
+  const slide = ez(seg(t, 9.4, 10.0));
+  $('rows').style.transform = `translateY(${-66 * (1 - slide)}px)`;
+  $('fresh').classList.toggle('fresh', t > 9.4);
+  $('fresh').style.opacity = slide;
+  const sides = clamp((grow - 0.6) * 3) * (1 - seg(t, 8.0, 8.3));
+  $('mute').style.opacity = $('tr').style.opacity = sides;
+
+  // Phases: connecting lights the ring lamp by lamp, then listen → speak.
+  const phase = t < 1.8 ? 'idle' : t < 4.1 ? 'conn' : t < 5.3 ? 'listen' : t < 7.9 ? 'speak' : t < 9.3 ? 'ended' : 'idle';
+  show('#statuses .xf', phase, 's');
+  show('#titles .xf', phase === 'idle' ? 'idle' : phase === 'ended' ? 'end' : 'call', 't');
+  const lit = seg(t, 2.8, 4.1) * 51;
+  dashes.forEach((d, i) => {
+    const on = phase !== 'idle' && phase !== 'ended' && i < lit;
+    d.setAttribute('stroke', on ? (phase === 'speak' ? V.C.lampHot : V.C.lamp) : V.C.lampOff);
+    d.style.filter = on ? 'drop-shadow(0 0 1.2px #E8A33D)' : 'none';
+  });
+  const talk = phase === 'speak' ? 0.55 + 0.35 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 2.9)) : phase === 'listen' ? 0.4 + 0.3 * Math.abs(Math.sin(t * 6.1)) : 0.4;
+  wave.setAttribute('d', V.wavePath(talk, phase === 'speak' ? t * 3.2 : 0));
+  disc.style.boxShadow = 'var(--raised-flat)' + (phase === 'speak' ? `, 0 0 44px rgba(232,163,61,.3)` : '');
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

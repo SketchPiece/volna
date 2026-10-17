@@ -1,0 +1,308 @@
+<title>Подтверждение с телефона</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F; --signal-deep:#8E2415;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-off:#CFC6B6;
+  --shade:#BFB6A6; --light:#FBF6EC; --ok:#3E6B47;
+  --raised:7px 7px 16px var(--shade), -7px -7px 16px var(--light);
+  --raised-sm:5px 5px 12px var(--shade), -5px -5px 12px var(--light);
+  --raised-lg:12px 12px 28px var(--shade), -12px -12px 28px var(--light);
+  --raised-flat:3px 3px 8px var(--shade), -3px -3px 8px var(--light);
+  --pressed:inset 5px 5px 12px var(--shade), inset -5px -5px 12px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade), inset -3px -3px 7px var(--light);
+  --halo:0 0 44px rgba(232,163,61,.38);
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --page-line:rgba(38,33,29,.14);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--ivory);color:var(--bakelite);font:16px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:24px;padding-block:0 64px}
+@media (max-width:480px){.wrap{padding-inline:16px}}
+section{padding-block:44px;border-top:1px solid var(--page-line)}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(24px,4vw,30px);margin:48px 0 10px}
+h2{font-size:22px;margin-bottom:8px}
+h3{font-size:15px;margin:22px 0 8px}
+.lead{color:var(--ink-2);max-width:760px;margin:0 0 20px}
+.cap{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--ink-2);margin:0}
+.tablebox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+td,th{padding:8px 10px;border-bottom:1px solid var(--page-line);text-align:left;vertical-align:top}
+th{font:600 12px var(--font-mono);letter-spacing:.08em;color:var(--ink-2)}
+.mono{font-family:var(--font-mono);font-size:13px}
+.rec{display:inline-block;font:500 11px var(--font-mono);letter-spacing:.1em;padding:3px 8px;border-radius:999px;background:var(--signal);color:var(--light);margin-left:8px;vertical-align:middle}
+
+/* поток */
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:0;max-width:880px}
+.flow li{display:grid;grid-template-columns:118px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid var(--page-line)}
+.flow .who{font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);padding-top:3px}
+.flow .who.dev{color:var(--signal)}
+.flow li.gate{background:linear-gradient(90deg,rgba(184,50,31,.07),transparent 70%)}
+@media (max-width:560px){.flow li{grid-template-columns:1fr;gap:4px}}
+
+.rule{max-width:880px;padding:18px 22px;border-radius:22px;background:var(--ivory);box-shadow:var(--pressed-sm);display:grid;gap:8px}
+.rule strong{font-family:var(--font-display);font-weight:600;font-size:15px}
+
+/* знак */
+.mark{position:relative;border-radius:50%;background:var(--ivory);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--raised-flat)}
+.mark.xl{width:272px;height:272px}
+.mark.md{width:196px;height:196px}
+.mark svg{width:82%;height:82%;overflow:visible}
+.mark .wv{fill:none;stroke:var(--signal);stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round}
+.mark .ring{fill:none;stroke:var(--lamp);stroke-width:1.6;stroke-dasharray:2 5;filter:drop-shadow(0 0 3px var(--lamp))}
+.mark .orb{fill:var(--lamp)}
+.mark[data-state="speaking"]{box-shadow:var(--raised-flat),var(--halo)}
+.mark[data-state="speaking"] .ring{stroke:var(--lamp-hot);stroke-dasharray:none}
+
+/* телефон */
+.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:36px 28px;align-items:start}
+.shot{display:flex;flex-direction:column;gap:12px;min-width:0}
+.phone-wrap{width:100%;max-width:100%;aspect-ratio:390/844;position:relative}
+.phone-wrap > .phone{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:top left;border-radius:46px;background:var(--ivory);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(38,33,29,.12);overflow:hidden;display:flex;flex-direction:column;padding:58px 24px 30px}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#0C0A09}
+.phone .sb{position:absolute;top:16px;left:34px;right:34px;display:flex;justify-content:space-between;font:600 14px var(--font-body)}
+.phone .home{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--bakelite);opacity:.75}
+.topbar{display:flex;align-items:center;min-height:44px;gap:10px;font:600 15px var(--font-display)}
+.title{font:600 28px/1.15 var(--font-display);margin:22px 0 6px;letter-spacing:-.01em}
+.status-line{display:flex;align-items:center;gap:8px;font:15px/1.45 var(--font-body);color:var(--ink-2);margin:0 0 8px}
+.status-line svg{width:18px;height:18px;stroke:var(--ink-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.status-line.hot svg{stroke:var(--signal)}
+.stagearea{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;flex:1;min-height:0}
+.timer{font:500 22px var(--font-mono);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.row3{display:flex;align-items:center;justify-content:center;gap:40px;margin-bottom:6px}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:10px}
+.ctl .l{font:500 12px var(--font-body);color:var(--ink-2)}
+.ctl svg{stroke:var(--bakelite);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.row3 .ctl.sm{margin-bottom:-26px}
+.ctl.sm .k{width:52px;height:52px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-sm);display:flex;align-items:center;justify-content:center}
+.end{width:72px;height:72px;border-radius:50%;background:var(--signal);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center}
+
+/* карточка решения */
+.ask{border-radius:26px;background:var(--ivory);box-shadow:var(--raised);padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.ask .eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--signal)}
+.ask .lampdot{width:9px;height:9px;border-radius:50%;background:var(--lamp-hot);box-shadow:0 0 8px var(--lamp-hot)}
+.ask .q{font:600 17px/1.3 var(--font-display)}
+.ask .path{font:500 12.5px/1.4 var(--font-mono);color:var(--ink-2);padding:8px 10px;border-radius:12px;box-shadow:var(--pressed-sm);word-break:break-all}
+.ask .why{font:13.5px/1.45 var(--font-body);color:var(--ink-2)}
+.ask .btns{display:flex;gap:12px;margin-top:4px}
+.btn{flex:1;height:50px;border-radius:25px;border:0;display:flex;align-items:center;justify-content:center;font:600 15px var(--font-body);background:var(--ivory);color:var(--bakelite);box-shadow:var(--raised-sm)}
+.btn.primary{background:var(--signal);color:var(--light);box-shadow:var(--raised-sm)}
+.btn.pressed{box-shadow:var(--pressed)}
+.ask .meta{display:flex;justify-content:space-between;font:500 11px var(--font-mono);letter-spacing:.06em;color:var(--ink-2)}
+.ask.done .eyebrow{color:var(--ok)}
+.ask.done .lampdot{background:var(--ok);box-shadow:none}
+.ask.gone{box-shadow:var(--raised-flat);opacity:.9}
+.ask.gone .eyebrow{color:var(--ink-2)}
+.ask.gone .lampdot{background:var(--lamp-off);box-shadow:none}
+
+/* уведомление */
+.lock{background:#1d1a17;padding:58px 16px 30px}
+.lock .sb{color:#EDE6D8}
+.lock .clock{font:300 76px/1 var(--font-body);color:#EDE6D8;text-align:center;margin:26px 0 4px}
+.lock .date{font:500 16px var(--font-body);color:#CFC6B6;text-align:center;margin-bottom:30px}
+.lock .live{margin:0 4px 12px;border-radius:26px;background:rgba(40,36,32,.92);color:#EDE6D8;padding:14px 16px;display:flex;align-items:center;gap:12px;font:14px var(--font-body)}
+.lock .live .dot{width:10px;height:10px;border-radius:50%;background:#4CAF50}
+.note{margin:0 4px;border-radius:22px;background:rgba(237,230,216,.93);color:var(--bakelite);padding:12px 14px;display:grid;grid-template-columns:34px 1fr;gap:10px}
+.note .ic{width:34px;height:34px;border-radius:8px;background:var(--signal);display:flex;align-items:center;justify-content:center}
+.note .hd{display:flex;justify-content:space-between;font:600 14px var(--font-body)}
+.note .hd span{font-weight:400;color:var(--ink-2);font-size:13px}
+.note .bd{font:14px/1.35 var(--font-body)}
+.lock .home{background:#EDE6D8}
+</style>
+
+<div class="wrap">
+  <h1>Решения только с телефона</h1>
+  <p class="cap" style="margin-bottom:12px">СТАТУС · ОДОБРЕНО И ВНЕДРЕНО 22.09.2026 · ВАРИАНТ Б · БЕЗ FACE ID · ПЕРВЫЙ СЛУЧАЙ: ДОВЕРИЕ ПАПКЕ В CLAUDE DESKTOP</p>
+  <p class="lead">Когда Волна открывает новый чат Claude, Desktop может спросить «Trust this workspace?». Нажимать «Trust» сам Пульт не должен, а голосу не верим: голос может быть не твой, а модель могла понять неверно. Решение уходит Волне, она просит подтвердить, а подтверждает только нажатие на экране телефона. Потом по тому же пути пойдут разрешения агентам (Bash, правка файлов).</p>
+
+  <section>
+    <h2>Правило</h2>
+    <div class="rule">
+      <strong>Модель может попросить подтверждение, но выдать его не может.</strong>
+      <span>Инструмента «подтвердить» у модели нет. Подтверждение идёт по отдельному HTTP-маршруту от приложения на телефоне к ядру и дальше к Пульту, с токеном ядра из Keychain. Этот токен модель не видит. Фраза «да, подтверждаю» голосом ничего не делает: Волна отвечает, что нужно нажать кнопку на экране.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Как это происходит</h2>
+    <p class="lead">Первый раз для папки. Если ты уже доверил её в Desktop, окна нет, и чат отправляется сразу, как сейчас.</p>
+    <ol class="flow">
+      <li><span class="who">ТЫ</span><span>«Открой новый чат Клода в CallAssistant: прогони тесты». Волна зачитывает промпт вслух.</span></li>
+      <li><span class="who">ВОЛНА → ПУЛЬТ</span><span><span class="mono">agents_start</span>. Пульт открывает ссылку в Desktop и видит через Accessibility окно доверия с путём этой папки.</span></li>
+      <li><span class="who">ПУЛЬТ</span><span>Заводит запрос: случайный id, тип «доверие папке», путь, срок 2 минуты. Модели возвращает только <span class="mono">needs_confirmation</span> и текст для тебя, без id.</span></li>
+      <li><span class="who">ВОЛНА</span><span>«Desktop спрашивает, доверять ли папке CallAssistant. Подтверди на экране телефона».</span></li>
+      <li><span class="who dev">ТЕЛЕФОН</span><span>Во время звонка приложение раз в 1,5 с спрашивает ядро о запросах (<span class="mono">GET /confirmations</span>, ядро берёт их у Пульта). Появляется карточка. Если экран заблокирован, приходит уведомление.</span></li>
+      <li class="gate"><span class="who dev">ТЫ, ПАЛЬЦЕМ</span><span>«Подтвердить» → <span class="mono">POST /confirmations/{id}</span> с токеном ядра. «Отклонить» закрывает окно в Desktop кнопкой Cancel.</span></li>
+      <li><span class="who">ПУЛЬТ</span><span>Проверяет, что окно всё ещё на экране и путь тот же, нажимает «Trust workspace», ждёт промпт в поле, нажимает Return и находит новую сессию. Если что-то не сошлось, ничего не нажимает и отвечает ошибкой.</span></li>
+      <li><span class="who">ВОЛНА</span><span>Ядро сообщает ей результат заметкой в сессии: «Отправил в CallAssistant». Ответ Клода потом придёт в <span class="mono">agents_list</span>.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Карточка на экране звонка</h2>
+    <p class="lead">Два места. А: карточка встаёт между статусом и знаком, знак уменьшается до 196 pt, клавиши остаются на месте. Б: то же, но карточка прижата к клавишам снизу, знак не двигается. Рекомендую А: карточка ближе к глазам, и её не перепутать с клавишами звонка.</p>
+    <div class="screens">
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+          <div class="title">Волна</div>
+          <p class="status-line hot"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2l2-6 3 12 3-9 2 5 2-2h4"/></svg>Говорю</p>
+          <div class="ask">
+            <div class="eyebrow"><span class="lampdot"></span>НУЖНО ТВОЁ РЕШЕНИЕ</div>
+            <div class="q">Доверить папку Claude?</div>
+            <div class="path">~/Documents/Hacking/CallAssistant</div>
+            <div class="why">Claude Code сможет читать, менять и запускать файлы в ней. Потом Пульт отправит промпт «Прогони тесты».</div>
+            <div class="btns"><span class="btn">Отклонить</span><span class="btn primary">Подтвердить</span></div>
+            <div class="meta"><span>CLAUDE DESKTOP · ПУЛЬТ</span><span>1:48</span></div>
+          </div>
+          <div class="stagearea"><div class="mark md" data-state="speaking" aria-hidden="true"></div><span class="timer">01:12</span></div>
+          <div class="row3">
+            <span class="ctl sm"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></span>
+            <span class="ctl"><span class="end"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></span></span>
+            <span class="ctl sm"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg></span><span class="l">Стенограмма</span></span>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">А · запрос. Таймер карточки показывает, сколько осталось. <span class="rec">РЕКОМЕНДУЮ</span></p>
+      </div>
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+          <div class="title">Волна</div>
+          <p class="status-line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 3-2 4-3 6s-1 4-3 4"/><path d="M9 10a3 3 0 0 1 6 0c0 2-2 2-2 4"/></svg>Слушаю</p>
+          <div class="ask done">
+            <div class="eyebrow"><span class="lampdot"></span>ПОДТВЕРЖДЕНО</div>
+            <div class="q">Чат отправлен</div>
+            <div class="why">CallAssistant · «Прогони тесты». Карточка исчезнет через 4 с.</div>
+          </div>
+          <div class="stagearea"><div class="mark md" data-state="listening" aria-hidden="true"></div><span class="timer">01:20</span></div>
+          <div class="row3">
+            <span class="ctl sm"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></span>
+            <span class="ctl"><span class="end"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></span></span>
+            <span class="ctl sm"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg></span><span class="l">Стенограмма</span></span>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">А · после нажатия. Лампа гаснет в зелёный, затем карточка уходит и знак возвращается к 272 pt.</p>
+      </div>
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><svg width="26" height="26" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="58" fill="#B8321F"/><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>ВОЛНА-1</div>
+          <div class="title">Волна</div>
+          <p class="status-line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 3-2 4-3 6s-1 4-3 4"/><path d="M9 10a3 3 0 0 1 6 0c0 2-2 2-2 4"/></svg>Слушаю</p>
+          <div class="stagearea"><div class="mark xl" data-state="listening" aria-hidden="true"></div><span class="timer">01:12</span></div>
+          <div class="ask">
+            <div class="eyebrow"><span class="lampdot"></span>НУЖНО ТВОЁ РЕШЕНИЕ</div>
+            <div class="q">Доверить папку Claude?</div>
+            <div class="path">~/Documents/Hacking/CallAssistant</div>
+            <div class="btns"><span class="btn">Отклонить</span><span class="btn primary">Подтвердить</span></div>
+          </div>
+          <div class="row3">
+            <span class="ctl sm"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span><span class="l">Микрофон</span></span>
+            <span class="ctl"><span class="end"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V14l-3 1.5z"/></svg></span></span>
+            <span class="ctl sm"><span class="k"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg></span><span class="l">Стенограмма</span></span>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">Б · карточка у клавиш. Знак не двигается, но «Подтвердить» оказывается в сантиметре от «Завершить».</p>
+      </div>
+
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone lock">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="clock">9:41</div>
+          <div class="date">Вторник, 22 сентября</div>
+          <div class="live"><span class="dot"></span><span>Волна · 01:12</span></div>
+          <div class="note">
+            <span class="ic"><svg width="22" height="22" viewBox="0 0 120 120" aria-hidden="true"><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#E7E0D2" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div><div class="hd">Волна<span>сейчас</span></div><div class="bd">Нужно твоё решение: доверить Claude папку CallAssistant. Открой, чтобы подтвердить.</div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">Экран заблокирован. Уведомление без кнопок: подтверждение только в приложении, после Face ID.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Что считается подтверждением</h2>
+    <div class="tablebox"><table>
+      <tr><th>Действие</th><th>Результат</th></tr>
+      <tr><td>Нажатие «Подтвердить» в карточке</td><td>Пульт нажимает «Trust workspace», затем Return</td></tr>
+      <tr><td>«Да, подтверждаю» голосом</td><td>Ничего. Волна напоминает про кнопку на экране</td></tr>
+      <tr><td>«Отклонить» или 2 минуты без ответа</td><td>Пульт нажимает Cancel в Desktop, карточка гаснет с подписью «Отклонено» или «Время вышло»</td></tr>
+      <tr><td>Звонок завершён с открытым запросом</td><td>Запрос сгорает; окно в Desktop остаётся для решения за Mac</td></tr>
+      <tr><td>Окно в Desktop закрыли или сменился путь до нажатия</td><td>Пульт ничего не нажимает, карточка: «Окно на Mac уже закрыто»</td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Что меняется в коде</h2>
+    <div class="tablebox"><table>
+      <tr><th>Где</th><th>Что</th></tr>
+      <tr><td class="mono">Pult · ConfirmationCenter</td><td>очередь запросов (id, тип, путь, срок), поиск окна доверия и нажатие его кнопок через Accessibility; маршруты <span class="mono">GET /confirmations</span>, <span class="mono">POST /confirmations/{id}</span></td></tr>
+      <tr><td class="mono">core · http/confirmations.ts</td><td>прокси для телефона с его токеном; после решения короткая заметка в сессию через sideband. Инструмента для модели нет</td></tr>
+      <tr><td class="mono">core · pult.ts</td><td><span class="mono">agents_start</span> возвращает <span class="mono">needs_confirmation</span> с текстом для пользователя, без id</td></tr>
+      <tr><td class="mono">iOS · ConfirmationClient</td><td>опрос во время звонка, решение по нажатию; события <span class="mono">CallEvent.confirmationRequested/Resolved</span> через <span class="mono">CallReducer</span></td></tr>
+      <tr><td class="mono">iOS · ConfirmationCard</td><td>компонент в UI/Components, строки в <span class="mono">CallCopy</span> с unit-тестом, локальное уведомление при заблокированном экране</td></tr>
+      <tr><td class="mono">docs</td><td>инвариант «решения только с телефона» в architecture.md, раздел безопасности; протокол в core.md</td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Решения владельца 22.09.2026</h2>
+    <div class="tablebox"><table>
+      <tr><th>Вопрос</th><th>Решение</th></tr>
+      <tr><td>Где карточка</td><td>Б: над клавишами звонка. Чтобы клавиши остались на экране, знак на время карточки уменьшается до 150 pt</td></tr>
+      <tr><td>Face ID</td><td>Пока не нужен</td></tr>
+      <tr><td>Текст карточки</td><td>Убраны подзаголовок «Нужно твоё решение», описание про Claude Code и строка «Claude Desktop · Пульт» с таймером. Остались вопрос, путь и две кнопки; у итоговой карточки заголовок и одна строка</td></tr>
+      <tr><td>Кнопка завершения</td><td>Стоит ровно по центру: боковые клавиши одной ширины (104 pt), иначе длинная «Стенограмма» сдвигала её влево</td></tr>
+      <tr><td>Цвет итога</td><td>Зелёного в дизайн-системе нет: итоговая карточка без лампы, только текст</td></tr>
+      <tr><td>Остальное</td><td>Как рекомендовано ниже</td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Вопросы</h2>
+    <div class="tablebox"><table>
+      <tr><th>Вопрос</th><th>Рекомендация</th></tr>
+      <tr><td>Где карточка: А (под статусом) или Б (у клавиш)?</td><td>А</td></tr>
+      <tr><td>Требовать Face ID на само нажатие, а не только на разблокировку?</td><td>Нет для доверия папке; да позже для разрешений агентам на команды</td></tr>
+      <tr><td>Срок запроса</td><td>2 минуты</td></tr>
+      <tr><td>«Отклонить» нажимает Cancel в Desktop или оставляет окно?</td><td>Нажимает Cancel, чтобы на Mac не висело чужое окно</td></tr>
+      <tr><td>Опрос раз в 1,5 с только во время звонка</td><td>Да; вне звонка запросов не бывает</td></tr>
+      <tr><td>Тот же путь для разрешений агентам (PermissionRequest) следующим шагом</td><td>Да, это и есть <span class="mono">agents_approve</span> из плана, только без голоса</td></tr>
+    </table></div>
+    <p class="cap" style="margin-top:20px">После «ок» внедряется Пульт → ядро → iOS, карточка переносится в основную дизайн-систему, прогоняются DesignScreenshots.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  function wave(amp){var k=2*Math.PI/36,d='';for(var x=16;x<=104;x+=2){var u=(x-60)/44,e=Math.exp(-2.8*u*u);var y=60-26*amp*e*Math.sin(k*(x-62));d+=(x===16?'M':' L')+x+' '+y.toFixed(2);}return d;}
+  document.querySelectorAll('.mark').forEach(function(el){
+    var svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 120 120');
+    var ring=document.createElementNS(NS,'circle');ring.setAttribute('class','ring');ring.setAttribute('cx',60);ring.setAttribute('cy',60);ring.setAttribute('r',57);
+    var orb=document.createElementNS(NS,'circle');orb.setAttribute('class','orb');orb.setAttribute('cx',60);orb.setAttribute('cy',3);orb.setAttribute('r',3);
+    var p=document.createElementNS(NS,'path');p.setAttribute('class','wv');p.setAttribute('d',wave(el.getAttribute('data-state')==='speaking'?0.9:0.6));
+    svg.appendChild(ring);svg.appendChild(orb);svg.appendChild(p);el.appendChild(svg);
+  });
+  function fit(){document.querySelectorAll('.phone-wrap').forEach(function(w){w.querySelector('.phone').style.transform='scale('+(w.clientWidth/390)+')';});}
+  fit();addEventListener('resize',fit);
+})();
+</script>

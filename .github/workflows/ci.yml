@@ -1,0 +1,76 @@
+# Проверки на каждый PR и на main. Railway выкатывает ядро сам, но только после зелёного CI (Wait for CI).
+# Устройство и порядок работы: docs/ci-cd.md.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: read  # paths-filter читает список файлов PR
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      relay: ${{ steps.filter.outputs.relay }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+              - '.github/workflows/ci.yml'
+            relay:
+              - 'relay/**'
+              # «Узел» импортирует RPC-клиент «Штурвала» из ядра.
+              - 'core/src/t3/rpc.ts'
+              - '.github/workflows/ci.yml'
+
+  core:
+    needs: changes
+    if: needs.changes.outputs.core == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # обычно около минуты; зависший тест не держит деплой час
+    defaults:
+      run:
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: core/.node-version
+          cache: npm
+          cache-dependency-path: core/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  relay:
+    needs: changes
+    if: needs.changes.outputs.relay == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: relay/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test

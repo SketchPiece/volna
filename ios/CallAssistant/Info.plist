@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Волна</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleSpokenName</key>
+	<string>VOLNA_SPOKEN_NAME</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>callassistant</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>VOLNA_ALTERNATE_NAME</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>VOLNA_INFLECTED_NAME</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>VOLNA_ACCUSATIVE_NAME</string>
+		</dict>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Волна создаёт встречи и читает расписание в Календаре, когда ты просишь об этом голосом.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Волна ищет адреса и телефоны в Контактах, когда ты называешь человека по имени.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Волна создаёт и отмечает напоминания в системном приложении, когда ты просишь напомнить.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Волна подключается к ядру на твоём Mac в той же сети Wi-Fi.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Микрофон нужен для голосового разговора с AI. Звук передаётся OpenAI только во время звонка.</string>
+	<key>NSSiriUsageDescription</key>
+	<string>Siri запускает голосовой звонок с Волной.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INStartCallIntent</string>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Unbounded-SemiBold.ttf</string>
+		<string>Unbounded-ExtraBold.ttf</string>
+		<string>IBMPlexSans-Regular.ttf</string>
+		<string>IBMPlexSans-Medium.ttf</string>
+		<string>IBMPlexSans-SemiBold.ttf</string>
+		<string>IBMPlexMono-Regular.ttf</string>
+		<string>IBMPlexMono-Medium.ttf</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).WaveSceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>voip</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="board" content="1600x820">
+<title>В. Из чего состоит техкарта</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .file{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:baseline}
+  .file:last-child{border-bottom:0}
+  .file b{font:500 14px var(--mono)}
+  .file span{color:var(--ink-2);font-size:14px}
+  .ex h2{display:flex;justify-content:space-between;align-items:baseline}
+  .ex h2 .chip{font-size:12px}
+  .ex pre.code{margin-top:12px}
+  .prim{display:flex;gap:20px;align-items:center}
+  .prim .box{position:static;flex:1}
+  html,body{height:820px}
+</style>
+</head><body>
+
+<div class="head"><h1>Техкарта = скилл по стандарту</h1><p>один файл SKILL.md по стандарту; уровень в metadata.tier, инструменты в allowed-tools</p></div>
+
+<svg class="wires" viewBox="0 0 1600 1000">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="rgba(38,33,29,.5)"/></marker></defs>
+  <path class="dash" d="M740,550 L740,626" marker-end="url(#ar)"/>
+  <path class="dash" d="M1090,550 L1090,626" marker-end="url(#ar)"/>
+  <path class="dash" d="M1410,550 L1410,626" marker-end="url(#ar)"/>
+</svg>
+
+<div class="box" style="left:60px;top:150px;width:440px;height:400px">
+  <div class="t">core/skills/reminder/</div>
+  <h2>Одна папка</h2>
+  <div style="margin-top:10px">
+    <div class="file"><b>SKILL.md</b><span>как делать работу; формат Agent Skills</span></div>
+    <div class="file"><b>Правила владельца</b><span>раздел в SKILL.md, как сейчас; правится голосом</span></div>
+    <div class="file"><b>metadata.tier</b><span><span class="new" style="margin:0 6px 0 0;color:var(--light)">новое</span>simple, standard или work; нижняя планка, решается при создании</span></div>
+    <div class="file"><b>references/</b><span>справка, которую модель читает по запросу</span></div>
+  </div>
+</div>
+
+<div class="box ex" style="left:580px;top:150px;width:320px;height:400px">
+  <div class="t">быстрое действие</div>
+  <h2>Напоминание <span class="chip">simple</span></h2>
+  <p>Flash Lite или извлекатель; чего не хватает, Волна спрашивает сама</p>
+<pre class="code"><span class="k">name</span>: <span class="s">reminders</span>
+<span class="k">description</span>: <span class="s">напоминания…</span>
+<span class="k">allowed-tools</span>: <span class="s">reminder_create</span>
+<span class="k">metadata</span>:
+  <span class="k">tier</span>: <span class="s">simple</span>
+<span class="c"># не хватает времени —</span>
+<span class="c"># Live спросит сам</span></pre>
+</div>
+
+<div class="box ex" style="left:930px;top:150px;width:320px;height:400px">
+  <div class="t">нужно подумать</div>
+  <h2>Почта <span class="chip">standard</span></h2>
+  <p>Sonnet видит только инструменты Gmail из плагина почты</p>
+<pre class="code"><span class="k">name</span>: <span class="s">mail</span>
+<span class="k">description</span>: <span class="s">почта…</span>
+<span class="k">allowed-tools</span>: <span class="s">gmail_*</span>
+<span class="k">metadata</span>:
+  <span class="k">tier</span>: <span class="s">standard</span>
+<span class="c"># отправка — только</span>
+<span class="c"># после пересказа и «да»</span></pre>
+</div>
+
+<div class="box ex" style="left:1280px;top:150px;width:260px;height:400px;background:var(--bakelite)">
+  <div class="t" style="color:var(--ether-muted)">долгая работа</div>
+  <h2 style="color:var(--ether-text)">Работа на Mac <span class="chip" style="background:var(--ether);box-shadow:none;color:var(--lamp-hot)">work</span></h2>
+  <p style="color:var(--ether-muted)">сразу «Мне кажется, это большая работа…»</p>
+<pre class="code"><span class="k">name</span>: <span class="s">mac-work</span>
+<span class="k">description</span>: <span class="s">работа…</span>
+<span class="k">allowed-tools</span>: <span class="s">work_start</span>
+<span class="k">metadata</span>:
+  <span class="k">tier</span>: <span class="s">work</span>
+<span class="c"># исполнитель: T3 Code</span></pre>
+</div>
+
+<div class="prim" style="position:absolute;left:580px;top:630px;width:960px">
+  <div class="box"><div class="t">исполнитель</div><h3>Инструмент в коде</h3><p>defineTool, как сейчас</p></div>
+  <div class="box"><div class="t">исполнитель</div><h3>MCP-сервер из плагина<span class="new">новое</span></h3><p>сервер подключается при первом выборе техкарты</p></div>
+  <div class="box"><div class="t">исполнитель</div><h3>Агент в T3 Code<span class="new">новое</span></h3><p>Claude или Codex внутри T3 Code</p></div>
+</div>
+
+<div class="box ghost" style="left:60px;top:630px;width:440px;height:130px">
+  <h3>Встроенные наборы становятся техкартами</h3>
+  <p>planner, contacts, web и остальные переезжают в core/skills/ один к одному, поведение прежнее</p>
+</div>
+
+</body></html>

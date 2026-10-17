@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>А. Сводка вместо знака</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<script src="_shared.js"></script>
+<script>
+Volna.idle({ stageClass: 'top', stage: `
+  <div class="eyebrow">СЕЙЧАС</div>
+  <div class="card">
+    <div class="item"><span class="lamp hot"></span><div class="body"><div class="k">Работа · 12 мин</div><div class="t">Сравниваю тарифы на связь</div></div></div>
+    <div class="item"><span class="lamp on"></span><div class="body"><div class="k">Сегодня · 18:00</div><div class="t">Позвонить в банк про карту</div></div></div>
+    <div class="item"><span class="lamp off"></span><div class="body"><div class="k">Разговор · вчера, 21:40</div><div class="t">Что такое резонанс, по-простому</div></div><span class="chev"></span></div>
+  </div>` });
+</script>
+</body>
+</html>

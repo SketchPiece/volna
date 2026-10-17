@@ -1,0 +1,515 @@
+<title>Консоль ядра</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Внутренний инструмент: тёмный и плоский. Цвета и шрифты из «Бакелита и лампы» (volna-design-system.html), без неоморфизма. */
+:root{
+  --bg:#161310; --surface:#1F1B18; --surface-2:#29241F; --line:rgba(239,231,214,.11); --line-2:rgba(239,231,214,.2);
+  --text:#EFE7D6; --muted:#A3968A;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#4A423B;
+  --signal:#B8321F; --signal-text:#E0664F;
+  --eye:#6FD48C;
+  --r-sm:6px; --r-md:10px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:24px}
+@media (max-width:600px){.wrap{padding-inline:16px}}
+section{padding-block:48px;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0;padding-block:40px 32px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,52px);font-weight:800;letter-spacing:-.01em;margin:12px 0 12px}
+h1 span{color:var(--lamp)}
+h2{font-size:clamp(20px,2.6vw,26px);margin-bottom:12px}
+p{margin:0 0 12px;max-width:68ch}
+.lead{color:var(--muted);max-width:70ch;margin-bottom:22px}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--muted)}
+.cap{font:12px/1.5 var(--font-mono);letter-spacing:.02em;color:var(--muted);margin-top:12px;max-width:80ch}
+code{font:13px var(--font-mono);color:var(--lamp-hot)}
+ul{padding-left:20px;margin:0}
+li{margin-bottom:7px;max-width:72ch}
+
+.lamp{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;background:var(--lamp)}
+.lamp.hot{background:var(--lamp-hot);box-shadow:0 0 8px var(--lamp-hot)}
+.lamp.off{background:var(--lamp-off)}
+.lamp.red{background:var(--signal-text);animation:blink 1.1s steps(2) infinite}
+.lamp.eye{background:var(--eye)}
+@keyframes blink{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.lamp.red{animation:none}}
+
+/* Окно консоли */
+.console{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-md);overflow:hidden;font-size:13px}
+.chrome{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);font:11px var(--font-mono);color:var(--muted);background:var(--bg)}
+.chrome i{width:9px;height:9px;border-radius:50%;background:var(--lamp-off);display:inline-block}
+.chrome .url{margin-left:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 16px}
+.bar .t{font:600 14px var(--font-display);margin-right:4px}
+.pill{display:inline-flex;align-items:center;gap:7px;font:500 11px var(--font-mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill b{color:var(--text);font-weight:500}
+.bar .sp{flex:1}
+.seg{display:inline-grid;grid-auto-flow:column;border:1px solid var(--line-2);border-radius:var(--r-sm);overflow:hidden}
+.seg button{border:0;background:transparent;height:26px;padding:0 11px;font:500 12px var(--font-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--text)}
+.seg button.warn[aria-pressed="true"]{color:var(--signal-text)}
+.seg-label{font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--muted)}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--lamp);outline-offset:1px}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.15fr) minmax(0,.9fr);border-top:1px solid var(--line)}
+.col{padding:12px 14px 14px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.col+.col{border-left:1px solid var(--line)}
+@media (max-width:1060px){.grid{grid-template-columns:1fr 1fr}.col.ev{grid-column:1 / -1;border-left:0;border-top:1px solid var(--line)}}
+@media (max-width:720px){.grid{grid-template-columns:1fr}.col+.col{border-left:0;border-top:1px solid var(--line)}}
+.ch{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--muted)}
+.ch b{font-weight:500;color:var(--text)}
+
+/* Стенограмма */
+.ether{display:flex;flex-direction:column;gap:9px;max-height:560px;overflow:auto}
+.turn{display:grid;grid-template-columns:44px 1fr;gap:2px 10px}
+.turn time{font:10.5px/1.9 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.turn .who{font:500 9.5px var(--font-mono);letter-spacing:.14em;color:var(--muted);display:block}
+.turn.v .who{color:var(--lamp)}
+.turn p{margin:0;font-size:13.5px;line-height:1.45}
+.turn.live p::after{content:"▍";color:var(--lamp);margin-left:2px;animation:blink 1s steps(2) infinite}
+@media (prefers-reduced-motion:reduce){.turn.live p::after{animation:none}}
+.mark{margin-left:54px;display:flex;align-items:center;gap:8px;font:10.5px/1.4 var(--font-mono);color:var(--muted);border-left:2px solid var(--line-2);padding:2px 0 2px 10px}
+.mark b{font-weight:500;color:var(--lamp-hot)}
+.mark.out b{color:var(--eye)}
+.mark.quiet b{color:var(--text)}
+.mark.red{border-left-color:var(--signal-text)}
+.mark.red b{color:var(--signal-text)}
+
+/* Делегирования */
+.dl{border:1px solid var(--line);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:9px}
+.dl.hold{border-color:var(--signal-text);background:rgba(184,50,31,.07)}
+.dl-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.dl-h .id{font:600 13px var(--font-mono)}
+.dl-h .st{font:500 10px var(--font-mono);letter-spacing:.12em;color:var(--muted)}
+.dl-h .st.hold{color:var(--signal-text)}
+.dl-h .tm{margin-left:auto;font:600 17px var(--font-mono);font-variant-numeric:tabular-nums;color:var(--signal-text)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin:0}
+.kv dt{font:500 10px/1.9 var(--font-mono);letter-spacing:.1em;color:var(--muted)}
+.kv dd{margin:0;min-width:0}
+.chip{display:inline-block;font:500 10.5px var(--font-mono);padding:1px 7px;border:1px solid var(--line-2);border-radius:var(--r-sm);margin:0 4px 3px 0;white-space:nowrap}
+.chip i{font-style:normal;color:var(--muted)}
+.ctx{border-left:2px solid var(--line-2);padding:2px 0 2px 10px;font:11px/1.55 var(--font-mono);color:var(--muted);max-height:110px;overflow:auto}
+.ctx div{display:grid;grid-template-columns:18px 1fr;gap:4px}
+.ctx .u{color:var(--text)}
+textarea{width:100%;min-height:70px;resize:vertical;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--bg);padding:9px 11px;font:13.5px/1.45 var(--font-body);color:var(--text)}
+.acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.btn{font:500 12px var(--font-body);color:var(--text);border:1px solid var(--line-2);height:28px;padding:0 12px;border-radius:var(--r-sm);background:transparent;cursor:pointer;display:inline-flex;align-items:center;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.go{background:var(--signal);border-color:var(--signal);color:#FBF6EC}
+.btn.go:hover{background:#C93C28}
+.btn.quiet{border-color:transparent;color:var(--muted);padding:0 8px}
+.count{margin-left:auto;font:10.5px var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.count.over{color:var(--signal-text)}
+.tl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;font:10px/1.35 var(--font-mono);color:var(--muted);border:1px solid var(--line);border-radius:var(--r-sm)}
+.tl div{padding:5px 8px}
+.tl div+div{border-left:1px solid var(--line)}
+.tl b{display:block;font:600 12.5px var(--font-mono);color:var(--text);font-variant-numeric:tabular-nums}
+.dl.done{padding:9px 12px}
+.dl.done .ans{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+
+/* Вставка в контекст */
+.inject{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.inject .hint{font:11px/1.45 var(--font-mono);color:var(--muted);margin:0}
+.rowline{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* Сырые события */
+.filters{display:flex;flex-wrap:wrap;gap:5px}
+.fchip{font:500 10.5px var(--font-mono);padding:2px 8px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--line-2);color:var(--text);cursor:pointer}
+.fchip[aria-pressed="false"]{background:transparent;border-color:var(--line);color:var(--muted)}
+.events{font:11px/1.5 var(--font-mono);max-height:560px;overflow:auto}
+.ev-row{display:grid;grid-template-columns:52px 12px 1fr;gap:6px;padding:3px 6px;border-radius:var(--r-sm);align-items:start}
+.ev-row:hover{background:var(--surface-2)}
+.ev-row time{color:var(--muted);font-variant-numeric:tabular-nums}
+.ev-row .ty{word-break:break-all}
+.ev-row .ty small{display:block;color:var(--muted);font-size:10.5px;word-break:normal}
+.ev-row.in .dir{color:var(--lamp)}
+.ev-row.out .dir{color:var(--signal-text)}
+.ev-row.open{background:var(--surface-2)}
+.ev-row pre{grid-column:2 / -1;margin:4px 0 2px;padding:8px 10px;border-radius:var(--r-sm);background:var(--bg);border:1px solid var(--line);font:10.5px/1.5 var(--font-mono);overflow-x:auto;white-space:pre}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--font-mono);letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.cols{display:grid;gap:32px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));align-items:start}
+.q{border-left:2px solid var(--signal-text);padding:8px 14px;margin-bottom:12px;max-width:80ch}
+.q b{font-family:var(--font-display);font-weight:600;font-size:13px}
+.note{border-left:2px solid var(--lamp);padding:8px 14px;max-width:80ch;color:var(--text)}
+.flow{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:16px 18px;font:12px/1.75 var(--font-mono);overflow-x:auto;white-space:pre;margin:0}
+.flow b{color:var(--lamp-hot);font-weight:500}
+.flow i{color:var(--muted);font-style:normal}
+.dl-h .tm small{font:500 10px var(--font-mono);color:var(--muted)}
+.hgrid{display:grid;grid-template-columns:200px minmax(0,1fr);border-top:1px solid var(--line)}
+@media (max-width:760px){.hgrid{grid-template-columns:1fr}.calls{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}}
+.calls{display:flex;flex-direction:column;gap:2px;padding:8px;border-right:1px solid var(--line)}
+.call{all:unset;cursor:pointer;display:flex;flex-direction:column;padding:7px 10px;border-radius:var(--r-sm);white-space:nowrap}
+.call b{font:500 12.5px var(--font-body);color:var(--text)}
+.call span{font:10.5px var(--font-mono);color:var(--muted)}
+.call:hover{background:var(--surface-2)}
+.call[aria-current="true"]{background:var(--surface-2);box-shadow:inset 2px 0 0 var(--lamp)}
+.call:focus-visible{outline:2px solid var(--lamp)}
+.player{padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.transport .sp{flex:1}
+.clock{font:12px var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.clock b{color:var(--text);font-weight:500}
+.tracks{position:relative;display:grid;grid-template-columns:62px 1fr;row-gap:6px;cursor:pointer;user-select:none;padding-bottom:18px}
+.tracks .lb{font:500 9.5px/18px var(--font-mono);letter-spacing:.12em;color:var(--muted)}
+.lane{position:relative;height:18px;border-bottom:1px solid var(--line)}
+.seg-u,.seg-v,.seg-d,.dot{position:absolute;top:4px;height:10px;border-radius:2px}
+.seg-u{background:var(--muted);opacity:.6}
+.seg-v{background:var(--lamp)}
+.seg-d{background:var(--eye);opacity:.8}
+.seg-d.man{background:var(--signal-text)}
+.seg-d.off{background:var(--lamp-off)}
+.dot{width:8px;height:8px;top:5px;margin-left:-4px;border-radius:50%;background:var(--text)}
+.ruler{position:absolute;left:62px;right:0;bottom:0;height:14px;font:9.5px var(--font-mono);color:var(--muted)}
+.ruler span{position:absolute;transform:translateX(-50%)}
+.head{position:absolute;top:-4px;bottom:14px;width:2px;margin-left:-1px;background:var(--signal-text);pointer-events:none}
+.head::before{content:"";position:absolute;top:-3px;left:-4px;width:10px;height:6px;border-radius:2px;background:var(--signal-text)}
+.hview{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.hview{grid-template-columns:1fr}}
+.hview .ether{max-height:260px;margin-top:8px}
+.turn.future{opacity:.22}
+.mark.future{opacity:.22}
+.now-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.now-list .dl{padding:10px 12px}
+.now-list p{margin:0;font-size:12.5px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+
+<section>
+  <div class="decode">ВОЛНА · ЯДРО · ИНСТРУМЕНТ РАЗРАБОТКИ · МАКЕТ 25.09.2026 · ВЕРСИЯ 2</div>
+  <h1>Консоль <span>ядра</span></h1>
+  <p class="lead">Страница на Mac, где видно, что происходит с GPT-Live прямо во время звонка: стенограмма, решения делегировать, что ушло в контекст модели и когда она это приняла. Отсюда можно ответить на делегирование самому, заготовить ответ на следующее и дописать модели комментарий, мысль или инструкцию. Цель — понять, как модель ведёт себя, а не заменить автомат.</p>
+  <div class="note">Только на этом Mac: <code>127.0.0.1:25452</code>. 25452 — это «ВОЛНА», набранная на кнопках телефона (В·О·Л·Н·А → 2·5·4·5·2). Через ngrok консоль не видна.</div>
+</section>
+
+<section id="console">
+  <h2>Звонок идёт</h2>
+  <p class="lead">Вкладка «Эфир», режим «Вручную»: модель только что делегировала запрос о напоминании.</p>
+
+  <div class="console" role="region" aria-label="Макет консоли">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">127.0.0.1:25452/live</span></div>
+
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Раздел"><button type="button" aria-pressed="true">Эфир</button><button type="button" aria-pressed="false">История</button></div>
+      <span class="pill"><span class="lamp hot"></span><b>ЗВОНОК</b> 03:42</span>
+      <span class="pill">gpt-live-1 · meridian · client</span>
+      <span class="pill">ВХОД <b>41 с</b> · ВЫХОД <b>58 с</b> · $0,19</span>
+      <span class="sp"></span>
+      <span class="seg-label">ДЕЛЕГИРОВАНИЯ</span>
+      <div class="seg" role="group" aria-label="Кто отвечает на делегирования" id="mode">
+        <button type="button" aria-pressed="false" data-mode="auto">Авто</button>
+        <button type="button" aria-pressed="false" data-mode="next">Заготовка</button>
+        <button type="button" aria-pressed="true" data-mode="manual" class="warn">Вручную</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Стенограмма -->
+      <div class="col">
+        <div class="ch"><span>СТЕНОГРАММА</span></div>
+        <div class="ether" aria-label="Стенограмма">
+          <div class="turn v"><time>00:01</time><div><span class="who">ВОЛНА</span><p>Андрей, добрый вечер. Слушаю.</p></div></div>
+          <div class="turn"><time>00:04</time><div><span class="who">ВЫ</span><p>Какая завтра погода в Москве?</p></div></div>
+          <div class="mark"><b>▸ d_4a1</b> делегирование · +0,21 с от конца фразы</div>
+          <div class="turn v"><time>00:06</time><div><span class="who">ВОЛНА</span><p>Сейчас гляну.</p></div></div>
+          <div class="mark out"><b>◂ commentary</b> d_4a1 · авто · принят за 38 мс</div>
+          <div class="turn v"><time>00:09</time><div><span class="who">ВОЛНА</span><p>Завтра плюс двенадцать, облачно, к вечеру дождь.</p></div></div>
+          <div class="mark quiet"><b>✎ мысль</b> от вас: «Пользователь торопится, отвечай короче»</div>
+          <div class="turn"><time>03:31</time><div><span class="who">ВЫ</span><p>Поставь напоминание на завтра в девять позвонить маме.</p></div></div>
+          <div class="mark red"><b>▸ d_4b7</b> делегирование · ждёт вашего ответа</div>
+          <div class="turn v live"><time>03:34</time><div><span class="who">ВОЛНА</span><p>Секунду, записываю</p></div></div>
+        </div>
+      </div>
+
+      <!-- Делегирования и вставка -->
+      <div class="col">
+        <div class="ch"><span>ДЕЛЕГИРОВАНИЯ</span><span><b>1</b> ждёт · 3 всего</span></div>
+
+        <article class="dl hold" aria-label="Делегирование d_4b7">
+          <div class="dl-h"><span class="lamp red"></span><span class="id">d_4b7</span><span class="st hold">ЖДЁТ ВАС</span><span class="tm" id="timer">0:07</span></div>
+          <dl class="kv">
+            <dt>ПОСЛАНО В</dt><dd>03:33,40 · offset_ms 211 820</dd>
+            <dt>СТЕНОГРАММА</dt><dd>дописалась через 260 мс</dd>
+            <dt>JEV</dt><dd><span class="chip">набор planner <i>0,93</i></span><span class="chip">simple <i>0,88</i></span><span class="chip"><i>инструмент —</i></span></dd>
+          </dl>
+          <div class="ctx" aria-label="Контекст, который получил бы бэкенд">
+            <div><span>В</span><span>Завтра плюс двенадцать, облачно, к вечеру дождь.</span></div>
+            <div class="u"><span>П</span><span>Поставь напоминание на завтра в девять позвонить маме.</span></div>
+          </div>
+          <label class="seg-label" for="answer">ОТВЕТ МОДЕЛИ · COMMENTARY</label>
+          <textarea id="answer">Напоминание «Позвонить маме» стоит на завтра, 26 сентября, 9:00.</textarea>
+          <div class="acts">
+            <button class="btn go" type="button">Отправить</button>
+            <button class="btn" type="button">Отдать автомату</button>
+            <button class="btn quiet" type="button">Сбой</button>
+            <button class="btn quiet" type="button">Не отвечать</button>
+            <span class="count" id="count-answer">23 / 500 ток.</span>
+          </div>
+        </article>
+
+        <article class="dl done" aria-label="Делегирование d_4a1">
+          <div class="dl-h"><span class="lamp eye"></span><span class="id">d_4a1</span><span class="st">АВТО · WEB · SIMPLE · 2 КРУГА</span></div>
+          <p class="ans">«Москва, 26.09: +12 °C, облачно, дождь после 18:00».</p>
+          <div class="tl" aria-label="Время по шагам">
+            <div>ожидание<b>0,18 с</b></div><div>jev<b>0,34 с</b></div><div>модель<b>2,41 с</b></div><div>заговорила<b>+0,62 с</b></div>
+          </div>
+        </article>
+
+        <article class="dl done" aria-label="Делегирование d_3f9">
+          <div class="dl-h"><span class="lamp off"></span><span class="id">d_3f9</span><span class="st">ОТМЕНЕНО · ПРИШЛО НОВОЕ</span></div>
+        </article>
+
+        <div class="inject" aria-label="Вставка в контекст">
+          <div class="ch"><span>ВСТАВИТЬ В КОНТЕКСТ</span></div>
+          <div class="rowline">
+            <div class="seg" role="group" aria-label="Вид вставки" id="kind">
+              <button type="button" aria-pressed="false">Комментарий</button>
+              <button type="button" aria-pressed="true">Мысль</button>
+              <button type="button" aria-pressed="false">Инструкция</button>
+            </div>
+            <div class="seg" role="group" aria-label="К чему привязать">
+              <button type="button" aria-pressed="true">К сессии</button>
+              <button type="button" aria-pressed="false">К d_4b7</button>
+            </div>
+          </div>
+          <textarea id="inject" aria-label="Текст вставки">Пользователь за рулём: не задавай встречных вопросов.</textarea>
+          <div class="acts">
+            <button class="btn go" type="button">Вставить</button>
+            <span class="count" id="count-inject">16 / 500 ток.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- События -->
+      <div class="col ev">
+        <div class="ch"><span>СОБЫТИЯ SIDEBAND</span></div>
+        <div class="filters" role="group" aria-label="Фильтр событий">
+          <button class="fchip" type="button" aria-pressed="true">delegation</button>
+          <button class="fchip" type="button" aria-pressed="true">append</button>
+          <button class="fchip" type="button" aria-pressed="true">session</button>
+          <button class="fchip" type="button" aria-pressed="false">transcript</button>
+          <button class="fchip" type="button" aria-pressed="false">usage</button>
+          <button class="fchip" type="button" aria-pressed="true">error</button>
+        </div>
+        <div class="events" aria-label="Сырые события">
+          <div class="ev-row in"><time>00:00,02</time><span class="dir">▼</span><span class="ty">session.started</span></div>
+          <div class="ev-row in"><time>00:04,91</time><span class="dir">▼</span><span class="ty">session.delegation.created<small>d_4a1 · client</small></span></div>
+          <div class="ev-row out"><time>00:08,01</time><span class="dir">▲</span><span class="ty">session.commentary.append<small>d_4a1 · 61 ток. · авто</small></span></div>
+          <div class="ev-row in"><time>00:08,05</time><span class="dir">▼</span><span class="ty">session.commentary.appended<small>+38 мс</small></span></div>
+          <div class="ev-row out"><time>01:12,40</time><span class="dir">▲</span><span class="ty">session.thinking.append<small>null · 14 ток. · вручную</small></span></div>
+          <div class="ev-row in"><time>01:12,47</time><span class="dir">▼</span><span class="ty">session.thinking.appended<small>+70 мс</small></span></div>
+          <div class="ev-row in open"><time>03:33,40</time><span class="dir">▼</span><span class="ty">session.delegation.created<small>d_4b7 · client</small></span>
+<pre>{
+  "type": "session.delegation.created",
+  "delegation": {
+    "id": "d_4b7",
+    "target": "client",
+    "offset_ms": 211820
+  }
+}</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="history">
+  <h2>История</h2>
+  <p class="lead">Прошлый звонок проигрывается по таймлайну: стенограмма, делегирования и вставки появляются в том темпе, в каком шли. Звука нет: он идёт с телефона прямо в OpenAI, мимо ядра.</p>
+
+  <div class="console" role="region" aria-label="Макет истории">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">127.0.0.1:25452/history/25-09-1942</span></div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Раздел"><button type="button" aria-pressed="false">Эфир</button><button type="button" aria-pressed="true">История</button></div>
+      <span class="pill"><b>25.09 · 19:42</b> · 4:05</span>
+      <span class="sp"></span>
+      <button class="btn quiet" type="button">Удалить звонок</button>
+    </div>
+    <div class="hgrid">
+      <nav class="calls" aria-label="Звонки">
+        <button type="button" class="call" aria-current="true"><b>Сегодня, 19:42</b><span>4:05 · 3 делег.</span></button>
+        <button type="button" class="call"><b>Сегодня, 12:10</b><span>1:18 · 1 делег.</span></button>
+        <button type="button" class="call"><b>Вчера, 22:03</b><span>7:44 · 6 делег. · 1 сбой</span></button>
+        <button type="button" class="call"><b>Вчера, 09:15</b><span>0:41 · 0 делег.</span></button>
+        <button type="button" class="call"><b>23.09, 07:05</b><span>2:57 · 2 делег.</span></button>
+      </nav>
+      <div class="player">
+        <div class="transport">
+          <button class="btn" type="button" id="play" aria-label="Играть">▶</button>
+          <button class="btn quiet" type="button" id="prev" aria-label="Предыдущее событие">⏮</button>
+          <button class="btn quiet" type="button" id="next" aria-label="Следующее событие">⏭</button>
+          <span class="clock"><b id="ph-time">1:12,4</b> / 4:05</span>
+          <span class="sp"></span>
+          <div class="seg" role="group" aria-label="Скорость" id="speed">
+            <button type="button" aria-pressed="false" data-v="0.5">0,5×</button>
+            <button type="button" aria-pressed="true" data-v="1">1×</button>
+            <button type="button" aria-pressed="false" data-v="2">2×</button>
+            <button type="button" aria-pressed="false" data-v="4">4×</button>
+          </div>
+        </div>
+        <div class="tracks" id="tracks" aria-label="Таймлайн звонка"></div>
+        <div class="hview">
+          <div>
+            <div class="ch"><span>СТЕНОГРАММА</span></div>
+            <div class="ether" id="h-transcript"></div>
+          </div>
+          <div>
+            <div class="ch"><span>В ЭТОТ МОМЕНТ</span></div>
+            <div id="h-now" class="now-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="modes">
+  <h2>Кто отвечает на делегирование</h2>
+  <p class="lead">Переключатель в шапке задаёт поведение для новых делегирований. Уже идущее автоматическое можно перехватить кнопкой на его карточке.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Режим</th><th>Что делает ядро</th><th>Зачем</th></tr></thead>
+    <tbody>
+      <tr><td><b>Авто</b></td><td>Как сейчас: ожидание хвоста, Jev, модель, инструменты, <code>commentary.append</code>. Карточка показывает маршрут, круги, инструменты и время каждого шага.</td><td>Смотреть, как работает цепочка без вмешательства.</td></tr>
+      <tr><td><b>Заготовка</b></td><td>Вы заранее пишете ответ. Следующее делегирование получает его сразу, без Jev и модели, после чего режим возвращается в «Авто». Вместо текста можно выбрать «Сбой» или «Не отвечать».</td><td>Проверить, как Live пересказывает конкретный текст и сколько ей нужно, чтобы заговорить. Посмотреть, что она делает, если ответа нет.</td></tr>
+      <tr><td><b>Вручную</b></td><td>Каждое делегирование ждёт вас, идёт таймер. Можно отправить текст, отдать автомату, послать сбой или промолчать. Без ответа за 20 с уходит автомату.</td><td>Отвечать за бэкенд самому и видеть, как модель держит паузу.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="server">
+  <h2>Как это встраивается в ядро</h2>
+  <div class="cols">
+    <div>
+<pre class="flow"><b>sideband</b> (OpenAI)
+   │ все события
+   ▼
+<b>ConsoleHub</b>  <i>участник звонка, как Jev</i>
+   ├─ буфер звонка в памяти
+   ├─ запись звонка ──▶ data/console/*.json
+   ├─ SSE  GET /console/events ──▶ страница
+   └─ ◀── POST /console/…
+          ├─ append     <i>commentary | thinking | instructions</i>
+          ├─ answer/:id <i>текст | сбой | молчание | авто</i>
+          └─ mode       <i>auto | next | manual</i>
+   ▼
+<b>ClientDelegate</b>  <i>спрашивает режим до #settle</i>
+
+<i>страница:</i> GET /history, GET /history/:id</pre>
+    </div>
+    <div>
+      <ul>
+        <li><code>ConsoleHub</code> — ещё один <code>SidebandListener</code>: видит все события и отметки ядра (маршрут Jev, круги, инструменты) и шлёт через <code>SidebandControl.send</code>.</li>
+        <li><code>ClientDelegate</code> перед работой спрашивает у консоли, кто отвечает. Без консоли поведение не меняется.</li>
+        <li>Отдельный сервер Hono на <code>127.0.0.1:25452</code>: ngrok смотрит на 8789, поэтому консоль снаружи не видна. Проверка заголовка <code>Host</code> от подмены DNS, POST только с того же <code>Origin</code>. Правило «ядро не отвечает браузерам» для основного порта остаётся.</li>
+        <li>Страница — один HTML-файл без сборки, в тех же токенах.</li>
+        <li>Запись звонка — все события sideband с отметкой времени и отметки ядра, одним файлом. В ней есть текст разговора, поэтому она отдельно от замеров, в <code>data/console/</code> вне git. В лог текст по-прежнему не попадает.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="questions">
+  <h2>Решено</h2>
+  <div class="q"><b>Решено 25.09.2026.</b><br>Консоль на локальном порту 25452. В ручном режиме без ответа через 20 с делегирование уходит автомату. Прошлые звонки смотрятся по таймлайну во вкладке «История». Ручной ответ пока только текстом, инструменты позже. Хранятся последние 30 звонков, старые ядро удаляет само.</div>
+  
+</section>
+
+</div>
+
+<script>
+(() => {
+  const pressOne = (group, target) => group.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === target)));
+  document.querySelectorAll('.seg').forEach(group => group.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    pressOne(group, b);
+  }));
+  document.querySelectorAll('.fchip').forEach(b => b.addEventListener('click', () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'))));
+  // Грубая оценка токенов для русского текста: ~3 символа на токен.
+  const bind = (id, out) => {
+    const area = document.getElementById(id), label = document.getElementById(out);
+    const upd = () => { const n = Math.ceil(area.value.length / 3); label.textContent = `${n} / 500 ток.`; label.classList.toggle('over', n > 500); };
+    area.addEventListener('input', upd); upd();
+  };
+  bind('answer', 'count-answer'); bind('inject', 'count-inject');
+  const timer = document.getElementById('timer'); let s = 7;
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => { s = s >= 20 ? 7 : s + 1; timer.textContent = `0:${String(s).padStart(2, '0')}`; }, 1000);
+
+  // История: таймлайн звонка 4:05. Данные примерные.
+  const D = 245;
+  const U = [[3.2,4.6],[40,44],[70,73],[211,213.2]];
+  const V = [[0.5,2.5],[5.2,6.0],[8.8,12],[45,52],[74,80],[150.5,154],[213.5,216],[219,222]];
+  const DL = [
+    {id:'d_4a1',a:4.9,b:8.05,cls:'',st:'АВТО · WEB · SIMPLE',ans:'«Москва, 26.09: +12 °C, облачно, дождь после 18:00».',steps:[['ожидание',0.18],['jev',0.34],['модель',2.41]]},
+    {id:'d_3f9',a:72.1,b:72.9,cls:'off',st:'ОТМЕНЕНО · ПРИШЛО НОВОЕ',ans:''},
+    {id:'d_4b7',a:213.4,b:219.0,cls:'man',st:'ВРУЧНУЮ · 5,6 С',ans:'«Напоминание „Позвонить маме“ стоит на завтра, 26 сентября, 9:00».'}
+  ];
+  const INS = [{t:72.4,k:'мысль',x:'Пользователь торопится, отвечай короче'},{t:150,k:'инструкция',x:'Ядро: фоновое задание «Цены на билеты» готово'}];
+  const T = [
+    {t:0.5,v:1,x:'Андрей, добрый вечер. Слушаю.'},{t:3.2,x:'Какая завтра погода в Москве?'},{t:4.9,m:'▸ d_4a1',c:''},
+    {t:5.2,v:1,x:'Сейчас гляну.'},{t:8.05,m:'◂ commentary d_4a1 · принят за 38 мс',c:'out'},{t:8.8,v:1,x:'Завтра плюс двенадцать, облачно, к вечеру дождь.'},
+    {t:40,x:'А на выходные?'},{t:45,v:1,x:'В субботу солнечно, в воскресенье снова дожди.'},{t:70,x:'Слушай, а что там с билетами…'},
+    {t:72.1,m:'▸ d_3f9 · отменено',c:'quiet'},{t:72.4,m:'✎ мысль: «Пользователь торопится, отвечай короче»',c:'quiet'},
+    {t:74,v:1,x:'Билеты ищу в фоне, скажу, как будет готово.'},{t:150,m:'⚑ инструкция: задание «Цены на билеты» готово',c:'quiet'},
+    {t:150.5,v:1,x:'Цены на билеты готовы, рассказать?'},{t:211,x:'Потом. Поставь напоминание на завтра в девять позвонить маме.'},
+    {t:213.4,m:'▸ d_4b7 · вручную',c:'red'},{t:213.5,v:1,x:'Секунду, записываю.'},{t:219,m:'◂ commentary d_4b7 · вручную',c:'out'},
+    {t:219,v:1,x:'Готово: завтра в девять напомню позвонить маме.'}
+  ];
+  const fmt = t => `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')},${Math.floor((t%1)*10)}`;
+  const pct = t => `${(t/D*100).toFixed(3)}%`;
+  const tracks = document.getElementById('tracks');
+  const lane = (label, html) => { tracks.insertAdjacentHTML('beforeend', `<span class="lb">${label}</span><div class="lane">${html}</div>`); };
+  lane('ВЫ', U.map(([a,b]) => `<i class="seg-u" style="left:${pct(a)};width:${pct(b-a)}"></i>`).join(''));
+  lane('ВОЛНА', V.map(([a,b]) => `<i class="seg-v" style="left:${pct(a)};width:${pct(b-a)}"></i>`).join(''));
+  lane('ДЕЛЕГ.', DL.map(d => `<i class="seg-d ${d.cls}" title="${d.id}" style="left:${pct(d.a)};width:max(4px,${pct(d.b-d.a)})"></i>`).join(''));
+  lane('ВСТАВКИ', INS.map(n => `<i class="dot" title="${n.k}" style="left:${pct(n.t)}"></i>`).join(''));
+  tracks.insertAdjacentHTML('beforeend', `<div class="ruler">${[0,60,120,180,240].map(t => `<span style="left:${pct(t)}">${t/60}:00</span>`).join('')}</div><div class="head" id="head"></div>`);
+  const head = document.getElementById('head'), hT = document.getElementById('h-transcript'), hNow = document.getElementById('h-now'), time = document.getElementById('ph-time');
+  hT.innerHTML = T.map((r,i) => r.m ? `<div class="mark ${r.c}" data-i="${i}"><b>${r.m}</b></div>`
+    : `<div class="turn ${r.v?'v':''}" data-i="${i}"><time>${fmt(r.t).slice(0,-2)}</time><div><span class="who">${r.v?'ВОЛНА':'ВЫ'}</span><p>${r.x}</p></div></div>`).join('');
+  const rows = [...hT.children];
+  const stops = [...new Set([...U.map(x=>x[0]),...DL.flatMap(d=>[d.a,d.b]),...INS.map(n=>n.t)])].sort((a,b)=>a-b);
+  let at = 72.4, playing = false, speed = 1, last = 0;
+  const lanesLeft = () => tracks.querySelector('.lane').offsetLeft;
+  const render = () => {
+    const w = tracks.clientWidth - lanesLeft();
+    head.style.left = `${lanesLeft() + w * at / D}px`;
+    time.textContent = fmt(at);
+    let lastPast = null;
+    rows.forEach(el => { const f = T[+el.dataset.i].t > at; el.classList.toggle('future', f); if (!f) lastPast = el; });
+    if (lastPast) hT.scrollTop = Math.max(0, lastPast.offsetTop - hT.offsetTop - hT.clientHeight + lastPast.offsetHeight + 8);
+    const cards = DL.filter(d => d.a <= at).slice(-2).reverse().map(d => {
+      const live = at < d.b, el = (at - d.a).toFixed(1).replace('.', ',');
+      const lamp = live ? (d.cls === 'man' ? 'red' : 'hot') : (d.cls === 'off' ? 'off' : 'eye');
+      const st = live ? (d.cls === 'man' ? `ЖДЁТ ОТВЕТА · ${el} С` : `РАБОТАЕТ · ${el} С`) : d.st;
+      return `<article class="dl"><div class="dl-h"><span class="lamp ${lamp}"></span><span class="id">${d.id}</span><span class="st">${st}</span></div>${!live && d.ans ? `<p>${d.ans}</p>` : ''}</article>`;
+    });
+    const ins = INS.filter(n => n.t <= at && at - n.t < 20).map(n => `<article class="dl"><div class="dl-h"><span class="lamp"></span><span class="id">${n.k}</span></div><p>«${n.x}»</p></article>`);
+    hNow.innerHTML = [...ins, ...cards].join('') || '<p>Делегирований ещё не было.</p>';
+  };
+  const seek = e => { const r = tracks.getBoundingClientRect(), x = e.clientX - r.left - lanesLeft(); at = Math.min(D, Math.max(0, x / (r.width - lanesLeft()) * D)); render(); };
+  let drag = false;
+  tracks.addEventListener('pointerdown', e => { drag = true; tracks.setPointerCapture(e.pointerId); seek(e); });
+  tracks.addEventListener('pointermove', e => drag && seek(e));
+  tracks.addEventListener('pointerup', () => { drag = false; });
+  const playBtn = document.getElementById('play');
+  const tick = now => { if (!playing) return; at = Math.min(D, at + (now - last) / 1000 * speed); last = now; render(); if (at >= D) { playing = false; playBtn.textContent = '▶'; } else requestAnimationFrame(tick); };
+  playBtn.addEventListener('click', () => { playing = !playing; playBtn.textContent = playing ? '❚❚' : '▶'; if (playing) { last = performance.now(); requestAnimationFrame(tick); } });
+  document.getElementById('next').addEventListener('click', () => { const n = stops.find(t => t > at + 0.05); if (n != null) { at = n; render(); } });
+  document.getElementById('prev').addEventListener('click', () => { const p = [...stops].reverse().find(t => t < at - 0.05); at = p ?? 0; render(); });
+  document.getElementById('speed').addEventListener('click', e => { const b = e.target.closest('button'); if (b) speed = +b.dataset.v; });
+  addEventListener('resize', render);
+  render();
+})();
+</script>

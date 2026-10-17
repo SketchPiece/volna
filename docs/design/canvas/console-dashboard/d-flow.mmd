@@ -1,0 +1,20 @@
+---
+title: Откуда берутся цифры
+board: 1440x800
+---
+flowchart LR
+  subgraph sources [Что тратит деньги]
+    live[GPT-Live<br>секунды звонка × $0,05/мин]
+    orc[OpenRouter<br>делегирование, поиск, память, сводки]
+    jev[Jev<br>маршрут, прощание, проверка]
+  end
+  live -->|1. session.usage, session.closed| rec
+  orc -->|2. usage.cost в ответе| rec
+  jev -->|3. usage в ответе| rec
+  rec[Учёт расходов<br>одна запись на вызов]:::add
+  rec ==> ledger[(usage.jsonl<br>по месяцам, без текста)]:::add
+  ledger ==> api[Консоль<br>/api/costs, /api/summary]:::hl
+  api --> page[Сводка · Расходы · История]:::hl
+  or2[OpenRouter<br>баланс ключа]:::ext -.-> api
+  oai[OpenAI Costs API<br>счёт по дням, ключ админа]:::ext -.->|сверка| api
+  t3[T3 Code<br>Claude и Codex по подписке]:::ext -.->|задания и время, без денег| api

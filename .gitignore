@@ -1,0 +1,29 @@
+.DS_Store
+build/
+build-device/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.env
+.env.*
+!.env.example
+*.log
+node_modules
+core/data/
+.build/
+.swiftpm/
+.claude/worktrees/
+archive/speakerbox/source/
+
+# Secrets and signing material
+*.p8
+*.pem
+*.mobileprovision
+*.ipa
+
+# Local canvas sync metadata (account and share links)
+.canvas-remote.json
+
+# Third-party sample archives stay local
+archive/speakerbox/*.zip
+archive/speakerbox/releases/*.zip

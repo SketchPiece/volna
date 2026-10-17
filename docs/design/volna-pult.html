@@ -1,0 +1,223 @@
+<title>Волна: Пульт</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Токены «Бакелит и лампа», один в один из volna-design-system.html. Дизайн намеренно однотемный: слоновая кость и бакелит. */
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F; --signal-deep:#8E2415;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --ether:#1F1B18; --ether-text:#EFE7D6; --ether-line:rgba(232,163,61,.22); --ether-muted:#CDBFA6;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised:7px 7px 16px var(--shade),-7px -7px 16px var(--light);
+  --raised-sm:5px 5px 12px var(--shade),-5px -5px 12px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed:inset 5px 5px 12px var(--shade),inset -5px -5px 12px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --glass:inset 0 3px 14px rgba(0,0,0,.7),inset 0 0 50px rgba(232,163,61,.08);
+  --glow:0 0 8px var(--lamp);
+  --r-sm:14px; --r-md:24px; --r-lg:32px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-line:rgba(38,33,29,.14);
+}
+:root{box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--ivory);color:var(--bakelite);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:24px}
+section{padding-block:56px;border-top:1px solid var(--page-line)}
+section:first-of-type{border-top:0;padding-block:48px 40px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,6vw,64px);font-weight:800;letter-spacing:-.01em;margin:14px 0 10px}
+h1 span{color:var(--signal)}
+h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+h3{font-size:16px;margin-bottom:8px}
+p{margin:0 0 12px;max-width:68ch}
+.lead{color:var(--ink-2);margin-bottom:26px;max-width:64ch}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--ink-2)}
+.mono{font-family:var(--font-mono)}
+.cap{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--ink-2);margin-top:12px;max-width:none}
+.note{border-left:3px solid var(--lamp);padding:10px 16px;background:rgba(232,163,61,.09);border-radius:0 var(--r-sm) var(--r-sm) 0;max-width:70ch}
+.tag{display:inline-block;font:500 10.5px var(--font-mono);letter-spacing:.1em;padding:3px 8px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);color:var(--ink-2);vertical-align:middle;margin-left:6px}
+.grid{display:grid;gap:24px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font-family:var(--font-mono);font-weight:500;font-size:11.5px;letter-spacing:.08em;color:var(--ink-2)}
+ul{padding-left:20px}
+li{margin-bottom:6px}
+a{color:var(--signal)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== Компоненты продукта ===== */
+.lamp{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:var(--glow);display:inline-block;flex-shrink:0}
+.lamp.hot{background:var(--lamp-hot);box-shadow:0 0 10px var(--lamp-hot)}
+.lamp.dim{background:var(--lamp-dim);box-shadow:none}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 2px 2px 3px #A89F90}
+.lamp.blink{animation:blink 1.1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.status{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 10.5px var(--font-mono);letter-spacing:.12em;white-space:nowrap}
+.status .lamp{width:9px;height:9px}
+.btn{font:600 14px var(--font-body);color:var(--bakelite);border:0;height:44px;padding:0 20px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised);cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:active,.btn[aria-pressed="true"]{box-shadow:var(--pressed);color:var(--signal)}
+.btn-signal{background:var(--signal);color:var(--light);font-family:var(--font-display);font-size:13px}
+.btn-quiet{box-shadow:none;background:transparent;font-weight:500;font-size:13px;color:var(--ink-2);height:38px;padding:0 10px}
+.btn-sm{height:36px;padding:0 14px;font-size:13px;box-shadow:var(--raised-sm)}
+.field{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 18px;border-radius:var(--r-pill);box-shadow:var(--pressed);color:var(--ink-2);font-size:14px}
+.field .ph{opacity:.7}
+.card{border-radius:var(--r-md);padding:16px 18px}
+.card.ether{background:var(--ether);color:var(--ether-text);box-shadow:var(--glass)}
+.card.ether .who{font:500 10.5px var(--font-mono);letter-spacing:.12em;color:var(--ether-muted);margin-bottom:8px}
+.card.raised{background:var(--ivory);box-shadow:var(--raised-sm)}
+.card.pressed{background:var(--ivory);box-shadow:var(--pressed-sm)}
+.key{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-sm);border:0;cursor:pointer}
+.key[aria-pressed="true"]{box-shadow:var(--pressed-sm)}
+.key svg{stroke:var(--bakelite);width:20px;height:20px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.key[aria-pressed="true"] svg{stroke:var(--signal)}
+
+/* ===== Окно Mac ===== */
+.shot{overflow-x:auto;padding-bottom:8px}
+.mac{width:1180px;background:var(--ivory);border-radius:var(--r-lg);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(0,0,0,.05);overflow:hidden;font-size:13.5px}
+.mac.narrow{width:760px}
+.titlebar{display:flex;align-items:center;gap:14px;height:52px;padding:0 18px;border-bottom:1px solid var(--page-line)}
+.dots{display:flex;gap:7px}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--lamp-off);box-shadow:inset 1px 1px 2px #A89F90}
+.brand{display:flex;align-items:center;gap:10px;font:600 14px var(--font-display)}
+.brand svg{width:24px;height:24px}
+.titlebar .spacer{flex:1}
+.panes{display:grid;grid-template-columns:300px 1fr 260px;min-height:680px}
+.pane{padding:18px;min-width:0}
+.pane+.pane{border-left:1px solid var(--page-line)}
+.ph-h{font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);margin:14px 0 8px;display:flex;justify-content:space-between;align-items:center}
+.ph-h:first-child{margin-top:0}
+.sess{display:grid;grid-template-columns:14px 1fr;gap:10px;align-items:start;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer}
+.sess .lamp{margin-top:5px;width:10px;height:10px}
+.sess .n{font-weight:500;line-height:1.3}
+.sess .d{font:11.5px var(--font-mono);color:var(--ink-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sess[aria-current="true"]{box-shadow:var(--pressed-sm)}
+.sess.needs .n{color:var(--signal)}
+.feed{display:flex;flex-direction:column;gap:12px;padding:8px 0 16px}
+.msg{max-width:78%}
+.msg.me{align-self:flex-end}
+.msg.me .card{border-radius:var(--r-md) var(--r-md) 6px var(--r-md)}
+.msg.ai{align-self:stretch;max-width:100%}
+.msg .who{font:500 10.5px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin-bottom:6px}
+.cmd{font:12.5px/1.5 var(--font-mono);border-radius:var(--r-sm);padding:10px 14px;box-shadow:var(--pressed-sm);color:var(--bakelite);white-space:pre-wrap;word-break:break-word}
+.cmd .out{color:var(--ink-2);display:block;margin-top:6px;border-top:1px dashed var(--page-line);padding-top:6px}
+.approval{border-radius:var(--r-md);box-shadow:var(--raised);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.approval .h{display:flex;align-items:center;gap:10px}
+.approval .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.composer{display:flex;gap:10px;align-items:center;margin-top:8px}
+.composer .field{flex:1}
+.composer .key{width:48px;height:48px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px}
+.kv dt{color:var(--ink-2);font:500 10.5px var(--font-mono);letter-spacing:.1em;padding-top:2px}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.strip{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--page-line);font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--ink-2)}
+.strip .spacer{flex:1}
+.sheet{width:520px;margin:0 auto;padding:22px;border-radius:var(--r-lg);box-shadow:var(--raised-lg);background:var(--ivory);display:flex;flex-direction:column;gap:14px}
+.seg{display:flex;gap:10px}
+.seg .btn{flex:1;justify-content:center}
+.mark{width:36px;height:36px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised-sm);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.mark svg{width:80%;height:80%}
+.wv{fill:none;stroke:var(--signal);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.ring{fill:none;stroke:var(--lamp-off);stroke-width:2;stroke-dasharray:2 5}
+.ring.on{stroke:var(--lamp)}
+</style>
+
+<section>
+  <div class="wrap">
+    <div class="decode">ВОЛНА · ПУЛЬТ · MAC · ДИЗАЙН НА ОДОБРЕНИЕ · 22.09.2026</div>
+    <h1>Волна: <span>Пульт</span></h1>
+    <p class="lead">Фоновый пульт для всех агентов на этом Mac. Живёт в строке меню, следит за сессиями Claude Desktop, Claude Code и Codex, присылает уведомления, когда кто-то ждёт тебя или ход завершён, и открывает сессию в родном клиенте. Разговоры остаются в Claude и ChatGPT: чат-окна у Пульта нет по решению владельца 22.09.2026. Всё собрано из «Бакелита и лампы».</p>
+    <div class="note"><strong>Состояние.</strong> Приложение собрано и работает на Mac владельца: панель ниже реализована в SwiftUI, окно настроек тоже. Здесь зафиксирован ориентир, чтобы сверять реализацию с дизайном.</div>
+  </div>
+</section>
+
+<section id="states">
+  <div class="wrap">
+    <h2>01 · Лампы и состояния <span class="tag">Lamp · StatusPill</span></h2>
+    <p class="lead">Одна и та же лампа для обоих агентов, чтобы взгляд не переключался между вендорами. Красный не обозначает статус: он только на кнопке, которую нужно нажать.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Состояние</th><th>Лампа</th><th>Пилюля</th><th>Откуда берём</th></tr></thead>
+        <tbody>
+          <tr><td>Агент работает</td><td><span class="lamp hot"></span> горячая</td><td><span class="status"><span class="lamp hot"></span>РАБОТАЕТ</span></td><td>Claude: <span class="mono">status busy</span> из <span class="mono">claude agents --json</span>. Codex: <span class="mono">turn/started</span> без <span class="mono">turn/completed</span></td></tr>
+          <tr><td>Ждёт человека</td><td><span class="lamp hot"></span> горячая, имя сессии сигнальным</td><td><span class="status"><span class="lamp hot"></span>ЖДЁТ ТЕБЯ</span></td><td>Claude: <span class="mono">waiting</span> + <span class="mono">waitingFor</span>, хук <span class="mono">PermissionRequest</span>. Codex: серверный запрос <span class="mono">requestApproval</span></td></tr>
+          <tr><td>В ожидании</td><td><span class="lamp dim"></span> приглушённая</td><td><span class="status"><span class="lamp dim"></span>ЖДЁТ ЗАДАЧУ</span></td><td>Claude: <span class="mono">idle</span>. Codex: тред загружен, ход завершён</td></tr>
+          <tr><td>Соединяю</td><td><span class="lamp blink"></span> мигает</td><td><span class="status"><span class="lamp blink"></span>СОЕДИНЯЮ</span></td><td>Запуск процесса: <span class="mono">initialize</span> Codex или <span class="mono">system/init</span> Claude ещё не пришёл</td></tr>
+          <tr><td>Выключена</td><td><span class="lamp off"></span> погашена</td><td><span class="status"><span class="lamp off"></span>ВНЕ ЭФИРА</span></td><td>История на диске: транскрипт Claude или тред Codex <span class="mono">notLoaded</span>; открыть можно, ответ запустит процесс</td></tr>
+          <tr><td>Помехи</td><td><span class="lamp off"></span> погашена + карточка ошибки</td><td><span class="status"><span class="lamp off"></span>ПОМЕХИ</span></td><td>Процесс упал, <span class="mono">turn/completed failed</span>, <span class="mono">result is_error</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="compact">
+  <div class="wrap">
+    <h2>02 · Панель в строке меню <span class="tag">MenuBarPanel</span></h2>
+    <p class="lead">Единственный экран Пульта. Показывает, кто ждёт, кто работает и кто в ожидании; иконка в строке меню несёт число сессий, которые ждут тебя. У каждой строки фирменный знак агента (Claude и OpenAI из Simple Icons), а во второй строке модель и уровень рассуждения: «Claude Desktop · Fable 5.1 · high · CallAssistant». Клик по строке открывает сессию в родном клиенте. Правки 22.09.2026 (зелёная лампа «работает», без «написать», настройки в три группы) в volna-pult-refresh.html, они актуальнее этого экрана. Кнопка «+» в шапке раскрывает форму новой сессии: агент (Claude / Codex вдавливанием), папка, текст; «Начать» запускает сессию силами Пульта: строка появляется в эфире, запрос разрешения показывается в ней кнопками «Разрешить/Отклонить», ответ приходит уведомлением и остаётся во второй строке; крестик убирает сессию из эфира, стрелка открывает её в родном приложении.</p>
+    <div class="shot">
+      <div class="mac narrow" style="width:380px">
+        <div class="titlebar" style="height:44px"><div class="brand" style="font-size:13px"><span class="mark" style="width:28px;height:28px"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring on" cx="60" cy="60" r="52"/><path class="wv" d="M22 60 Q31 50 40 60 Q49 74 58 60 Q66 36 74 60 Q82 80 90 60 Q94 56 98 60"/></svg></span>Эфир</div><div class="spacer"></div><span class="status"><span class="lamp hot"></span>1 ЖДЁТ</span></div>
+        <div class="pane" style="display:flex;flex-direction:column;gap:6px">
+          <div class="ph-h">ЖДУТ ТЕБЯ <span>1</span></div>
+          <div class="sess needs"><span class="lamp hot"></span><div><div class="n">Инструменты для волны</div><div class="d">Claude Desktop · CallAssistant · permission prompt</div></div></div>
+          <div class="ph-h">В РАБОТЕ <span>2</span></div>
+          <div class="sess"><span class="lamp hot"></span><div><div class="n">macOS приложение для взаимодействия с агентами</div><div class="d">Claude Desktop · пишет ответ</div></div></div>
+          <div class="sess"><span class="lamp hot"></span><div><div class="n">Иконка волны при разговоре</div><div class="d">Claude Desktop · запускает тесты</div></div></div>
+          <div class="ph-h">В ОЖИДАНИИ <span>5</span></div>
+          <div class="sess"><span class="lamp dim"></span><div><div class="n">Переделка промпта волны</div><div class="d">Claude Desktop · CallAssistant · 1 ч</div></div></div>
+          <div class="sess"><span class="lamp dim"></span><div><div class="n">Собери билд с сервером и туннелем</div><div class="d">Codex · ChatGPT · CallAssistant · 3 ч</div></div></div>
+          <div class="cap" style="margin:6px 0 0 12px">Ещё 3</div>
+        </div>
+        <div class="strip"><span class="lamp"></span>СЕЙЧАС<span class="spacer"></span>НАСТРОЙКИ… · ВЫЙТИ</div>
+      </div>
+    </div>
+    <p class="cap">02 · Панель строки меню 380 pt. Группы по состоянию, внутри по времени. Имя сессии, которая ждёт, набрано сигнальным. Внизу обновление, настройки, выход.</p>
+    <h3 style="margin-top:28px">Окно настроек</h3>
+    <div class="shot">
+      <div class="sheet" style="gap:10px;width:460px">
+        <div class="ph-h">УВЕДОМЛЕНИЯ</div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Сессия ждёт меня</span><span class="lamp"></span></div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Ход завершён</span><span class="lamp"></span></div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Помехи: процесс упал</span><span class="lamp"></span></div>
+        <div class="ph-h">CLAUDE</div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Хуки Claude включены</span><span class="lamp off"></span></div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Порт приёмника</span><span class="mono">48611</span></div>
+        <div style="font-size:12px;color:var(--ink-2)">Хуки дописываются в ~/.claude/settings.json (копия рядом) и присылают события всех сессий мгновенно. Без них Пульт опрашивает «claude agents» раз в 8 секунд.</div>
+        <div class="ph-h">CODEX</div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Показывать треды Codex</span><span class="lamp"></span></div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>За последние 3 дн.</span><span class="mono">− +</span></div>
+        <div class="ph-h">ВОЛНА</div>
+        <div class="field" style="min-height:40px;justify-content:space-between"><span>Ядро</span><span class="mono">ЭТАП 4</span></div>
+      </div>
+    </div>
+    <p class="cap">03 · Настройки 480 × 640: группы на приподнятых карточках, заголовки моно капителью, лампа у каждого тумблера показывает состояние, у строк состояния лампа и моно-текст.</p>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <h2>04 · Правила и решения</h2>
+    <div class="grid g2">
+      <div>
+        <h3>Что показываем честно</h3>
+        <ul>
+          <li>Источник сессии всегда подписан: Claude Desktop, Claude Code (CLI), Codex через ChatGPT.app, Пульт.</li>
+          <li>Сессия из Claude Desktop или ChatGPT.app в Пульте только читается и получает сообщения; вести её как свою нельзя, чтобы два процесса не писали один транскрипт. «Открыть» ведёт в родной клиент.</li>
+          <li>«Работает» для треда Codex значит «менялся последние две минуты»: живое состояние держит ChatGPT.app, Пульт видит только диск.</li>
+          <li>Сообщение в чужую сессию всегда по явному действию: оно начинает ход и тратит токены.</li>
+        </ul>
+      </div>
+    </div>
+    <h3 style="margin-top:28px">Что осталось решить</h3>
+    <ul>
+      <li>Автозапуск при входе в систему: после недели обкатки.</li>
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Волна · Память</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F; --signal-deep:#8E2415;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --ether:#1F1B18; --ether-text:#EFE7D6; --ether-line:rgba(232,163,61,.22); --ether-muted:#CDBFA6;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised:7px 7px 16px var(--shade),-7px -7px 16px var(--light);
+  --raised-sm:5px 5px 12px var(--shade),-5px -5px 12px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed:inset 5px 5px 12px var(--shade),inset -5px -5px 12px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --glow:0 0 8px var(--lamp);
+  --r-sm:14px; --r-md:24px; --r-lg:32px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-bg:var(--ivory); --page-fg:var(--bakelite); --page-muted:var(--ink-2); --page-line:rgba(38,33,29,.14);
+}
+/* Документ показывается в светлом корпусе всегда: экраны сверяются с макетом, а не с темой читателя. */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --page-bg:#141210; --page-fg:#EFE7D6; --page-muted:#B7AB98; --page-line:rgba(239,231,214,.14); } }
+:root[data-theme="dark"]{ --page-bg:#141210; --page-fg:#EFE7D6; --page-muted:#B7AB98; --page-line:rgba(239,231,214,.14); }
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page-bg);color:var(--page-fg);font:16px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+@media (min-width:600px){.wrap{padding:0 24px}}
+section{padding:48px 0;border-top:1px solid var(--page-line)}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0}
+h2{font-size:clamp(22px,3vw,30px);margin-bottom:12px}
+h3{font-size:16px;margin-bottom:8px}
+p{margin:0 0 12px;max-width:70ch}
+.lead{color:var(--page-muted);margin-bottom:28px}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--page-muted)}
+.cap{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;color:var(--page-muted);margin:0}
+.hero{padding:48px 0 40px;border-top:0}
+.wordmark{font:800 clamp(36px,6vw,64px)/1 var(--font-display);letter-spacing:-.01em;margin:14px 0 8px}
+.wordmark span{color:var(--signal)}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--page-muted);margin-bottom:18px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font-family:var(--font-mono);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--page-muted)}
+.note{border-left:3px solid var(--lamp);padding:10px 16px;background:rgba(232,163,61,.09);border-radius:0 var(--r-sm) var(--r-sm) 0;max-width:70ch}
+ol li,ul li{margin-bottom:8px}
+.rec{font:500 11px var(--font-mono);letter-spacing:.1em;color:var(--signal);margin-right:6px}
+
+/* Компоненты продукта (как в дизайн-системе) */
+.lamp{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:var(--glow);display:inline-block;flex-shrink:0}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 2px 2px 3px #A89F90}
+.status{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 11px var(--font-mono);letter-spacing:.12em;white-space:nowrap;color:var(--bakelite)}
+.status .lamp{width:9px;height:9px}
+.btn{font:600 15px var(--font-body);color:var(--bakelite);border:0;height:48px;padding:0 24px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised);display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn-quiet{box-shadow:none;background:transparent;font-weight:500;font-size:13px;color:var(--ink-2);height:40px;padding:0 12px}
+.group{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--raised);padding:6px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 20px;font-size:15px;color:var(--bakelite)}
+.row + .row{border-top:1px solid rgba(38,33,29,.08)}
+.row .v{margin-left:auto;color:var(--ink-2);font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.row .v .mono{font-size:12.5px;letter-spacing:.06em}
+.row.sub{display:block;font-size:13px;color:var(--ink-2);min-height:0;padding-top:8px;padding-bottom:10px;line-height:1.4}
+.gh{font:500 11px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin:0 0 10px 20px;text-transform:uppercase}
+.level{width:100%;min-height:56px;border:0;border-radius:var(--r-sm);background:var(--ivory);box-shadow:var(--raised-sm);display:flex;align-items:center;gap:14px;padding:10px 18px;text-align:left;font:inherit;color:var(--bakelite)}
+.level[aria-pressed="true"]{box-shadow:var(--pressed)}
+.level .t{flex:1;display:flex;flex-direction:column;gap:2px}
+.level .n{font-weight:600;font-size:15px}
+.level[aria-pressed="true"] .n{color:var(--signal)}
+.level .d{font-size:12px;color:var(--ink-2);line-height:1.35}
+.card.ether{border-radius:var(--r-md);background:var(--ether);color:var(--ether-text);box-shadow:var(--raised),inset 0 0 40px rgba(232,163,61,.08);padding:18px 20px}
+.card.ether .who{font:500 10.5px var(--font-mono);letter-spacing:.14em;color:var(--lamp);margin-bottom:10px}
+.card.ether .txt{font:14.5px/1.5 var(--font-body)}
+.card.ether .res{border-top:1px solid var(--ether-line);margin-top:12px;padding-top:10px;font:10px var(--font-mono);color:var(--ether-muted);letter-spacing:.1em;display:flex;justify-content:space-between}
+.card.err{border-radius:var(--r-md);background:var(--ivory);box-shadow:var(--pressed);padding:16px 20px;color:var(--bakelite);font-size:14px}
+.card.err b{display:block;font:600 13px var(--font-display);margin-bottom:6px}
+.fact{display:flex;flex-direction:column;gap:5px;padding:10px 20px;color:var(--bakelite)}
+.fact + .fact{border-top:1px solid rgba(38,33,29,.08)}
+.fact .x{font-size:14.5px;line-height:1.4}
+.fact .m{display:flex;gap:10px;font:500 10.5px var(--font-mono);letter-spacing:.1em;color:var(--ink-2);text-transform:uppercase}
+.fact .m .k{padding:2px 8px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm)}
+.fact .m .k.ex{color:var(--signal)}
+.swipe{position:relative;overflow:hidden}
+.swipe .fact{transform:translateX(-76px);background:var(--ivory)}
+.swipe .act{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;background:var(--signal);color:var(--light);box-shadow:var(--raised-sm);display:flex;align-items:center;justify-content:center;font:500 9.5px var(--font-mono);letter-spacing:.1em}
+.empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 20px;text-align:center;color:var(--ink-2);font-size:13.5px}
+.empty .lamp{width:10px;height:10px}
+
+/* Рамка телефона 390 × 844 */
+.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:36px 28px;align-items:start}
+.shot{display:flex;flex-direction:column;gap:12px}
+.phone-wrap{width:100%;aspect-ratio:390/844;position:relative}
+.phone{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:top left;border-radius:46px;background:var(--ivory);color:var(--bakelite);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(38,33,29,.12);overflow:hidden;display:flex;flex-direction:column;padding:54px 24px 30px}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#0C0A09}
+.phone .sb{position:absolute;top:16px;left:34px;right:34px;display:flex;justify-content:space-between;font:600 14px var(--font-body)}
+.phone .home{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--bakelite);opacity:.75}
+.topbar{display:flex;align-items:center;justify-content:space-between;min-height:40px}
+.topbar .ttl{font:600 15px var(--font-display)}
+.stack{display:flex;flex-direction:column;gap:22px;margin-top:16px;overflow:hidden}
+.mark-mini{width:56px;height:56px;border-radius:50%;background:var(--ivory);box-shadow:var(--raised);display:flex;align-items:center;justify-content:center}
+.mark-mini svg{width:82%;height:82%}
+</style>
+</head>
+<body>
+<main>
+<section class="hero">
+  <div class="wrap">
+    <p class="mono muted" style="font-size:13px">Дизайн-система «Бакелит и лампа» · дополнение · экран «Память» · на одобрение</p>
+    <h1 class="wordmark">ПАМЯТЬ<span>.</span></h1>
+    <div class="decode">РЕГУЛЯТОР БЛИЗОСТИ · ПРОФИЛЬ · ЗАПИСИ · ЗАБЫТЬ</div>
+    <p>Экран управления тем, что Волна помнит о хозяине. Ядро уже ведёт память (транскрипты, извлечение после звонка, «сон»). Экран показывает её и даёт четыре рычага: уровень близости, чувствительные темы, удаление записи, «забыть всё». Разовый «звонок без памяти» не делаем: переключение на «Холодную» занимает один тап.</p>
+    <p class="muted">Новых цветов, теней и шрифтов нет. Новые компоненты: строка уровня с описанием (расширение <span class="mono">SelectableRow</span>), строка записи с меткой вида, карточка профиля на стекле.</p>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Экраны</h2>
+    <p class="lead">Вход из настроек: новая группа «Память» со строкой уровня. Сам экран открывается как «Голос», кнопкой назад. Все данные приходят из ядра по <span class="mono">GET /memory</span>; экран не хранит ничего на телефоне.</p>
+    <div class="screens">
+
+      <!-- 01 settings entry -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">Закрыть</button><span class="ttl">Настройки</span><button class="btn btn-quiet" style="padding:0;height:auto;color:var(--signal);font-weight:600">Готово</button></div>
+          <div class="stack">
+            <div><p class="gh">Голос Волны</p><div class="group"><div class="row">Голос<span class="v">Marin <span style="opacity:.55">›</span></span></div><div class="row sub">Применяется со следующего звонка. Marin и Cedar рекомендованы по качеству звучания.</div></div></div>
+            <div><p class="gh">Память</p><div class="group"><div class="row">Что Волна помнит<span class="v">Замечает сама <span style="opacity:.55">›</span></span></div><div class="row sub">Волна запоминает важное из разговоров и хранит это в твоём ядре. Уровень и записи можно менять.</div></div></div>
+            <div><p class="gh">Подключение</p><div class="group"><div class="row" style="padding-top:12px"><div style="flex:1;height:44px;border-radius:22px;box-shadow:var(--pressed-sm);display:flex;align-items:center;padding:0 18px"><span class="mono" style="font-size:13.5px">https://volna.example.com</span></div></div><div class="row">Проверить подключение<span class="v"><span class="lamp"></span><span class="mono">В ЭФИРЕ</span></span></div></div></div>
+            <div><p class="gh">Первый запуск</p><div class="group"><div class="row">Микрофон<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЁН</span></span></div><div class="row">Siri<span class="v"><span class="lamp"></span><span class="mono">РАЗРЕШЕНА</span></span></div></div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">01 · Настройки. Группа «Память» стоит второй: после голоса, перед подключением. Значение строки = текущий уровень.</p>
+      </div>
+
+      <!-- 02 memory main -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Настройки</button><span class="ttl">Память</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="level"><span class="t"><span class="n">Холодная</span><span class="d">Ничего не запоминает и не записывает.</span></span><span class="lamp off"></span></button>
+              <button class="level"><span class="t"><span class="n">По просьбе</span><span class="d">Только «запомни» и «забудь».</span></span><span class="lamp off"></span></button>
+              <button class="level" aria-pressed="true"><span class="t"><span class="n">Замечает сама</span><span class="d">Выделяет важное после звонка.</span></span><span class="lamp"></span></button>
+              <button class="level"><span class="t"><span class="n">Вовлечённая</span><span class="d">Плюс спрашивает о твоих делах.</span></span><span class="lamp off"></span></button>
+            </div>
+            <div class="card ether"><div class="who">ВОЛНА О ТЕБЕ</div><div class="txt">Инженер, живёт в Берлине, работает над голосовым ассистентом. Любит короткие ответы и лёгкую иронию, серьёзные темы обсуждает без шуток.</div><div class="res"><span>ОБНОВЛЕНО 22.09 · 09:41</span><span>4 ЗАПИСИ</span></div></div>
+            <div><p class="gh">Записи</p><div class="group" style="padding:2px 0">
+              <div class="fact"><span class="x">Собаку зовут Рекс</span><span class="m"><span class="k ex">просьба</span><span>21.09</span></span></div>
+              <div class="fact"><span class="x">Предпочитает короткие ответы</span><span class="m"><span class="k">общение</span><span>21.09</span></span></div>
+              <div class="fact"><span class="x">Встреча с врачом</span><span class="m"><span class="k">нить</span><span>25.09</span></span></div>
+              <div class="fact"><span class="x">Обсуждали переезд в Мюнхен</span><span class="m"><span class="k">разговор</span><span>22.09</span></span></div>
+            </div></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">02 · Память. Уровень вдавливается, как голос. Профиль на стекле: это слова Волны. Записи со свайпом.</p>
+      </div>
+
+      <!-- 03 memory scrolled -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Настройки</button><span class="ttl">Память</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div><p class="gh">Записи</p><div class="group" style="padding:2px 0;overflow:hidden;border-radius:var(--r-md)">
+              <div class="fact"><span class="x">Собаку зовут Рекс</span><span class="m"><span class="k ex">просьба</span><span>21.09</span></span></div>
+              <div class="swipe"><div class="fact"><span class="x">Предпочитает короткие ответы</span><span class="m"><span class="k">общение</span><span>21.09</span></span></div><div class="act">ЗАБЫТЬ</div></div>
+              <div class="fact"><span class="x">Встреча с врачом</span><span class="m"><span class="k">нить</span><span>25.09</span></span></div>
+              <div class="fact"><span class="x">Обсуждали переезд в Мюнхен</span><span class="m"><span class="k">разговор</span><span>22.09</span></span></div>
+            </div></div>
+            <div><p class="gh">Чувствительные темы</p><div class="group"><div class="row">Здоровье, политика, религия<span class="v"><span class="lamp off"></span><span class="mono">НЕ ХРАНИТЬ</span></span></div><div class="row sub">Пока выключено, Волна пропускает такие темы сама. По твоей просьбе «запомни» сохраняет всегда.</div></div></div>
+            <div><p class="gh">Отладка</p><div class="group"><div class="row">Разговоров в ядре<span class="v"><span class="mono">12</span></span></div><div class="row">Последний «сон»<span class="v"><span class="mono">СЕГОДНЯ 04:00</span></span></div><div class="row sub">Группа видна только при включённом режиме отладки в настройках.</div></div></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:4px"><button class="btn btn-quiet" style="color:var(--signal);font-weight:600;font-size:14px">Забыть всё</button><span class="cap" style="font-size:11px">ЗАПИСИ, ПРОФИЛЬ И РАЗГОВОРЫ · УРОВЕНЬ ОСТАЁТСЯ</span></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">03 · Ниже по экрану. Свайп открывает круглую красную клавишу «Забыть». Группа «Отладка» только в режиме отладки.</p>
+      </div>
+
+      <!-- 04 empty / cold / error -->
+      <div class="shot">
+        <div class="phone-wrap"><div class="phone">
+          <div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="topbar"><button class="btn btn-quiet" style="padding:0;height:auto">‹ Настройки</button><span class="ttl">Память</span><span style="width:44px"></span></div>
+          <div class="stack" style="gap:18px">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="level" aria-pressed="true"><span class="t"><span class="n">Холодная</span><span class="d">Ничего не запоминает и не записывает.</span></span><span class="lamp off"></span></button>
+              <button class="level"><span class="t"><span class="n">По просьбе</span><span class="d">Только «запомни» и «забудь».</span></span><span class="lamp off"></span></button>
+              <button class="level"><span class="t"><span class="n">Замечает сама</span><span class="d">Выделяет важное после звонка.</span></span><span class="lamp off"></span></button>
+              <button class="level"><span class="t"><span class="n">Вовлечённая</span><span class="d">Плюс спрашивает о твоих делах.</span></span><span class="lamp off"></span></button>
+            </div>
+            <div class="group"><div class="empty"><span class="lamp off"></span><span>Память выключена. Записи сохранены в ядре, но Волна их не читает.</span></div></div>
+            <div><p class="gh">Записи</p><div class="group"><div class="empty"><div class="mark-mini" aria-hidden="true"><svg viewBox="0 0 120 120"><path d="M16 60 Q23 54 30 60 Q38 70 46 60 Q55 34 64 60 Q73 86 82 60 Q90 50 98 60 Q101 63 104 60" fill="none" stroke="#B8321F" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/></svg></div><span>Пока пусто. После первого разговора Волна запишет то, что стоит помнить.</span></div></div></div>
+            <div class="card err"><b>Ядро не отвечает</b>Память живёт в ядре. Проверь подключение в настройках и открой экран снова.</div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <p class="cap">04 · Состояния: уровень «Холодная» гасит все лампы; пустой список со знаком; ошибка ядра вдавленной карточкой.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="components">
+  <div class="wrap">
+    <h2>Компоненты и соответствие в коде</h2>
+    <div class="table-wrap"><table>
+      <tr><th>Элемент</th><th>Откуда</th><th>SwiftUI</th></tr>
+      <tr><td>Строка уровня с описанием</td><td>Расширение <span class="mono">SelectableRow</span>: второй строкой описание 12 pt, высота растёт до 64 pt. Выбранное вдавлено, лампа горит только у выбранного.</td><td><span class="mono">SelectableRow(title:detail:subtitle:selected:)</span> или новый <span class="mono">LevelRow</span> в <span class="mono">VolnaComponents</span></td></tr>
+      <tr><td>Профиль на стекле</td><td><span class="mono">AnswerCard</span> без изменений: заголовок «ВОЛНА О ТЕБЕ», внизу дата обновления и число записей.</td><td><span class="mono">AnswerCard(title:text:footer:)</span></td></tr>
+      <tr><td>Строка записи</td><td>Текст 14.5 pt плюс метка вида в вдавленной пилюле (mono 10.5, верхний регистр) и дата. Явные записи («просьба») красной меткой. Свайп влево открывает круглую красную клавишу 56 pt «ЗАБЫТЬ» (как <span class="mono">RoundControl</span>, но сигнального цвета).</td><td>Новый <span class="mono">MemoryRow</span> с собственным жестом: системный <span class="mono">swipeActions</span> рисует только прямоугольник</td></tr>
+      <tr><td>Переключатель чувствительных тем</td><td>Строка с <span class="mono">LampValue</span>: «НЕ ХРАНИТЬ» / «ХРАНИТЬ». Без системного Toggle.</td><td><span class="mono">SettingsRow + LampValue</span>, как «Микрофон»</td></tr>
+      <tr><td>Пустое состояние</td><td>Малый знак с приглушённой волной и одна строка 13.5 pt.</td><td><span class="mono">WaveMark(size: .sm, state: .idle)</span> с opacity .45</td></tr>
+      <tr><td>Ошибка ядра</td><td><span class="mono">ErrorCard</span> без изменений.</td><td><span class="mono">ErrorCard</span></td></tr>
+      <tr><td>Группа «Отладка»</td><td>Число разговоров в ядре и время последнего «сна». Показывается только при включённом «Режиме отладки» в настройках (переключатель в группе «Для разработки», см. volna-settings-refresh.html).</td><td><span class="mono">SettingsRow</span>, флаг <span class="mono">debugMode</span> в UserDefaults</td></tr>
+      <tr><td>«Забыть всё»</td><td><span class="mono">QuietButton</span> красным текстом и подписью mono. Перед выполнением системный confirmationDialog.</td><td><span class="mono">QuietButtonStyle</span> + <span class="mono">confirmationDialog</span></td></tr>
+    </table></div>
+    <h3 style="margin-top:24px">Словарь</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Уровень (ядро)</th><th>Название</th><th>Описание в строке</th></tr>
+      <tr><td class="mono">cold</td><td>Холодная</td><td>Ничего не запоминает и не записывает.</td></tr>
+      <tr><td class="mono">explicit</td><td>По просьбе</td><td>Только «запомни» и «забудь».</td></tr>
+      <tr><td class="mono">attentive</td><td>Замечает сама</td><td>Выделяет важное после звонка.</td></tr>
+      <tr><td class="mono">involved</td><td>Вовлечённая</td><td>Плюс спрашивает о твоих делах.</td></tr>
+      <tr><th>Вид записи</th><th>Метка</th><th></th></tr>
+      <tr><td class="mono">preference</td><td>общение</td><td></td></tr>
+      <tr><td class="mono">fact</td><td>факт</td><td></td></tr>
+      <tr><td class="mono">episode</td><td>разговор</td><td></td></tr>
+      <tr><td class="mono">thread</td><td>нить</td><td></td></tr>
+      <tr><td class="mono">insight</td><td>наблюдение</td><td></td></tr>
+      <tr><td class="mono">origin: explicit</td><td>просьба</td><td>Красная метка вместо вида: пользователь попросил сам.</td></tr>
+    </table></div>
+    <h3 style="margin-top:24px">Поведение</h3>
+    <ul>
+      <li>Уровень применяется сразу: тап шлёт <span class="mono">PUT /memory/settings</span>, строка вдавливается без ожидания ответа, при ошибке возвращается и показывается карточка ошибки.</li>
+      <li>Во время звонка уровень менять нельзя (строки приглушены, как голоса): он уже вшит в сессию.</li>
+      <li>Список загружается при открытии и обновляется pull-to-refresh. Кэша на телефоне нет: если ядро недоступно, показывается только ошибка.</li>
+      <li>Удаление записи закрывает её в ядре (она остаётся в истории для <span class="mono">recall</span>), в списке исчезает сразу.</li>
+      <li>Идентификаторы доступности для тестов: <span class="mono">memory, memoryLevel, memoryProfile, memoryList, forgetAll</span>.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <h2>Решения владельца · 22.09.2026</h2>
+    <ol>
+      <li><b>Профиль на стекле.</b> Принято: профиль считается текстом Волны и живёт на стекле.</li>
+      <li><b>Два красных.</b> Принято: «Забыть всё» и свайп оба красные. Клавиша свайпа круглая, не прямоугольная.</li>
+      <li><b>Техническая информация.</b> Вместо постоянной строки «Ядро» группа «Отладка», видимая только при включённом режиме отладки в настройках.</li>
+      <li><b>Ручное добавление записи.</b> Не делаем.</li>
+    </ol>
+  </div>
+</section>
+</main>
+<script>
+function fit(){document.querySelectorAll('.phone-wrap').forEach(function(w){var s=w.clientWidth/390;w.querySelector('.phone').style.transform='scale('+s+')';});}
+window.addEventListener('resize',fit);fit();document.fonts&&document.fonts.ready.then(fit);
+</script>
+</body>
+</html>

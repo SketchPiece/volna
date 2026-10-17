@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>Г′. Та же вкладка «Работа»</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<script src="_shared.js"></script>
+<script>
+Volna.idle({ stageClass: 'top', stage: `<div class="seg"><span class="${'work'==='talk'?'on':''}">Разговоры</span><span class="${'work'==='work'?'on':''}">Работа <em class="cnt" style="font-style:normal">2</em></span></div><div class="card list">${[
+  ['hot', 'Работа · 12 мин', 'Сравниваю тарифы на связь'],
+  ['hot', 'Работа · 3 мин', 'Ищу билеты в Тбилиси на 10-е'],
+  ['on', 'Ждёт ответа', 'Какой бюджет на подарок маме?'],
+  ['on', 'Сегодня · 18:00', 'Позвонить в банк про карту'],
+  ['off', 'Готово · 14:20', 'План переезда: сводка'],
+].map(([l, k, t]) => `<div class="item"><span class="lamp ${l}"></span><div class="body"><div class="k">${k}</div><div class="t">${t}</div></div></div>`).join('')}</div>` });
+</script>
+</body>
+</html>

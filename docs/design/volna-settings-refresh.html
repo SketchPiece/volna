@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Настройки Волны: правки</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Токены «Бакелит и лампа» из volna-design-system.html. Макет однотемный, светлая тема приложения. */
+:root{
+  color-scheme:light;
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B; --ph:#6E655A;
+  --signal:#B8321F;
+  --lamp:#E8A33D; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised:7px 7px 16px var(--shade),-7px -7px 16px var(--light);
+  --raised-sm:4px 4px 10px var(--shade),-4px -4px 10px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --hair:rgba(38,33,29,.08);
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-line:rgba(38,33,29,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--ivory);color:var(--bakelite);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
+section{padding-block:48px;border-top:1px solid var(--page-line)}
+section:first-of-type{border-top:0;padding-block:40px 32px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,52px);font-weight:800;margin:12px 0 10px}
+h1 span{color:var(--signal)}
+h2{font-size:clamp(20px,3vw,28px);margin-bottom:12px}
+h3{font-size:15px;margin:0 0 10px}
+p{margin:0 0 12px;max-width:68ch}
+.lead{color:var(--ink-2);max-width:66ch;margin-bottom:24px}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--ink-2)}
+.cap{font:12px/1.5 var(--font-mono);letter-spacing:.06em;color:var(--ink-2);margin-top:14px}
+ul{padding-left:20px;margin:0}
+li{margin-bottom:6px;max-width:66ch}
+.cols{display:grid;gap:40px;grid-template-columns:repeat(auto-fit,minmax(min(100%,390px),1fr));align-items:start}
+.label{font:500 11px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);margin-bottom:14px}
+.label b{color:var(--signal);font-weight:500}
+
+/* Экран целиком, без корпуса телефона: настройки длиннее одного экрана. */
+.scr{width:390px;max-width:100%;background:var(--ivory);border-radius:28px;box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(0,0,0,.05);overflow:hidden}
+.nav{display:flex;align-items:center;justify-content:center;height:52px;position:relative;font:600 15px var(--font-display)}
+.nav .done{position:absolute;right:20px;font:600 15px var(--font-body);color:var(--signal)}
+.body{padding:12px 24px 32px;display:flex;flex-direction:column;gap:22px}
+.gh{font:500 11px var(--font-mono);letter-spacing:.13em;color:var(--ink-2);margin:0 0 10px 20px}
+.grp{border-radius:24px;box-shadow:var(--raised);padding:6px 0}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 20px}
+.row+.row,.row+.note,.note+.row,.fields+.row,.row+.fields{border-top:1px solid var(--hair)}
+.row .t{flex:1;min-width:0}
+.row .t small{display:block;font:12px/1.4 var(--font-body);color:var(--ink-2)}
+.val{font:14px var(--font-body);color:var(--ink-2);white-space:nowrap}
+.chev{color:rgba(94,85,75,.55);font:600 13px var(--font-body)}
+.lv{display:inline-flex;align-items:center;gap:8px;font:500 12px var(--font-mono);letter-spacing:.06em;color:var(--ink-2);white-space:nowrap}
+.lamp{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;background:var(--lamp);box-shadow:0 0 8px var(--lamp)}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 1px 1px 2px #A89F90}
+.note{font:13px/1.45 var(--font-body);color:var(--ink-2);padding:8px 20px 10px}
+.hint{font:13px/1.45 var(--font-body);color:var(--ink-2);margin:10px 20px 0}
+.fields{padding:12px 20px;display:flex;flex-direction:column;gap:10px}
+.fld{height:44px;border-radius:999px;box-shadow:var(--pressed-sm);display:flex;align-items:center;padding:0 18px;font:13.5px var(--font-mono);color:var(--bakelite)}
+.fld.ph{font-family:var(--font-body);font-size:14px;color:var(--ph)}
+.btn{font:600 13px var(--font-body);color:var(--bakelite);border:0;height:32px;padding:0 14px;border-radius:999px;background:var(--ivory);box-shadow:var(--raised-sm);white-space:nowrap;display:inline-flex;align-items:center}
+.ok{font:14px var(--font-body);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.ok svg{width:14px;height:14px;fill:none;stroke:var(--ink-2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sw{width:46px;height:28px;border-radius:14px;box-shadow:var(--pressed-sm);position:relative;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:var(--ivory);box-shadow:2px 2px 4px var(--shade),-1px -1px 2px var(--light)}
+.sw.on{background:rgba(232,163,61,.28)}
+.sw.on::after{left:22px;background:var(--lamp);box-shadow:0 0 7px rgba(232,163,61,.7)}
+.link{font:14px var(--font-body);color:var(--signal);white-space:nowrap}
+.foot{font:13px/1.45 var(--font-body);color:var(--ink-2);padding:0 20px}
+.mark{outline:2px dashed rgba(184,50,31,.45);outline-offset:3px;border-radius:24px}
+.old .note{font-size:12.5px}
+</style>
+</head>
+<body>
+
+<section>
+  <div class="wrap">
+    <div class="decode">ВОЛНА · iOS · НАСТРОЙКИ · ПРАВКИ ОДОБРЕНЫ И ВНЕДРЕНЫ · 23.09.2026</div>
+    <h1>Настройки: <span>мелочи</span></h1>
+    <p class="lead">Та же чистка, что в Пульте: меньше групп и пояснений, лампа только там, где что-то живое, настоящие переключатели и кнопки вместо текста капителью. Идентификаторы доступности и порядок, который проверяют тесты, не меняются.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>01 · Экран целиком</h2>
+    <p class="lead">Слева как сейчас, справа как предлагаю. Экран показан во всю длину, без корпуса телефона.</p>
+    <div class="cols">
+      <div>
+        <div class="label">СЕЙЧАС · 8 ГРУПП, 11 ПОЯСНЕНИЙ</div>
+        <div class="scr old">
+          <div class="nav">Настройки<span class="done">Готово</span></div>
+          <div class="body">
+            <div><div class="gh">ГОЛОС ВОЛНЫ</div><div class="grp">
+              <div class="row"><span class="t">Голос</span><span class="val">Marin</span><span class="chev">›</span></div>
+              <div class="note">Применяется со следующего звонка. Marin и Cedar рекомендованы OpenAI по качеству звучания.</div>
+            </div></div>
+            <div><div class="gh">ПАМЯТЬ</div><div class="grp">
+              <div class="row"><span class="t">Что Волна помнит</span><span class="val">Замечает сама</span><span class="chev">›</span></div>
+              <div class="note">Волна запоминает важное из разговоров и хранит это в твоём ядре. Уровень и записи можно менять.</div>
+            </div></div>
+            <div><div class="gh">ПОДКЛЮЧЕНИЕ</div><div class="grp">
+              <div class="fields"><div class="fld">https://volna.example.dev</div><div class="fld ph">Токен ядра (если задан)</div></div>
+              <div class="row"><span class="t">Проверить подключение</span><span class="lv"><span class="lamp off"></span>ПРОВЕРИТЬ</span></div>
+              <div class="note">Микрофон разрешён.</div>
+              <div class="note">В симуляторе ядро работает на Mac: http://127.0.0.1:8787. На iPhone нужен HTTPS-адрес. OpenAI API-ключ хранится только в ядре.</div>
+            </div></div>
+            <div><div class="gh">ПЕРВЫЙ ЗАПУСК</div><div class="grp">
+              <div class="row"><span class="t">Микрофон</span><span class="lv"><span class="lamp"></span>РАЗРЕШЁН</span></div>
+              <div class="row"><span class="t">Siri</span><span class="lv"><span class="lamp"></span>РАЗРЕШЕНА</span></div>
+              <div class="note">Один раз разреши микрофон и Siri здесь, затем включи доступ к Siri при блокировке в настройках iPhone.</div>
+            </div></div>
+            <div><div class="gh">ДОСТУП К ТЕЛЕФОНУ</div><div class="grp">
+              <div class="row"><span class="t">Напоминания</span><span class="lv"><span class="lamp"></span>РАЗРЕШЕНЫ</span></div>
+              <div class="row"><span class="t">Календарь</span><span class="lv"><span class="lamp off"></span>РАЗРЕШИТЬ</span></div>
+              <div class="row"><span class="t">Контакты</span><span class="lv" style="color:var(--signal)"><span class="lamp off"></span>В НАСТРОЙКАХ IOS</span></div>
+              <div class="note">Часть доступа отклонена. Включить: Настройки iOS → Волна.</div>
+            </div></div>
+            <div><div class="gh">SIRI → ЗВОНОК</div><div class="grp">
+              <div class="row"><span class="t">Язык Siri</span><span class="val" style="font-family:var(--font-mono);font-size:12.5px">RU-RU</span></div>
+              <div class="note">Скажи: «Siri, Позвони Волне через Волну». Siri начнёт звонок встроенному AI-собеседнику. Добавлять Волну в Контакты не нужно.</div>
+              <div class="note">Если в «Командах» остался старый «Call Volna» или «Позвони Волне», переименуй его: Siri может выбрать его вместо звонка.</div>
+            </div></div>
+            <div><div class="gh">ПРОВЕРКА ИНТЕРФЕЙСА</div><div class="grp">
+              <div class="row"><span class="t">Открыть демо звонка</span><span class="chev">›</span></div>
+              <div class="note">Без микрофона, сетевых запросов и расходов API.</div>
+              <div class="row"><span class="t">Режим отладки</span><span class="lv"><span class="lamp off"></span>ВЫКЛ</span></div>
+              <div class="note">Показывает технические сведения: число разговоров в ядре и время последнего «сна» памяти.</div>
+            </div></div>
+            <div><div class="gh">ПОСЛЕДНИЙ ЗВОНОК</div><div class="grp">
+              <div class="row"><span class="t">Подключение</span><span class="val" style="font-family:var(--font-mono);font-size:12.5px">1.4 с</span></div>
+              <div class="row"><span class="t">Запуск</span><span class="val">Siri</span></div>
+            </div></div>
+            <div class="foot">Ты разговариваешь с AI. Во время настоящего звонка звук передаётся OpenAI. Телефон ничего не сохраняет; транскрипты и память хранятся в твоём ядре по уровню в разделе «Память». Демо и настоящий звонок отмечены отдельно.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="label"><b>ПРЕДЛАГАЮ · ОБЫЧНЫЙ РЕЖИМ</b></div>
+        <div class="scr">
+          <div class="nav">Настройки<span class="done">Готово</span></div>
+          <div class="body">
+            <div><div class="gh">РАЗГОВОР</div><div class="grp">
+              <div class="row"><span class="t">Голос</span><span class="val">Marin</span><span class="chev">›</span></div>
+              <div class="row"><span class="t">Память<small>что Волна знает о тебе</small></span><span class="chev">›</span></div>
+              <div class="row"><span class="t">Музыка в ожидании<small>эксперимент: пока идёт работа</small></span><span class="sw"></span></div>
+            </div><p class="hint">Голос и музыка меняются со следующего звонка.</p></div>
+
+            <div><div class="gh">РАЗРЕШЕНИЯ</div><div class="grp">
+              <div class="row"><span class="t">Микрофон</span><span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>есть</span></div>
+              <div class="row"><span class="t">Siri</span><span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>есть</span></div>
+              <div class="row"><span class="t">Напоминания</span><span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>есть</span></div>
+              <div class="row"><span class="t">Календарь</span><button class="btn">Разрешить</button></div>
+              <div class="row"><span class="t">Контакты</span><span class="link">Настройки iOS ›</span></div>
+            </div><p class="hint">Без доступа Волна скажет, что не дотягивается до приложения.</p></div>
+
+            <div><div class="gh">SIRI</div><div class="grp">
+              <div class="row"><span class="t">«Siri, позвони Волне через Волну»<small>язык Siri: RU-RU</small></span></div>
+            </div></div>
+
+            <div><div class="gh">ДЛЯ РАЗРАБОТКИ</div><div class="grp">
+              <div class="row"><span class="t">Демо звонка<small>без микрофона и расходов API</small></span><span class="chev">›</span></div>
+              <div class="row"><span class="t">Режим отладки<small>ядро, замеры звонка, счётчики памяти</small></span><span class="sw"></span></div>
+            </div></div>
+
+            <div class="foot" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-align:center">ВОЛНА 0.1.0 · СБОРКА 3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols" style="margin-top:40px">
+      <div>
+        <div class="label"><b>ПРЕДЛАГАЮ · ОТЛАДКА ВКЛЮЧЕНА</b></div>
+        <div class="scr">
+          <div class="nav">Настройки<span class="done">Готово</span></div>
+          <div class="body">
+            <div style="font:12px var(--font-mono);color:var(--ink-2);text-align:center;letter-spacing:.1em">… РАЗГОВОР · РАЗРЕШЕНИЯ · SIRI …</div>
+            <div><div class="gh">ДЛЯ РАЗРАБОТКИ</div><div class="grp">
+              <div class="row"><span class="t">Демо звонка<small>без микрофона и расходов API</small></span><span class="chev">›</span></div>
+              <div class="row"><span class="t">Режим отладки<small>ядро, замеры звонка, счётчики памяти</small></span><span class="sw on"></span></div>
+              <div class="row"><span class="t">Последний звонок</span><span class="val" style="font-family:var(--font-mono);font-size:12.5px">1.4 с · Siri</span></div>
+            </div></div>
+            <div><div class="gh">ЯДРО</div><div class="grp">
+              <div class="fields"><div class="fld">https://volna.example.dev</div><div class="fld ph">Токен (если задан)</div></div>
+              <div class="row"><span class="t">Подключение</span><span class="lv"><span class="lamp"></span>В ЭФИРЕ</span><button class="btn">Проверить</button></div>
+              <div class="note">Ядро доступно, ключ задан.</div>
+            </div></div>
+            <div class="foot" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-align:center">ВОЛНА 0.1.0 · СБОРКА 3</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Что делает режим отладки</h3>
+        <p>Сейчас одно: на экране «Память» появляется блок «Отладка» с числом разговоров в ядре и временем последнего «сна» памяти.</p>
+        <p>После правки ещё два: в настройках появляются группа «Ядро» (адрес, токен, проверка подключения) и строка «Последний звонок» (время подключения и откуда запущен). В обычном режиме их нет.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>02 · Что меняется</h2>
+    <ul>
+      <li><b>Голос и Память в одной группе «Разговор».</b> Строка называется просто «Память» и ведёт на просмотр того, что Волна о тебе знает; уровень близости в строке не показываем. Про Marin и Cedar уже сказано на экране выбора голоса.</li>
+      <li><b>«Первый запуск» и «Доступ к телефону» слиты в «Разрешения».</b> Выданное разрешение — спокойная галочка «есть», без горящей лампы: по правилам дизайн-системы лампа горит только при реальной активности. Не спрошено — маленькая выпуклая кнопка «Разрешить». Отказано в iOS — ссылка «Настройки iOS ›».</li>
+      <li><b>Сообщения о разрешениях больше не появляются в группе «Подключение».</b> Сейчас «Микрофон разрешён.» вылезает под ядром; теперь строка сама меняется на «есть».</li>
+      <li><b>Siri: одна строка с фразой и языком.</b> Пояснение про старую команду в «Командах» убрано: её давно нет.</li>
+      <li><b>Ядро и последний звонок только в режиме отладки.</b> «Проверить» стал кнопкой, лампа «в эфире» горит только после успешной проверки.</li>
+      <li><b>«Для разработки» внизу:</b> демо и режим отладки настоящим оранжевым переключателем, как в Пульте.</li>
+      <li><b>Вместо подписи про AI и OpenAI внизу версия приложения:</b> «ВОЛНА 0.1.0 · СБОРКА 3» из Info.plist.</li>
+      <li>Идентификаторы остаются на тех же элементах. Один UI-тест подключения сначала включит режим отладки (правка в <span style="font-family:var(--font-mono);font-size:13px">CallAssistantUITests.swift</span>; соседняя сессия этот файл не трогает).</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>03 · Решено владельцем 23.09.2026</h2>
+    <ul><li>«Память» без уровня в строке: это место просмотра.</li><li>Старая команда Siri не упоминается.</li><li>OpenAI не упоминается, внизу версия.</li><li>Ядро видно только в режиме отладки.</li></ul>
+  </div>
+</section>
+
+</body>
+</html>

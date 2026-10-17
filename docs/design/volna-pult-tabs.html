@@ -1,0 +1,231 @@
+<title>Пульт: код и задания</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Токены «Бакелит и лампа» (volna-design-system.html, volna-pult-refresh.html). Дизайн однотемный намеренно. */
+:root{
+  color-scheme:light;
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --eye:#3FA65E; --eye-hot:#6FD48C;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised-sm:4px 4px 10px var(--shade),-4px -4px 10px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --r-sm:12px; --r-md:18px; --r-lg:28px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-line:rgba(38,33,29,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--ivory);color:var(--bakelite);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
+section{padding-block:44px;border-top:1px solid var(--page-line)}
+section:first-of-type{border-top:0;padding-block:40px 28px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,50px);font-weight:800;margin:12px 0 10px}
+h1 span{color:var(--signal)}
+h2{font-size:clamp(20px,3vw,27px);margin-bottom:12px}
+h3{font-size:15px;margin:28px 0 10px}
+p{margin:0 0 12px;max-width:68ch}
+.lead{color:var(--ink-2);max-width:68ch;margin-bottom:24px}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--ink-2)}
+.cap{font:12px/1.5 var(--font-mono);letter-spacing:.04em;color:var(--ink-2);margin-top:14px;max-width:72ch}
+ul{padding-left:20px;margin:0}
+li{margin-bottom:7px;max-width:70ch}
+.cols{display:grid;gap:40px;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));align-items:start}
+.label{font:500 11px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);margin-bottom:14px}
+.label b{color:var(--signal);font-weight:500}
+
+.lamp{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;background:var(--lamp)}
+.lamp.hot{background:var(--lamp-hot);box-shadow:0 0 9px var(--lamp-hot)}
+.lamp.dim{background:var(--lamp-dim)}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 1px 1px 2px #A89F90}
+.lamp.eye{background:var(--eye);box-shadow:0 0 6px var(--eye-hot);animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 3px rgba(111,212,140,.5);background:var(--eye)}50%{box-shadow:0 0 11px var(--eye-hot);background:#58C377}}
+@media (prefers-reduced-motion:reduce){.lamp.eye{animation:none}}
+
+/* Панель */
+.panel{width:400px;max-width:100%;background:var(--ivory);border-radius:var(--r-lg);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(0,0,0,.05);overflow:hidden;font-size:13px}
+.p-head{display:flex;align-items:center;gap:10px;padding:12px 14px 10px}
+.p-head .t{font:600 15px var(--font-display);flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 10px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);white-space:nowrap}
+.pill .lamp{width:8px;height:8px}
+.key{width:30px;height:30px;border-radius:50%;border:0;background:var(--ivory);box-shadow:var(--raised-sm);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--bakelite);padding:0}
+.key svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Табы: вдавленная шкала, активный таб — выпуклая клавиша */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0 14px 10px;padding:4px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm)}
+.tab{border:0;background:transparent;border-radius:var(--r-pill);height:30px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 12.5px var(--font-body);color:var(--ink-2);cursor:pointer}
+.tab .lamp{width:7px;height:7px}
+.tab .n{font:500 10.5px var(--font-mono);color:var(--ink-2)}
+.tab[aria-selected="true"]{background:var(--ivory);box-shadow:var(--raised-sm);color:var(--bakelite)}
+.tab:focus-visible,.btn:focus-visible,.key:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+.p-list{padding:0 6px 8px;display:flex;flex-direction:column;border-top:1px solid var(--page-line)}
+.gh{display:flex;justify-content:space-between;font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);padding:10px 12px 4px}
+.row{display:grid;grid-template-columns:10px 15px 1fr auto;gap:0 10px;align-items:start;padding:8px 12px;border-radius:var(--r-sm)}
+.row.open{background:rgba(251,246,236,.75)}
+.row .lamp{margin-top:5px}
+.row .mk{margin-top:2px;width:15px;height:15px}
+.row .nm{font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row.needs .nm{color:var(--signal)}
+.row .d{font:10.5px/1.45 var(--font-mono);color:var(--ink-2);margin-top:2px}
+.row .d.one{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .d.now{font:12.5px/1.4 var(--font-body);color:var(--bakelite);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row.needs .d.one{color:var(--signal)}
+.row{position:relative}
+.row.hov{cursor:pointer}
+.row .go{position:absolute;right:12px;bottom:9px;opacity:0;color:var(--ink-2)}
+.row.hov:hover .go,.row.open .go{opacity:1}
+.row.hov:hover{background:rgba(251,246,236,.75)}
+.row .go svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.row .tm{font:10.5px var(--font-mono);color:var(--ink-2);margin-top:2px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ok{color:var(--eye)} .no{color:var(--signal)}
+.now{margin-top:6px;font:12.5px/1.4 var(--font-body);color:var(--bakelite)}
+.now i{font-style:normal;font:500 9.5px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);margin-right:6px}
+
+/* Журнал задания */
+.log{margin-top:8px;border-radius:10px;box-shadow:var(--pressed-sm);padding:8px 10px;max-height:190px;overflow:auto;font:10.5px/1.55 var(--font-mono);color:var(--ink-2)}
+.log div{display:grid;grid-template-columns:52px 1fr;gap:6px}
+.log time{font-variant-numeric:tabular-nums;opacity:.8}
+.log .k{color:var(--bakelite)}
+.log .w{color:var(--signal)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.btn{font:600 12px var(--font-body);color:var(--bakelite);border:0;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised-sm);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn.quiet{box-shadow:none;background:transparent;color:var(--ink-2);padding:0 8px}
+.btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.phone-note{margin-top:6px;font:11px/1.4 var(--font-mono);color:var(--signal)}
+.p-foot{display:flex;align-items:center;gap:10px;padding:10px 14px 12px;border-top:1px solid var(--page-line)}
+.p-foot .sp{flex:1}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font:500 11px var(--font-mono);letter-spacing:.08em;color:var(--ink-2)}
+td code{font:12.5px var(--font-mono)}
+.q{border-left:3px solid var(--signal);padding:10px 16px;background:rgba(184,50,31,.06);border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:12px;max-width:74ch}
+.q b{font-family:var(--font-display);font-weight:600;font-size:13px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="claude" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1M7 2.8l10 18.4M17 2.8 7 21.2M2.8 7l18.4 10M2.8 17 21.2 7"/></g></symbol>
+  <symbol id="codex" viewBox="0 0 24 24"><g fill="none" stroke="#26211D" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></g></symbol>
+  <symbol id="wave" viewBox="0 0 24 24"><path d="M2 12c2.5-5 5-5 7.5 0s5 5 7.5 0 3.5-3 5-2" fill="none" stroke="#B8321F" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="astra" viewBox="0 0 24 24"><g fill="none" stroke="#26211D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M10 9l2 2 3-3" stroke="#3FA65E"/></g></symbol>
+</svg>
+
+<section>
+  <div class="wrap">
+    <div class="decode">ВОЛНА · ПУЛЬТ · MAC · ВЕРСИЯ 3 · ОДОБРЕНО И ВНЕДРЕНО 23.09.2026</div>
+    <h1>Пульт: <span>код и задания</span></h1>
+    <p class="lead">Панель в строке меню делится на два таба. «Код» — сессии Claude и Codex, как сейчас. «Работа» — всё, что Волна делает фоном: работа Астры на Mac и фоновые задания ядра (исследования, планы). У каждого задания лампа, название и одна строка «что сейчас происходит». Задание Астры — обычная сессия Codex: клик открывает её в Codex, там видно всё вживую.</p>
+  </div>
+</section>
+
+<section id="panel">
+  <div class="wrap">
+    <h2>Панель с табами</h2>
+    <p class="lead">Слева таб «Код» — нынешняя панель без изменений внутри. Справа таб «Работа»: одно ждёт кнопку на телефоне, два идут, два закончены.</p>
+    <div class="cols">
+      <div>
+        <div class="label">ТАБ «КОД»</div>
+        <div class="panel">
+          <div class="p-head">
+            <div class="t">Эфир</div>
+            <span class="pill"><span class="lamp eye"></span>3 В РАБОТЕ</span>
+            <button class="key" aria-label="Новая сессия"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" aria-selected="true" id="t-code-a">Код <span class="n">2</span></button>
+            <button class="tab" role="tab" aria-selected="false" id="t-comp-a"><span class="lamp hot"></span>Работа <span class="n">3</span></button>
+          </div>
+          <div class="p-list">
+            <div class="gh">В РАБОТЕ <span>2</span></div>
+            <div class="row"><span class="lamp eye"></span><svg class="mk"><use href="#claude"/></svg><div><div class="nm">Фоновые задания пачкой и сводка хода</div><div class="d one">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">сейчас</div></div>
+            <div class="row"><span class="lamp eye" style="animation-delay:-.7s"></span><svg class="mk"><use href="#codex"/></svg><div><div class="nm">Разбор задержки вызова Пульта</div><div class="d one">Codex · gpt-6 · CallAssistant</div></div><div class="tm">3 мин</div></div>
+            <div class="gh">В ОЖИДАНИИ <span>4</span></div>
+            <div class="row"><span class="lamp dim"></span><svg class="mk"><use href="#claude"/></svg><div><div class="nm">Экран «Память» в дизайн-систему</div><div class="d one">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">40 мин</div></div>
+            <div class="row"><span class="lamp dim"></span><svg class="mk"><use href="#claude"/></svg><div><div class="nm">Ожидание первого приветствия</div><div class="d one">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">2 ч</div></div>
+          </div>
+          <div class="p-foot">
+            <button class="btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Настройки</button>
+            <span class="sp"></span>
+            <button class="btn quiet">Выйти</button>
+          </div>
+        </div>
+        <p class="cap">Янтарная лампа на табе «Работа» значит: там что-то ждёт твою кнопку на телефоне. Счётчик — сколько заданий ждут или идут.</p>
+      </div>
+
+      <div>
+        <div class="label"><b>ТАБ «ЗАДАНИЯ»</b></div>
+        <div class="panel">
+          <div class="p-head">
+            <div class="t">Эфир</div>
+            <span class="pill"><span class="lamp hot"></span>1 ЖДЁТ</span>
+            <button class="key" aria-label="Новая сессия"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" aria-selected="false" id="t-code-b">Код <span class="n">2</span></button>
+            <button class="tab" role="tab" aria-selected="true" id="t-comp-b"><span class="lamp hot"></span>Работа <span class="n">3</span></button>
+          </div>
+          <div class="p-list">
+            <div class="gh">ЖДЁТ ТЕБЯ <span>1</span></div>
+            <div class="row needs hov"><span class="lamp hot"></span><svg class="mk"><use href="#codex"/></svg><div><div class="nm">Скриншоты в папку проекта</div><div class="d one">ждёт разрешения: Preview</div><div class="acts"><button class="btn" style="background:var(--signal);color:var(--light)">Разрешить</button><button class="btn">Отклонить</button></div></div><div class="tm">0:42</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+
+            <div class="gh">В РАБОТЕ <span>2</span></div>
+            <div class="row hov open"><span class="lamp eye"></span><svg class="mk"><use href="#codex"/></svg><div><div class="nm">Найти счёт за сентябрь в Почте</div><div class="d now">Открыта папка «Счета», идёт поиск письма от провайдера.</div></div><div class="tm">1:24</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <div class="row"><span class="lamp eye" style="animation-delay:-.9s"></span><svg class="mk"><use href="#wave"/></svg><div><div class="nm">Отели в Лиссабоне на октябрь</div><div class="d now">Сравниваются цены трёх районов, два варианта уже отобраны.</div></div><div class="tm">3:05</div></div>
+
+            <div class="gh">ГОТОВО <span>2</span></div>
+            <div class="row hov"><span class="lamp dim"></span><svg class="mk"><use href="#codex"/></svg><div><div class="nm">Открыть Заметки и найти список покупок</div><div class="d one">Список нашёлся в заметке «Выходные», восемь пунктов.</div></div><div class="tm">18 мин</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <div class="row"><span class="lamp off"></span><svg class="mk"><use href="#wave"/></svg><div><div class="nm">План поездки на три дня</div><div class="d one">Не получилось: модель не ответила за 10 минут.</div></div><div class="tm">1 ч</div></div>
+          </div>
+          <div class="p-foot">
+            <button class="btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Настройки</button>
+            <span class="sp"></span>
+            <button class="btn quiet">Выйти</button>
+          </div>
+        </div>
+        <p class="cap">Знак Codex — задание Астры: клик открывает его сессию в Codex, при наведении справа шеврон. Знак волны — фоновое задание ядра, открывать его некуда. Запрос доступа приходит сразу сюда, в окно Codex и на телефон; засчитывается первый ответ, в остальных местах запрос исчезает. Голосом нельзя.</p>
+      </div>
+    </div>
+
+    <h3>Что меняется</h3>
+    <ul>
+      <li><b>Два таба под шапкой.</b> Вдавленная шкала, активный таб — выпуклая клавиша, как тумблеры Пульта. Пилюля в шапке показывает состояние открытого таба.</li>
+      <li><b>Таб «Код»</b> остаётся нынешней панелью: сессии Claude и Codex, группы «ждут тебя», «в работе», «в ожидании».</li>
+      <li><b>Таб «Работа»</b>: задания Астры и фоновые задания ядра в одном списке, группы «ждёт тебя», «в работе», «готово». Лампы те же: зелёная — идёт, янтарная горячая — ждёт кнопку на телефоне, тусклая — готово, погашена — сбой или отмена.</li>
+      <li><b>Вторая строка.</b> У идущего задания — фраза «что сейчас происходит»: её раз в 30 секунд пишет дешёвая модель, и её же Волна скажет на «как там задание?». У готового — первое предложение итога, у сбоя — причина. Время справа: у идущих сколько длится, у готовых сколько прошло.</li>
+      <li><b>Задание Астры — сессия Codex.</b> Пульт держит общий сервер Codex (<code>ws://127.0.0.1:48613</code>), на котором работает и приложение Codex, поэтому клик открывает задание там вживую. Журнала в панели нет: всё видно в Codex. Остановить можно голосом или в самом Codex.</li>
+      <li><b>Подключение Codex.</b> Если приложение Codex не на общем сервере, вверху таба плашка «Codex не подключён» с кнопкой «Подключить» (или «Запустить», если он закрыт): Пульт закрывает Codex и открывает его уже подключённым. То же в настройках, группа «Источники».</li>
+      <li><b>Законченные задания не хранятся</b>: после перезапуска Пульта или ядра список пустеет, как сейчас.</li>
+      <li>Какой таб открыт, Пульт помнит. Если задание ждёт кнопку, панель открывается на «Работе».</li>
+    </ul>
+  </div>
+</section>
+
+<section id="data">
+  <div class="wrap">
+    <h2>Откуда Пульт берёт задания</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Задание</th><th>Где идёт</th><th>Как Пульт о нём знает</th><th>Клик</th></tr></thead>
+        <tbody>
+          <tr><td>Астра на Mac</td><td>тред Codex в общем демоне</td><td>сам запускает и видит события; фразу «сейчас» присылает ядро</td><td>открыть в Codex</td></tr>
+          <tr><td>Фоновое задание ядра</td><td>ядро, модель заданий</td><td>ядро присылает название, состояние, фразу и итог при каждом изменении</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">Ядро уже ходит в Пульт с токеном, поэтому новых настроек не нужно: оно будет присылать снимок задания в Пульт при запуске, новой фразе и конце. Если Пульт выключен, ядро работает как раньше.</p>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <h2>Решено и осталось</h2>
+    <div class="q"><b>Решено 23.09.2026.</b><br>Журнала в панели нет, клик открывает задание в Codex. Задание Астры — сессия Codex через общий демон. Фоновые задания ядра в том же табе. Фраза «сейчас» — второй строкой. Законченные не хранятся. Позже в тот же день таб переименован из «Задания» в «Работа»; пустой таб: «Работы нет».</div>
+    <div class="q"><b>Проверено 23.09.2026.</b><br>Общий демон Codex в этой сборке не подходит; приложение подключается к внешнему серверу через <code>CODEX_APP_SERVER_WS_URL</code>. Запрос доступа получают все клиенты, первый ответ засчитывается. По решению владельца доступ даётся в любом клиенте, не голосом, поэтому в панели вернулись кнопки.</div>
+  </div>
+</section>

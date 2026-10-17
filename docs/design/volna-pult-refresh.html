@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Пульт: правки панели</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Токены «Бакелит и лампа» из volna-design-system.html. Новое: --eye (зелёный «магический глаз»). Дизайн однотемный. */
+:root{
+  color-scheme:light;
+  --ivory:#E7E0D2; --bakelite:#26211D; --ink-2:#5E554B;
+  --signal:#B8321F;
+  --lamp:#E8A33D; --lamp-hot:#F2B550; --lamp-dim:#9C7A45; --lamp-off:#CFC6B6;
+  --eye:#3FA65E; --eye-hot:#6FD48C;
+  --shade:#BFB6A6; --light:#FBF6EC;
+  --raised:7px 7px 16px var(--shade),-7px -7px 16px var(--light);
+  --raised-sm:4px 4px 10px var(--shade),-4px -4px 10px var(--light);
+  --raised-lg:12px 12px 28px var(--shade),-12px -12px 28px var(--light);
+  --pressed-sm:inset 3px 3px 7px var(--shade),inset -3px -3px 7px var(--light);
+  --r-sm:12px; --r-md:18px; --r-lg:28px; --r-pill:999px;
+  --font-display:'Unbounded','IBM Plex Sans',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --page-line:rgba(38,33,29,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--ivory);color:var(--bakelite);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
+section{padding-block:48px;border-top:1px solid var(--page-line)}
+section:first-of-type{border-top:0;padding-block:40px 32px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,52px);font-weight:800;margin:12px 0 10px}
+h1 span{color:var(--signal)}
+h2{font-size:clamp(20px,3vw,28px);margin-bottom:12px}
+h3{font-size:15px;margin:0 0 10px}
+p{margin:0 0 12px;max-width:68ch}
+.lead{color:var(--ink-2);max-width:66ch;margin-bottom:24px}
+.decode{font:12px/1.7 var(--font-mono);letter-spacing:.14em;color:var(--ink-2)}
+.cap{font:12px/1.5 var(--font-mono);letter-spacing:.06em;color:var(--ink-2);margin-top:14px}
+.mono{font-family:var(--font-mono)}
+ul{padding-left:20px;margin:0}
+li{margin-bottom:6px;max-width:66ch}
+.cols{display:grid;gap:40px;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));align-items:start}
+.label{font:500 11px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);margin-bottom:14px}
+.label b{color:var(--signal);font-weight:500}
+
+/* ===== Лампы ===== */
+.lamp{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;background:var(--lamp)}
+.lamp.hot{background:var(--lamp-hot);box-shadow:0 0 9px var(--lamp-hot)}
+.lamp.dim{background:var(--lamp-dim)}
+.lamp.off{background:var(--lamp-off);box-shadow:inset 1px 1px 2px #A89F90}
+.lamp.eye{background:var(--eye);box-shadow:0 0 6px var(--eye-hot);animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 3px rgba(111,212,140,.5);background:var(--eye)}50%{box-shadow:0 0 11px var(--eye-hot);background:#58C377}}
+@media (prefers-reduced-motion:reduce){.lamp.eye{animation:none}}
+
+/* ===== Панель ===== */
+.panel{width:380px;max-width:100%;background:var(--ivory);border-radius:var(--r-lg);box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(0,0,0,.05);overflow:hidden;font-size:13px}
+.p-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--page-line)}
+.p-head .t{font:600 15px var(--font-display);flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--r-pill);box-shadow:var(--pressed-sm);font:500 10px var(--font-mono);letter-spacing:.12em;color:var(--ink-2);white-space:nowrap}
+.pill .lamp{width:8px;height:8px}
+.key{width:30px;height:30px;border-radius:50%;border:0;background:var(--ivory);box-shadow:var(--raised-sm);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--bakelite);padding:0}
+.key:active{box-shadow:var(--pressed-sm);color:var(--signal)}
+.key svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.p-list{padding:6px 6px 8px;display:flex;flex-direction:column}
+.gh{display:flex;justify-content:space-between;font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);padding:10px 12px 4px}
+.row{display:grid;grid-template-columns:10px 15px 1fr auto;gap:0 10px;align-items:start;padding:8px 12px;border-radius:var(--r-sm);cursor:pointer;position:relative}
+.row:hover,.row.hover{background:rgba(251,246,236,.75)}
+.row .lamp{margin-top:5px}
+.row .mk{margin-top:2px;width:15px;height:15px}
+.row .n{font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row.needs .n{color:var(--signal)}
+.row .d{font:10.5px/1.4 var(--font-mono);color:var(--ink-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .tm{font:10.5px var(--font-mono);color:var(--ink-2);margin-top:2px;white-space:nowrap}
+.row .go{position:absolute;right:12px;bottom:9px;opacity:0;color:var(--ink-2)}
+.row:hover .go,.row.hover .go{opacity:1}
+.row .go svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.acts{display:flex;gap:8px;margin-top:8px}
+.btn{font:600 12.5px var(--font-body);color:var(--bakelite);border:0;height:30px;padding:0 14px;border-radius:var(--r-pill);background:var(--ivory);box-shadow:var(--raised-sm);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:active{box-shadow:var(--pressed-sm);color:var(--signal)}
+.btn.sig{background:var(--signal);color:var(--light);font:600 11px var(--font-display)}
+.btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.more{font:500 10.5px var(--font-mono);color:var(--ink-2);padding:6px 12px;border:0;background:none;text-align:left;cursor:pointer;letter-spacing:.06em}
+.p-foot{display:flex;align-items:center;gap:10px;padding:10px 14px 12px;border-top:1px solid var(--page-line)}
+.p-foot .sp{flex:1}
+.btn.quiet{box-shadow:none;background:transparent;color:var(--ink-2);padding:0 10px}
+.btn.quiet:hover{box-shadow:var(--pressed-sm)}
+
+/* Старая панель, для сравнения */
+.old .row{grid-template-columns:10px 15px 1fr auto}
+.old .ico{display:flex;gap:10px;color:var(--ink-2);margin-top:2px}
+.old .ico svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
+.old .lamp.hot{box-shadow:0 0 9px var(--lamp-hot)}
+.old .foot-txt{font:12.5px var(--font-body);color:var(--ink-2)}
+
+/* ===== Настройки ===== */
+.win{width:480px;max-width:100%;background:var(--ivory);border-radius:14px;box-shadow:var(--raised-lg),inset 0 0 0 1px rgba(0,0,0,.06);overflow:hidden}
+.win-bar{height:38px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--page-line);font:500 12.5px var(--font-body);color:var(--ink-2)}
+.win-bar i{width:12px;height:12px;border-radius:50%;background:var(--lamp-off);box-shadow:inset 1px 1px 2px #A89F90}
+.win-bar span{flex:1;text-align:center;margin-right:52px}
+.win-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:20px}
+.sg-h{font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);margin:0 0 8px 4px}
+.sg{border-radius:var(--r-md);box-shadow:var(--raised-sm)}
+.sr{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 14px}
+.sr+.sr{border-top:1px solid var(--page-line)}
+.sr .l{flex:1;min-width:0}
+.sr .l small{display:block;font:10.5px/1.4 var(--font-mono);color:var(--ink-2);margin-top:1px}
+.sr .st{display:inline-flex;align-items:center;gap:7px;font:10.5px var(--font-mono);color:var(--ink-2);white-space:nowrap}
+.sr .st .lamp{width:8px;height:8px}
+.sr .st .lamp.on{background:var(--lamp);box-shadow:0 0 6px var(--lamp)}
+.sw{width:34px;height:20px;border-radius:10px;box-shadow:var(--pressed-sm);position:relative;flex-shrink:0;background:var(--ivory)}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--ivory);box-shadow:2px 2px 4px var(--shade),-1px -1px 2px var(--light)}
+.sw.on{background:rgba(232,163,61,.2)}
+.sw.on::after{left:17px;background:var(--lamp);box-shadow:0 0 6px rgba(232,163,61,.7)}
+.step{display:inline-flex;align-items:center;gap:6px;font:12px var(--font-mono)}
+.step .key{width:24px;height:24px}
+.step .key svg{width:11px;height:11px}
+.step b{min-width:44px;text-align:center;font-weight:500}
+.disc{display:flex;align-items:center;gap:8px;font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);margin:0 0 8px 4px}
+.disc svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2}
+.hint{font:12px/1.5 var(--font-body);color:var(--ink-2);margin:8px 4px 0}
+.win-foot{display:flex;align-items:center;justify-content:space-between;font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--ink-2);padding:0 4px}
+.field{font:12px var(--font-mono);width:70px;text-align:right;padding:4px 8px;border-radius:8px;box-shadow:var(--pressed-sm)}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--page-line);vertical-align:top}
+th{font:500 11px var(--font-mono);letter-spacing:.08em;color:var(--ink-2)}
+td .lamp{vertical-align:middle;margin-right:8px}
+.q{border-left:3px solid var(--signal);padding:10px 16px;background:rgba(184,50,31,.06);border-radius:0 var(--r-sm) var(--r-sm) 0;margin-bottom:12px;max-width:72ch}
+.q b{font-family:var(--font-display);font-weight:600;font-size:13px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="claude" viewBox="0 0 24 24"><g stroke="#D97757" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1M7 2.8l10 18.4M17 2.8 7 21.2M2.8 7l18.4 10M2.8 17 21.2 7"/></g></symbol>
+</svg>
+
+<section>
+  <div class="wrap">
+    <div class="decode">ВОЛНА · ПУЛЬТ · MAC · ПРАВКИ ОДОБРЕНЫ И ВНЕДРЕНЫ · 22.09.2026</div>
+    <h1>Пульт: <span>мелочи</span></h1>
+    <p class="lead">Правки панели в строке меню и окна настроек по замечаниям владельца: зелёная живая лампа у работающих сессий, без кнопки обновления, без «написать в сессию» и без иконки-стрелки у каждой строки, настоящие кнопки внизу, настройки короче и спокойнее.</p>
+  </div>
+</section>
+
+<section id="panel">
+  <div class="wrap">
+    <h2>01 · Панель</h2>
+    <p class="lead">Слева как сейчас, справа как предлагаю. Наведи на строку справа: появляется маленькая стрелка «открыть», потому что клик по строке и так открывает сессию в родном клиенте.</p>
+    <div class="cols">
+      <div>
+        <div class="label">СЕЙЧАС</div>
+        <div class="panel old">
+          <div class="p-head"><div class="t">Эфир</div><span style="font-size:20px;color:var(--ink-2);margin-right:6px">+</span><span class="pill"><span class="lamp hot"></span>3 В РАБОТЕ</span></div>
+          <div class="p-list">
+            <div class="gh">В РАБОТЕ <span>3</span></div>
+            <div class="row"><span class="lamp hot"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Сравнение GPT и Anthropic по мнению сообщества</div><div class="d">Claude Desktop · Opus 5.5 · medium…</div></div><div class="ico"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="9" rx="2"/><path d="M5 6h6M5 9h4"/></svg><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="M6 10l4-4M7 6h3v3"/></svg></div></div>
+            <div class="row"><span class="lamp hot"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Интеграция пульта с управлением компьютером</div><div class="d">Claude Desktop · Opus 5.5 · medium…</div></div><div class="ico"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="9" rx="2"/><path d="M5 6h6M5 9h4"/></svg><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="M6 10l4-4M7 6h3v3"/></svg></div></div>
+            <div class="gh">В ОЖИДАНИИ <span>5</span></div>
+            <div class="row"><span class="lamp dim"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">GPT Live ответы «Сейчас посмотрю»</div><div class="d">Claude Desktop · Opus 5.5 · medium…</div></div><div class="ico"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="9" rx="2"/><path d="M5 6h6M5 9h4"/></svg><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="M6 10l4-4M7 6h3v3"/></svg></div></div>
+            <div class="row"><span class="lamp dim"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Готово</div><div class="d">Claude Desktop · Opus 5.5 · medium…</div></div><div class="ico"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="9" rx="2"/><path d="M5 6h6M5 9h4"/></svg><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="M6 10l4-4M7 6h3v3"/></svg></div></div>
+          </div>
+          <div class="p-foot"><span style="color:var(--ink-2)">↻</span><span class="mono" style="font-size:10px;color:var(--ink-2)">сейчас</span><span class="sp"></span><span class="foot-txt">Настройки…</span><span class="foot-txt">Выйти</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="label"><b>ПРЕДЛАГАЮ</b></div>
+        <div class="panel">
+          <div class="p-head">
+            <div class="t">Эфир</div>
+            <span class="pill"><span class="lamp eye"></span>3 В РАБОТЕ</span>
+            <button class="key" aria-label="Новая сессия" title="Новая сессия"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <div class="p-list">
+            <div class="gh">ЖДУТ ТЕБЯ <span>1</span></div>
+            <div class="row needs"><span class="lamp hot"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Ожидание первого приветствия перед отчётом</div><div class="d">Desktop · Opus 5.5 · разрешить Bash</div><div class="acts"><button class="btn sig">Разрешить</button><button class="btn">Отклонить</button></div></div><div class="tm">сейчас</div></div>
+            <div class="gh">В РАБОТЕ <span>3</span></div>
+            <div class="row hover"><span class="lamp eye"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Сравнение GPT и Anthropic по мнению сообщества</div><div class="d">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">1 мин</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <div class="row"><span class="lamp eye" style="animation-delay:-.6s"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Интеграция пульта с управлением компьютером</div><div class="d">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">сейчас</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <div class="row"><span class="lamp eye" style="animation-delay:-1.2s"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Масштабируемость инструментария Wave</div><div class="d">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">4 мин</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <div class="gh">В ОЖИДАНИИ <span>5</span></div>
+            <div class="row"><span class="lamp dim"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">GPT Live ответы «Сейчас посмотрю»</div><div class="d">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">12 мин</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <div class="row"><span class="lamp dim"></span><svg class="mk"><use href="#claude"/></svg><div><div class="n">Готово</div><div class="d">Desktop · Opus 5.5 medium · CallAssistant</div></div><div class="tm">1 ч</div><span class="go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div>
+            <button class="more">Ещё 3</button>
+          </div>
+          <div class="p-foot">
+            <button class="btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Настройки</button>
+            <span class="sp"></span>
+            <button class="btn quiet"><svg viewBox="0 0 24 24"><path d="M12 3v8M6.5 6.5a8 8 0 1 0 11 0"/></svg>Выйти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Время последнего изменения переехало вправо от названия, как в почте: вторая строка больше не обрезается на «medium…». «Claude Desktop» сокращено до «Desktop»: знак Claude уже стоит рядом.</p>
+
+    <h3 style="margin-top:32px">Что меняется</h3>
+    <ul>
+      <li><b>Зелёная лампа «магический глаз».</b> Работающая сессия светится зелёным и медленно дышит (1,8 с, при «уменьшить движение» просто горит). Отсылка к зелёному индикатору настройки в ламповых приёмниках, так что в «Бакелит и лампу» ложится. Янтарная горячая лампа остаётся только у «Ждут тебя»: жёлтый теперь значит «нужно твоё внимание», зелёный значит «всё идёт».</li>
+      <li><b>Нет кнопки обновления.</b> Пульт и так получает события от хуков мгновенно и опрашивает раз в 8 секунд. Строка «сейчас» тоже убрана.</li>
+      <li><b>Нет «Написать в сессию».</b> Иконка, поле ввода и код отправки из панели удаляются. Отправку в сессию через ядро Волны (голосом) не трогаю, это другой путь.</li>
+      <li><b>Нет иконки-стрелки у каждой строки.</b> Клик по строке открывает сессию; при наведении справа появляется тонкий шеврон.</li>
+      <li><b>«+» стал круглой клавишей</b> и переехал в правый край шапки, после пилюли.</li>
+      <li><b>«Настройки» и «Выйти» — кнопки.</b> Настройки — выпуклая клавиша с шестерёнкой, «Выйти» — тихая кнопка, вдавливается при наведении.</li>
+      <li><b>«Ещё 3»</b> остаётся как есть.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="lamps">
+  <div class="wrap">
+    <h2>02 · Лампы после правки</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Состояние</th><th>Лампа</th><th>Пилюля в шапке</th></tr></thead>
+        <tbody>
+          <tr><td>Ждёт тебя</td><td><span class="lamp hot"></span>янтарная горячая, имя сигнальным</td><td><span class="pill"><span class="lamp hot"></span>1 ЖДЁТ</span></td></tr>
+          <tr><td>Работает</td><td><span class="lamp eye"></span>зелёная, дышит</td><td><span class="pill"><span class="lamp eye"></span>3 В РАБОТЕ</span></td></tr>
+          <tr><td>В ожидании</td><td><span class="lamp dim"></span>тусклая янтарная</td><td><span class="pill"><span class="lamp dim"></span>ТИХО</span></td></tr>
+          <tr><td>Вне эфира, помехи</td><td><span class="lamp off"></span>погашена</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">Новый токен eye #3FA65E, свечение eyeHot #6FD48C. Добавляется в дизайн-систему и в Theme.swift Пульта.</p>
+  </div>
+</section>
+
+<section id="settings">
+  <div class="wrap">
+    <h2>03 · Настройки</h2>
+    <p class="lead">Сейчас окно из шести групп, у каждого тумблера лишняя лампа, порты висят наверху, пояснения по четыре строки. Предлагаю три группы по смыслу, состояние одной строкой рядом с источником, всё техническое (порты, журнал) свернуть в «Дополнительно».</p>
+    <div class="cols">
+      <div class="win">
+        <div class="win-bar"><i></i><i></i><i></i><span>Волна: Пульт</span></div>
+        <div class="win-body">
+          <div>
+            <div class="sg-h">УВЕДОМЛЯТЬ, КОГДА</div>
+            <div class="sg">
+              <div class="sr"><div class="l">Сессия ждёт меня</div><span class="sw on"></span></div>
+              <div class="sr"><div class="l">Ход завершён</div><span class="sw on"></span></div>
+              <div class="sr"><div class="l">Процесс упал</div><span class="sw on"></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="sg-h">ИСТОЧНИКИ</div>
+            <div class="sg">
+              <div class="sr"><svg width="15" height="15"><use href="#claude"/></svg><div class="l">Claude<small>хуки · 214 событий</small></div><span class="st"><span class="lamp on"></span>мгновенно</span><span class="sw on"></span></div>
+              <div class="sr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#26211D" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8" stroke-linecap="round"/></svg><div class="l">Codex<small>codex-cli 0.44</small></div><span class="st"><span class="lamp on"></span>в эфире</span><span class="sw on"></span></div>
+              <div class="sr" style="padding-left:41px"><div class="l">Треды Codex за</div><span class="step"><button class="key" aria-label="Меньше"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button><b>3 дн.</b><button class="key" aria-label="Больше"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button></span></div>
+            </div>
+            <p class="hint">Без хуков Пульт узнаёт о Claude с опозданием до 8 секунд.</p>
+          </div>
+          <div>
+            <div class="sg-h">ВОЛНА</div>
+            <div class="sg">
+              <div class="sr"><div class="l">Волна управляет Пультом<small>запросов 37</small></div><span class="st"><span class="lamp on"></span>подключена</span><span class="sw on"></span></div>
+              <div class="sr"><div class="l">Токен для ядра</div><button class="btn">Скопировать</button></div>
+              <div class="sr"><div class="l">Отправлять новые чаты сам<small>нужен Универсальный доступ</small></div><span class="st"><span class="lamp off"></span>нет доступа</span><button class="btn">Разрешить</button></div>
+            </div>
+          </div>
+          <div>
+            <div class="disc"><svg viewBox="0 0 10 10"><path d="M3 2l4 3-4 3"/></svg>ДОПОЛНИТЕЛЬНО</div>
+          </div>
+          <div class="win-foot"><span>ПУЛЬТ 0.1</span><span>ЖУРНАЛ ↗</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="win">
+          <div class="win-bar"><i></i><i></i><i></i><span>Волна: Пульт</span></div>
+          <div class="win-body">
+            <div>
+              <div class="disc"><svg viewBox="0 0 10 10" style="transform:rotate(90deg)"><path d="M3 2l4 3-4 3"/></svg>ДОПОЛНИТЕЛЬНО</div>
+              <div class="sg">
+                <div class="sr"><div class="l">Порт хуков Claude</div><span class="field">48611</span></div>
+                <div class="sr"><div class="l">Порт API для Волны</div><span class="field">48612</span></div>
+                <div class="sr"><div class="l">Сменить токен ядра<small>старый перестанет работать</small></div><button class="btn">Сменить…</button></div>
+                <div class="sr"><div class="l">Журнал</div><button class="btn">Открыть</button></div>
+              </div>
+              <p class="hint">В core/.env ядра: PULT_URL=http://127.0.0.1:48612 и PULT_TOKEN.</p>
+            </div>
+          </div>
+        </div>
+        <p class="cap">«Дополнительно» раскрыто. «Сменить…» спрашивает подтверждение: смена токена ломает ядро до правки .env.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px">Что меняется</h3>
+    <ul>
+      <li>Лампа у каждого тумблера убрана: тумблер сам показывает состояние, включённый подсвечен акцентным янтарём. Зелёного в настройках нет: он живёт только в панели и значит «сессия работает».</li>
+      <li>Лампа осталась только там, где она сообщает что-то живое: работает ли приёмник хуков, запущен ли Codex, подключена ли Волна.</li>
+      <li>Группы «Claude», «Codex», «Новые чаты Claude», «Диагностика» слиты в «Источники» и «Волну». Длинные пояснения сокращены до одной строки или ушли в подпись под названием.</li>
+      <li>Шаговый переключатель дней сделан двумя маленькими клавишами вместо голых «−» и «+».</li>
+      <li>Порты, смена токена и журнал спрятаны в «Дополнительно»; окно по высоте подстраивается под содержимое, без прокрутки.</li>
+      <li>Версия и ссылка на журнал внизу окна, заголовок «Настройки» внутри окна убран: он уже есть в заголовке окна.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <h2>04 · Решить до реализации</h2>
+    <div class="q"><b>Выйти в панели или в настройках?</b><br>Предлагаю оставить в панели тихой кнопкой, как на макете: фоновое приложение без Dock-иконки иначе закрыть негде.</div>
+    <div class="q"><b>Время справа или в конце второй строки?</b><br>Предлагаю справа: вторая строка перестаёт обрезаться, а свежесть видна одним взглядом по колонке.</div>
+    <div class="q"><b>Форма «+ Новая сессия» остаётся?</b><br>Её не трогаю: это запуск новой сессии, а не переписка из панели. Скажи, если её тоже убрать.</div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="1440x900">
+<title>А′. Одна модель подробно: claude-opus-5.5</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.crumbs{display:flex;align-items:center;gap:12px}
+.crumbs .back{color:var(--muted);font-size:13px}
+.crumbs .back::before{content:"‹ ";}
+.crumbs h1{margin:0;font:600 18px var(--font-mono)}
+.tiles{grid-template-columns:1.2fr 1fr 1fr 1fr 1.2fr}
+.row2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+.purp{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.purp .it{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.purp .it .c{font:500 13px var(--font-mono)}
+.purp .it .s{grid-column:1 / -1;font-size:12px;color:var(--muted)}
+.purp .it .b{grid-column:1 / -1;height:6px;background:var(--surface-2);border-radius:0 3px 3px 0}
+.purp .it .b i{display:block;height:6px;border-radius:0 3px 3px 0;background:var(--s3)}
+a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line-2)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="brand">Консоль</span>
+  <div class="seg"><span>Сводка</span><span>Эфир</span><span>История</span><span class="on">Расходы</span><span>Работа</span></div>
+  <span class="pill"><span class="lamp off"></span>звонка нет</span>
+  <span class="sp"></span>
+  <div class="seg"><span>Сегодня</span><span>7 дней</span><span>30 дней</span><span class="on">Сентябрь</span></div>
+</header>
+<div class="page">
+  <div class="crumbs"><span class="back">Расходы</span><h1><span class="sw" style="background:var(--s3)"></span>claude-opus-5.5</h1><span class="tag">OpenRouter · Anthropic</span><span class="tag">Память</span></div>
+  <div class="tiles">
+    <div class="tile hero"><span class="k">Итого в сентябре</span><span class="v num">$3,90</span><span class="s">16% всех расходов</span></div>
+    <div class="tile"><span class="k">Вызовов</span><span class="v num">9</span><span class="s">$0,43 за вызов</span></div>
+    <div class="tile"><span class="k">Вход</span><span class="v num">612<small>тыс.</small></span><span class="s">71% из кэша · сберёг $1,30</span></div>
+    <div class="tile"><span class="k">Выход</span><span class="v num">48<small>тыс.</small></span><span class="s">из них размышления 11 тыс.</span></div>
+    <div class="tile"><span class="k">На claude-sonnet-5</span><span class="v num">~$0,80</span><span class="s">те же вызовы, цена по токенам</span></div>
+  </div>
+
+  <div class="row2">
+    <div class="box">
+      <div class="ch"><span>По дням</span><span>$ в день</span></div>
+      <div id="chart" style="margin-top:12px;position:relative"></div>
+    </div>
+    <div class="box">
+      <div class="ch"><span>На что уходит</span></div>
+      <div class="purp">
+        <div class="it"><span>Сон памяти</span><span class="c">$3,10 <span class="muted">79%</span></span><span class="b"><i style="width:100%"></i></span><span class="s">6 раз · после звонка, когда пора</span></div>
+        <div class="it"><span>Отзыв о характере</span><span class="c">$0,80 <span class="muted">21%</span></span><span class="b"><i style="width:26%"></i></span><span class="s">3 раза · после звонков с правками</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" style="padding-bottom:6px">
+    <div class="ch" style="margin-bottom:10px"><span>Вызовы</span><span>новые сверху</span></div>
+    <table>
+      <thead><tr><th>Когда</th><th>Зачем</th><th>После звонка</th><th class="r">Вход</th><th class="r">из кэша</th><th class="r">Выход</th><th class="r">Размышления</th><th class="r">Время</th><th class="r">Цена</th></tr></thead>
+      <tbody>
+        <tr><td class="m">27.09 10:14</td><td>Сон памяти</td><td><a>Карточки памяти</a></td><td class="r">74 тыс.</td><td class="r muted">78%</td><td class="r">6,2 тыс.</td><td class="r muted">1,4 тыс.</td><td class="r muted">48 с</td><td class="r mono" style="font-weight:600">$0,49</td></tr>
+        <tr class="hov"><td class="m">26.09 22:05</td><td>Отзыв о характере</td><td><a>«Будь резче»</a></td><td class="r">41 тыс.</td><td class="r muted">52%</td><td class="r">3,8 тыс.</td><td class="r muted">0,9 тыс.</td><td class="r muted">31 с</td><td class="r mono" style="font-weight:600">$0,31</td></tr>
+        <tr><td class="m">24.09 19:40</td><td>Сон памяти</td><td><a>Тарифы операторов</a></td><td class="r">81 тыс.</td><td class="r muted">74%</td><td class="r">7,1 тыс.</td><td class="r muted">2,0 тыс.</td><td class="r muted">55 с</td><td class="r mono" style="font-weight:600">$0,56</td></tr>
+        <tr><td class="m">23.09 09:12</td><td>Отзыв о характере</td><td><a>Утренний план</a></td><td class="r">36 тыс.</td><td class="r muted">61%</td><td class="r">3,1 тыс.</td><td class="r muted">0,7 тыс.</td><td class="r muted">27 с</td><td class="r mono" style="font-weight:600">$0,24</td></tr>
+        <tr><td class="m">21.09 21:33</td><td>Сон памяти</td><td><a>Садик и документы</a></td><td class="r">77 тыс.</td><td class="r muted">80%</td><td class="r">6,8 тыс.</td><td class="r muted">1,9 тыс.</td><td class="r muted">51 с</td><td class="r mono" style="font-weight:600">$0,50</td></tr>
+        <tr><td class="m">18.09 20:02</td><td>Сон памяти</td><td><a>Мама и розы</a></td><td class="r">70 тыс.</td><td class="r muted">76%</td><td class="r">5,9 тыс.</td><td class="r muted">1,6 тыс.</td><td class="r muted">46 с</td><td class="r mono" style="font-weight:600">$0,47</td></tr>
+        <tr><td class="m">15.09 13:26</td><td>Отзыв о характере</td><td><a>Разбор приветствия</a></td><td class="r">38 тыс.</td><td class="r muted">58%</td><td class="r">2,6 тыс.</td><td class="r muted">0,6 тыс.</td><td class="r muted">24 с</td><td class="r mono" style="font-weight:600">$0,25</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>{
+const vals = [0,0,.52,0,0,0,0,0,.56,0,0,0,0,0,.25,0,0,.47,0,0,.5,0,.24,.56,0,.31,.49];
+const W = 780, H = 190, L = 40, B = 20, T = 8, max = .6;
+const y = v => T + (H - T - B) * (1 - v / max);
+const bw = (W - L) / vals.length;
+let s = `<svg width="${W}" height="${H}" font-family="IBM Plex Mono" font-size="10" fill="#A3968A">`;
+for (const g of [0, .2, .4, .6]) s += `<line x1="${L}" x2="${W}" y1="${y(g)}" y2="${y(g)}" stroke="rgba(239,231,214,${g ? .07 : .2})"/><text x="${L - 8}" y="${y(g) + 3}" text-anchor="end">$${g.toFixed(1).replace('.', ',')}</text>`;
+vals.forEach((v, i) => {
+  if (v) { const x = L + i * bw + 5, w = bw - 10, h = y(0) - y(v); s += `<path d="M${x},${y(0)} v${-(h - 4)} q0,-4 4,-4 h${w - 8} q4,0 4,4 v${h - 4} z" fill="#199e70"/>`; }
+  if (i % 3 === 0 || i === vals.length - 1) s += `<text x="${L + i * bw + bw / 2}" y="${H - 5}" text-anchor="middle">${String(i + 1).padStart(2, '0')}.09</text>`;
+});
+document.getElementById('chart').innerHTML = s + '</svg>';
+}</script>
+</body>
+</html>

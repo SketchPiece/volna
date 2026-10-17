@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="board" content="390x844">
+<title>Е2. Блок по оптическому центру, стрелка посередине</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.ghost .item .k,.ghost .item .t{color:transparent;border-radius:4px}
+.ghost .item .k{width:118px;height:9px;margin:4px 0 8px;background:rgba(38,33,29,.07)}
+.ghost .item .t{height:11px;background:rgba(38,33,29,.06)}
+.say .item .t{font-weight:500}
+.say .item .t::before{content:"«";color:var(--ink-2)} .say .item .t::after{content:"»";color:var(--ink-2)}
+.foot{font:13px/1.45 var(--font-body);color:var(--ink-2);margin:14px 4px 0}
+</style>
+</head>
+<body>
+<script src="_shared.js"></script>
+<script src="_arrow.js"></script>
+<script src="_layout.js"></script>
+<script>
+emptyHome({ badge: 204, icon: 172, title: 24, top: 0.6, mid: 1, bottom: 44, arrowH: 84 });
+</script>
+</body>
+</html>
