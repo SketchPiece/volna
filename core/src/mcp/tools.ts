@@ -62,7 +62,12 @@ const listInput = z.object({
   statuses: z.array(z.enum(['idle', 'preparing', 'queued', 'starting', 'running', 'waiting', 'completed', 'interrupted', 'failed', 'cancelled'])).optional(),
   titleContains: z.string().max(200).optional(),
   limit: z.number().int().min(1).max(100).optional().describe('Default 20.'),
-  offset: z.number().int().min(0).optional().describe('nextOffset from the previous page.')
+  offset: z.number().int().min(0).optional().describe('nextOffset from the previous page.'),
+  includeChildren: z.boolean().optional()
+    .describe('Also list child threads (subagents and delegated tasks, which have parentThreadId). Default false: only top-level threads, as in the Helm app.')
+});
+const unsettledInput = listInput.extend({
+  includeSnoozed: z.boolean().optional().describe('Also list snoozed threads (marked with snoozedUntil). Default false, as in the Helm app.')
 });
 
 const MAX_SNOOZE_MS = 366 * 24 * 3600_000;
@@ -71,7 +76,7 @@ const quote = (value: string) => value.split('\n').map(line => `> ${line}`).join
 const clip = (value: string, max: number) => value.length > max ? `${value.slice(0, max)}… [${value.length - max} more chars]` : value;
 
 const compactThread = (thread: HelmThreadShell) => ({
-  threadId: thread.id, title: thread.title, status: thread.status,
+  threadId: thread.id, title: thread.title, status: thread.status, parentThreadId: thread.parentThreadId ?? undefined,
   waitingFor: thread.hasPendingUserInput ? 'answer' : thread.hasPendingApprovals ? 'permission' : undefined,
   settled: thread.settled || undefined, snoozedUntil: thread.snoozedUntil ?? undefined,
   lastError: thread.session?.lastError ?? undefined, updatedAt: thread.updatedAt
@@ -131,12 +136,15 @@ export function mcpTools(options: McpToolsOptions): McpTool[] {
     return act(args, signal, String(payload.jti));
   };
 
-  /** Страница списка тредов без архива; какие треды берутся, решает `keep` (все или только неразобранные). */
+  /**
+   * Страница списка тредов без архива; какие треды берутся, решает `keep` (все или только неразобранные). Дочерние
+   * треды (субагенты, делегированные задачи) — только по `includeChildren`: в списке «Штурвала» их тоже нет.
+   */
   const listThreads = async (args: Record<string, unknown>, signal: AbortSignal, keep: (thread: HelmThreadShell) => boolean): Promise<ToolResult> => {
-    const { projectId, statuses, titleContains, limit = 20, offset = 0 } = args as { projectId?: string; statuses?: string[]; titleContains?: string; limit?: number; offset?: number };
+    const { projectId, statuses, titleContains, limit = 20, offset = 0, includeChildren = false } = args as { projectId?: string; statuses?: string[]; titleContains?: string; limit?: number; offset?: number; includeChildren?: boolean };
     const { projects, threads } = await shell(signal);
     const needle = titleContains?.toLowerCase();
-    const matching = threads.filter(t => !t.archivedAt && keep(t) && (!projectId || t.projectId === projectId) && (!statuses?.length || statuses.includes(t.status))
+    const matching = threads.filter(t => !t.archivedAt && (includeChildren || !t.child) && keep(t) && (!projectId || t.projectId === projectId) && (!statuses?.length || statuses.includes(t.status))
       && (!needle || t.title.toLowerCase().includes(needle))).sort(newestFirst);
     const page = matching.slice(offset, offset + limit);
     const projectTitle = (id: string) => projects.find(p => p.id === id)?.title;
@@ -179,15 +187,15 @@ export function mcpTools(options: McpToolsOptions): McpTool[] {
     {
       name: 'helm_list_unsettled_threads',
       title: 'List unsettled threads',
-      description: 'Default thread list. Threads not yet settled (not marked as dealt with), newest first: in one project or across all. This is what still needs the user\'s attention; snoozed ones are included and marked with snoozedUntil. Filter by status or title. Archived threads are not listed.',
-      input: listInput,
+      description: 'Default thread list: exactly what the Helm app shows as unsettled. Top-level threads not yet settled (not marked as dealt with) and not snoozed, newest first: in one project or across all. This is what still needs the user\'s attention. Filter by status or title; includeSnoozed and includeChildren add snoozed and child threads. Archived threads are not listed.',
+      input: unsettledInput,
       annotations: READ,
-      run: (args, signal) => listThreads(args, signal, t => !t.settled)
+      run: (args, signal) => listThreads(args, signal, t => !t.settled && (args.includeSnoozed === true || !t.snoozedUntil))
     },
     {
       name: 'helm_list_threads',
       title: 'List all threads',
-      description: 'List all threads, settled and unsettled, newest first: in one project or across all. Filter by status or title. Archived threads are not listed. Use only when settled threads are needed too; by default use helm_list_unsettled_threads.',
+      description: 'List all top-level threads, settled, unsettled and snoozed, newest first: in one project or across all. Filter by status or title; includeChildren adds child threads (subagents, delegated tasks). Archived threads are not listed. Use only when settled threads are needed too; by default use helm_list_unsettled_threads.',
       input: listInput,
       annotations: READ,
       run: (args, signal) => listThreads(args, signal, () => true)

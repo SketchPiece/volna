@@ -251,6 +251,30 @@ test('unsettled threads are listed apart from all threads; archived never', () =
   });
 });
 
+test('unsettled threads are top-level and awake by default, as in the Helm app', () => {
+  const t3 = helm();
+  const add = (t: any) => { t3.threads.set(t.id, t); t3.shell.threads.push(t); };
+  const lineage = (relationshipToParent: string) => ({ rootThreadId: 'th-run', parentThreadId: 'th-run', relationshipToParent });
+  add(thread('th-sub', 'Субагент', { latestTurn: turn('completed'), updatedAt: '2026-10-14T08:00:00Z', lineage: lineage('subagent') }));
+  add(thread('th-fork', 'Ответвление', { latestTurn: turn('completed'), updatedAt: '2026-10-14T07:00:00Z', lineage: lineage('fork') }));
+  add(thread('th-nap', 'Отложен', { latestTurn: turn('completed'), updatedAt: '2026-10-14T06:00:00Z', snoozedUntil: new Date(Date.now() + 3600_000).toISOString() }));
+  // Без lineage (старый «Штурвал») дочерний узнаётся по id.
+  const legacy = thread('thread:delegated-task:x', 'Задача', { latestTurn: turn('completed'), updatedAt: '2026-10-14T05:00:00Z' });
+  add(legacy);
+  return run({ mcp: options(t3) }, async url => {
+    const { access } = await signIn(url);
+    const list = async (name: string, args: object = {}) => JSON.parse((await call(url, access, name, args)).text).threads;
+    const ids = async (name: string, args: object = {}) => (await list(name, args)).map((t: any) => t.threadId);
+    assert.deepEqual(await ids('helm_list_unsettled_threads'), ['th-run', 'th-ask', 'th-fork', 'th-done']);
+    assert.deepEqual(await ids('helm_list_unsettled_threads', { includeSnoozed: true }), ['th-run', 'th-ask', 'th-fork', 'th-nap', 'th-done']);
+    assert.deepEqual(await ids('helm_list_unsettled_threads', { includeChildren: true }), ['th-run', 'th-ask', 'th-sub', 'th-fork', 'thread:delegated-task:x', 'th-done']);
+    assert.deepEqual(await ids('helm_list_threads'), ['th-run', 'th-ask', 'th-fork', 'th-nap', 'th-done']);
+    const sub = (await list('helm_list_threads', { includeChildren: true })).find((t: any) => t.threadId === 'th-sub');
+    assert.equal(sub.parentThreadId, 'th-run');
+    assert.equal((await list('helm_list_unsettled_threads'))[0].parentThreadId, undefined);
+  });
+});
+
 test('an offline computer is reported plainly and nothing is sent', () => {
   const t3 = helm();
   return run({ mcp: options(t3, { macOnline: () => false }) }, async url => {

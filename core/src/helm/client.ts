@@ -82,7 +82,12 @@ const threadShellV2 = z.object({
   settledAt: z.string().nullable().catch(null).default(null),
   settledOverride: z.string().nullable().catch(null).default(null),
   /** Отложен (snooze) до этого времени. */
-  snoozedUntil: z.string().nullable().catch(null).default(null)
+  snoozedUntil: z.string().nullable().catch(null).default(null),
+  /** Родитель: `subagent` — дочерний тред (субагент, делегированная задача), в списке «Штурвала» его нет; `fork` — ответвление, виден. */
+  lineage: z.object({
+    parentThreadId: z.string().nullable().catch(null).default(null),
+    relationshipToParent: z.string().nullable().catch(null).default(null)
+  }).nullable().catch(null).default(null)
 });
 
 const shellV2 = z.object({ projects: z.array(projectSchema), threads: z.array(threadShellV2) });
@@ -154,6 +159,10 @@ export interface HelmThreadShell {
   settled: boolean;
   /** Отложен до этого времени (в будущем), иначе null. */
   snoozedUntil: string | null;
+  /** Тред, от которого этот пошёл (субагент, делегированная задача или ответвление), иначе null. */
+  parentThreadId: string | null;
+  /** Дочерний тред: «Штурвал» не показывает его в списке, только внутри родителя. */
+  child: boolean;
   hasPendingApprovals: boolean;
   hasPendingUserInput: boolean;
 }
@@ -400,12 +409,17 @@ function rpcFailure(error: unknown): HelmError {
   return new HelmError('helm_error');
 }
 
+/** Дочерние треды по id, даже без lineage (старый «Штурвал»): субагенты провайдера и делегированные задачи. */
+const CHILD_ID = /^thread:(provider|delegated-task):/;
+
 function shellThread(thread: z.output<typeof threadShellV2>): HelmThreadShell {
   const request = thread.pendingRuntimeRequest && !SILENT_REQUESTS.has(thread.pendingRuntimeRequest.kind) ? thread.pendingRuntimeRequest : null;
   return {
     id: thread.id, projectId: thread.projectId, title: thread.title, status: thread.status, updatedAt: thread.updatedAt, archivedAt: thread.archivedAt,
     settled: thread.settledAt !== null && thread.settledOverride !== 'active',
     snoozedUntil: thread.snoozedUntil && Date.parse(thread.snoozedUntil) > Date.now() ? thread.snoozedUntil : null,
+    parentThreadId: thread.lineage?.parentThreadId ?? null,
+    child: thread.lineage?.relationshipToParent === 'subagent' || CHILD_ID.test(thread.id),
     latestTurn: thread.latestRunId ? { turnId: thread.latestRunId, state: turnState(thread.status), assistantMessageId: null } : null,
     session: thread.lastError ? { status: 'error', lastError: thread.lastError } : null,
     hasPendingUserInput: request?.kind === 'user_input',

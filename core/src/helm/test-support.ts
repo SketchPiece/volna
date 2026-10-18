@@ -89,7 +89,8 @@ function shellV2(t: any): object {
     branch: null, worktreePath: null, latestRunId, activeRunId: status === 'running' ? latestRunId : null, status,
     lastError: t.session?.status === 'error' ? t.session.lastError ?? 'error' : null, pendingRuntimeRequest: pending,
     latestVisibleMessage: null, latestUserMessageAt: null, hasActionableProposedPlan: false, itemCount: 0, visibleItemCount: 0,
-    createdAt: '2026-09-25T10:00:00Z', updatedAt: t.updatedAt, archivedAt: t.archivedAt ?? null, settledOverride: t.settledOverride ?? null, settledAt: t.settledAt ?? null, snoozedUntil: t.snoozedUntil ?? null, deletedAt: null
+    createdAt: '2026-09-25T10:00:00Z', updatedAt: t.updatedAt, archivedAt: t.archivedAt ?? null, settledOverride: t.settledOverride ?? null, settledAt: t.settledAt ?? null, snoozedUntil: t.snoozedUntil ?? null, deletedAt: null,
+    lineage: t.lineage ?? { rootThreadId: t.id, parentThreadId: null, relationshipToParent: null }
   };
 }
 
