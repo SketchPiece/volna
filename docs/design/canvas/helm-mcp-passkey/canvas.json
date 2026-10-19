@@ -1,0 +1,63 @@
+{
+ "v": 3,
+ "title": "Helm MCP · password once, then passkey",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "0-now.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 800,
+   "title": "Now"
+  },
+  "1-password.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 1280,
+   "h": 800,
+   "title": "1. First sign-in: password"
+  },
+  "2-create.html": {
+   "x": 2720,
+   "y": 0,
+   "w": 1280,
+   "h": 800,
+   "title": "2. Password accepted: passkey"
+  },
+  "3-passkey.html": {
+   "x": 0,
+   "y": 1004,
+   "w": 1280,
+   "h": 800,
+   "title": "3. Every sign-in after that"
+  },
+  "4-phone.html": {
+   "x": 1360,
+   "y": 1004,
+   "w": 390,
+   "h": 844,
+   "title": "3. On the phone"
+  }
+ },
+ "order": [
+  "0-now.html",
+  "1-password.html",
+  "2-create.html",
+  "3-passkey.html",
+  "4-phone.html"
+ ],
+ "notes": {
+  "t": {
+   "x": 0,
+   "y": -240,
+   "text": "Helm MCP · вход паролем один раз, дальше пасскей",
+   "kind": "title1",
+   "maxW": 4000
+  }
+ },
+ "annotations": [],
+ "designSystems": []
+}

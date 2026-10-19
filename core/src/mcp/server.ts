@@ -6,6 +6,7 @@ import type { Logger } from '../log.ts';
 import { MCP_PATH, oauthRoutes, requireAccessToken } from './oauth.ts';
 import { INSTRUCTIONS, mcpTools, type McpTool, type McpToolsOptions } from './tools.ts';
 import type { Signer } from './tokens.ts';
+import type { PasskeyStore } from './passkey.ts';
 
 /**
  * Helm MCP в ядре (docs/helm-mcp.md): удалённый MCP-сервер для Claude владельца (Desktop, мобильный, claude.ai).
@@ -15,6 +16,7 @@ import type { Signer } from './tokens.ts';
 export interface HelmMcpOptions extends Omit<McpToolsOptions, 'signer'> {
   signer: Signer;
   password: string;
+  passkeys: PasskeyStore;
   /** Внешний адрес ядра (MCP_PUBLIC_URL или домен Railway); без него — из запроса. */
   publicUrl?: string;
   log: Logger;
@@ -47,7 +49,7 @@ export function publicBase(publicUrl: string | undefined) {
 }
 
 /** Пути Helm MCP: вход, иконка и сам `/mcp`. */
-export const isHelmMcpPath = (path: string) => path === MCP_PATH || ICON_PATHS.includes(path) || ['/authorize', '/token', '/register'].includes(path) || path.startsWith('/.well-known/oauth-') || path === '/.well-known/openid-configuration';
+export const isHelmMcpPath = (path: string) => path === MCP_PATH || ICON_PATHS.includes(path) || ['/authorize', '/authorize/passkey', '/passkey', '/passkey/register', '/token', '/register'].includes(path) || path.startsWith('/.well-known/oauth-') || path === '/.well-known/openid-configuration';
 
 export function helmMcpRoutes(options: HelmMcpOptions) {
   const { signer, log } = options;
@@ -97,7 +99,7 @@ export function helmMcpRoutes(options: HelmMcpOptions) {
   }
 
   const app = new Hono();
-  app.route('/', oauthRoutes({ signer, password: options.password, baseUrl }));
+  app.route('/', oauthRoutes({ signer, password: options.password, passkeys: options.passkeys, baseUrl }));
   for (const path of ICON_PATHS) app.get(path, c => {
     c.header('Cache-Control', 'public, max-age=86400');
     return c.body(ICON, 200, { 'Content-Type': 'image/png' });

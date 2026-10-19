@@ -1,15 +1,19 @@
-import { randomUUID, createHash } from 'node:crypto';
+import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { Hono, type Context, type MiddlewareHandler } from 'hono';
 import { safeEqual, sha256, type Signer } from './tokens.ts';
+import { createPage, loginPage, messagePage, passwordPage, readyPage } from './pages.ts';
+import { PUBLIC_KEY_ALGORITHMS, verifyAssertion, verifyRegistration, type Expected, type PasskeyStore } from './passkey.ts';
 
 /**
  * Вход в Helm MCP (docs/helm-mcp.md, 3): минимальный сервер OAuth 2.1 для одного владельца, как ждут custom connectors
- * Claude. Регистрация клиента (DCR), код с PKCE S256, токены доступа и обновления. Разрешает владелец паролем
- * `MCP_OWNER_PASSWORD` на нашей странице. Всё без базы, на подписанных токенах (tokens.ts).
+ * Claude. Регистрация клиента (DCR), код с PKCE S256, токены доступа и обновления. Разрешает владелец на нашей странице
+ * пасскеем; пароль `MCP_OWNER_PASSWORD` годится один раз — чтобы создать пасскей (здесь же или на `/passkey`), после
+ * этого сервер его не принимает (passkey.ts). Кроме файла с пасскеем, всё на подписанных токенах (tokens.ts).
  */
 export interface OAuthOptions {
   signer: Signer;
   password: string;
+  passkeys: PasskeyStore;
   /** Внешний адрес ядра без «/» в конце (https://your-core.example.com). */
   baseUrl: (c: Context) => string;
   now?: () => number;
@@ -18,6 +22,8 @@ export interface OAuthOptions {
 const ACCESS_TTL = 60 * 60;
 const REFRESH_TTL = 90 * 24 * 60 * 60;
 const CODE_TTL = 5 * 60;
+/** Сколько живёт страница с вызовом пасскея. */
+const CEREMONY_TTL = 10 * 60;
 /** Неверных паролей за окно на всё ядро: пароль один, перебор с разных адресов тоже останавливается. */
 const MAX_FAILURES = 10;
 const FAILURE_WINDOW_MS = 15 * 60_000;
@@ -33,26 +39,6 @@ function allowedRedirect(uri: unknown): boolean {
     if (url.protocol === 'https:') return true;
     return url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   } catch { return false; }
-}
-
-const escapeHtml = (value: unknown) => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
-
-function approvalPage(params: Record<string, string>, clientName: string, error?: string): string {
-  const hidden = Object.entries(params).map(([key, value]) => `<input type="hidden" name="${escapeHtml(key)}" value="${escapeHtml(value)}">`).join('');
-  return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark"><meta name="referrer" content="no-referrer"><title>Волна · Helm MCP</title><link rel="icon" href="/icon.png"><link rel="apple-touch-icon" href="/icon.png">
-<style>body{font:16px/1.5 -apple-system,system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box;background:#f4efe6;color:#2a2622}
-@media(prefers-color-scheme:dark){body{background:#1b1917;color:#ece6dc}}
-main{width:min(100%,400px)}h1{font-size:22px;margin:0 0 8px}p{margin:0 0 16px;opacity:.75}
-input[type=password]{width:100%;box-sizing:border-box;padding:12px;font-size:16px;border-radius:10px;border:1px solid #8886;margin-bottom:12px;background:transparent;color:inherit}
-button{width:100%;padding:12px;font-size:16px;border-radius:10px;border:0;background:#c8642a;color:#fff;font-weight:600}
-.err{color:#c0392b;opacity:1}</style></head><body><main>
-<h1>Подключить ${escapeHtml(clientName)} к Штурвалу</h1>
-<p>Клиент сможет читать треды Штурвала на твоём компьютере, писать в них, запускать и останавливать работу. Каждую запись он сначала покажет и спросит.</p>
-${error ? `<p class="err">${escapeHtml(error)}</p>` : ''}
-<form method="post" action="/authorize">${hidden}
-<input type="password" name="password" placeholder="Пароль владельца" autofocus required autocomplete="current-password">
-<button type="submit">Разрешить</button></form></main></body></html>`;
 }
 
 type Fields = Record<string, string | undefined>;
@@ -129,38 +115,123 @@ export function oauthRoutes(options: OAuthOptions) {
       response_type: 'code'
     };
     const client = signer.verify('client', params.client_id) as { n: string; r: string[] } | null;
-    if (!client) return { error: 'Неизвестный клиент. Удали коннектор в Claude и добавь заново.' };
-    if (!client.r.includes(params.redirect_uri)) return { error: 'Этот адрес возврата не зарегистрирован для клиента.' };
-    if (source.response_type !== undefined && source.response_type !== 'code') return { error: 'Поддерживается только response_type=code.' };
-    if (params.code_challenge_method !== 'S256' || !params.code_challenge) return { error: 'Нужен PKCE с S256.' };
+    if (!client) return { error: 'Unknown client. Remove the connector and add it again.' };
+    if (!client.r.includes(params.redirect_uri)) return { error: 'This redirect URI is not registered for the client.' };
+    if (source.response_type !== undefined && source.response_type !== 'code') return { error: 'Only response_type=code is supported.' };
+    if (params.code_challenge_method !== 'S256' || !params.code_challenge) return { error: 'PKCE with S256 is required.' };
     return { params, client };
   };
 
-  app.get('/authorize', c => {
-    const parsed = authorizeParams(c.req.query());
-    if (parsed.error !== undefined) return c.text(parsed.error, 400);
-    return c.html(approvalPage(parsed.params, parsed.client.n));
-  });
-
-  app.post('/authorize', async c => {
-    // Форма уходит только со своей страницы: чужой сайт не отправит пароль сюда от имени владельца.
-    const origin = c.req.header('origin');
-    if (origin && origin !== 'null' && origin !== baseUrl(c)) return c.text('Форма с чужого сайта.', 403);
-    const source = await fields(c);
-    const parsed = authorizeParams(source);
-    if (parsed.error !== undefined) return c.text(parsed.error, 400);
-    const { params, client } = parsed;
-    if (tooManyFailures()) return c.html(approvalPage(params, client.n, 'Слишком много неверных попыток. Подожди 15 минут.'), 429);
-    if (!safeEqual(source.password ?? '', password)) {
-      failures.count += 1;
-      return c.html(approvalPage(params, client.n, 'Неверный пароль.'), 401);
-    }
-    const code = signer.sign('code', { jti: randomUUID(), c: sha256(params.client_id), r: params.redirect_uri, ch: params.code_challenge }, CODE_TTL);
-    const redirect = new URL(params.redirect_uri);
+  /** Код входа клиенту: адрес возврата с `code`, `state` и `iss`. */
+  const codeRedirect = (c: Context, params: Record<string, string>) => {
+    const code = signer.sign('code', { jti: randomUUID(), c: sha256(params.client_id!), r: params.redirect_uri, ch: params.code_challenge }, CODE_TTL);
+    const redirect = new URL(params.redirect_uri!);
     redirect.searchParams.set('code', code);
     if (params.state) redirect.searchParams.set('state', params.state);
     redirect.searchParams.set('iss', baseUrl(c));
-    return c.redirect(redirect.toString(), 302);
+    return redirect.toString();
+  };
+
+  const expected = (c: Context, challenge: string): Expected => {
+    const origin = baseUrl(c);
+    return { challenge, origin, rpId: new URL(origin).hostname };
+  };
+
+  /** Формы и вызовы пасскея уходят только со своей страницы: чужой сайт не отправит их сюда от имени владельца. */
+  const foreign = (c: Context, required: boolean) => {
+    const origin = c.req.header('origin');
+    return required ? origin !== baseUrl(c) : Boolean(origin && origin !== 'null' && origin !== baseUrl(c));
+  };
+
+  /** Вызов пасскея подписан вместе с параметрами OAuth (`p`), поэтому их нельзя подменить между страницей и ответом. */
+  const ceremony = (op: 'create' | 'get', params: Record<string, string> | null) => {
+    const challenge = randomBytes(32).toString('base64url');
+    return { challenge, ticket: signer.sign('passkey', { jti: randomUUID(), op, ch: challenge, p: params }, CEREMONY_TTL) };
+  };
+
+  const createView = (c: Context, params: Record<string, string> | null) => {
+    const { challenge, ticket } = ceremony('create', params);
+    return createPage({ ticket, endpoint: '/passkey/register', options: {
+      challenge, rp: { name: 'Helm', id: expected(c, challenge).rpId }, user: { id: Buffer.from('helm-owner').toString('base64url'), name: 'Helm owner', displayName: 'Helm owner' },
+      pubKeyCredParams: PUBLIC_KEY_ALGORITHMS.map(alg => ({ type: 'public-key', alg })),
+      authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'required' }, attestation: 'none', timeout: CEREMONY_TTL * 1000
+    } });
+  };
+
+  /** Пароль: проверка с паузой после 10 неверных за 15 минут на всё ядро; null — принят. */
+  const checkPassword = (value: string | undefined): { status: 401 | 429; text: string } | null => {
+    if (tooManyFailures()) return { status: 429, text: 'Too many wrong passwords. Wait 15 minutes.' };
+    if (safeEqual(value ?? '', password)) return null;
+    failures.count += 1;
+    return { status: 401, text: 'Wrong password.' };
+  };
+  const passwordOff = (c: Context) => c.html(messagePage('Password sign-in is off', 'This Helm signs in with a passkey. Open the page again from your client.'), 403);
+
+  app.get('/authorize', async c => {
+    const parsed = authorizeParams(c.req.query());
+    if (parsed.error !== undefined) return c.text(parsed.error, 400);
+    const passkeys = await options.passkeys.list();
+    if (!passkeys.length) return c.html(passwordPage('/authorize', parsed.params, parsed.client.n));
+    const { challenge, ticket } = ceremony('get', parsed.params);
+    return c.html(loginPage(parsed.client.n, { ticket, endpoint: '/authorize/passkey', options: {
+      challenge, rpId: expected(c, challenge).rpId, userVerification: 'required', timeout: CEREMONY_TTL * 1000,
+      allowCredentials: passkeys.map(p => ({ type: 'public-key', id: p.id }))
+    } }));
+  });
+
+  app.post('/authorize', async c => {
+    if (foreign(c, false)) return c.text('Form from another site.', 403);
+    const source = await fields(c);
+    const parsed = authorizeParams(source);
+    if (parsed.error !== undefined) return c.text(parsed.error, 400);
+    if ((await options.passkeys.list()).length) return passwordOff(c);
+    const wrong = checkPassword(source.password);
+    if (wrong) return c.html(passwordPage('/authorize', parsed.params, parsed.client.n, wrong.text), wrong.status);
+    return c.html(createView(c, parsed.params));
+  });
+
+  app.get('/passkey', async c => c.html((await options.passkeys.list()).length ? readyPage() : passwordPage('/passkey', {}, null)));
+
+  app.post('/passkey', async c => {
+    if (foreign(c, false)) return c.text('Form from another site.', 403);
+    if ((await options.passkeys.list()).length) return passwordOff(c);
+    const wrong = checkPassword((await fields(c)).password);
+    if (wrong) return c.html(passwordPage('/passkey', {}, null, wrong.text), wrong.status);
+    return c.html(createView(c, null));
+  });
+
+  /** Тело вызова пасскея и его билет; билет одноразовый. */
+  const ceremonyBody = async (c: Context, op: 'create' | 'get') => {
+    if (foreign(c, true)) return { error: 'Request from another site.' };
+    let body: Record<string, unknown>;
+    try { body = await c.req.json(); } catch { return { error: 'Bad request.' }; }
+    const ticket = signer.verify('passkey', body?.ticket);
+    if (!ticket || ticket.op !== op) return { error: 'This page expired. Reload it and try again.' };
+    if (!signer.consumeOnce(`passkey:${ticket.jti}`, ticket.exp)) return { error: 'This page was already used. Reload it.' };
+    const params = ticket.p ? authorizeParams(ticket.p as Fields) : null;
+    if (params?.error !== undefined) return { error: params.error };
+    return { body, challenge: String(ticket.ch), params: params?.params ?? null };
+  };
+
+  app.post('/passkey/register', async c => {
+    const got = await ceremonyBody(c, 'create');
+    if (got.error !== undefined) return c.json({ error: got.error }, 400);
+    const passkey = verifyRegistration(got.body, expected(c, got.challenge), new Date(now()));
+    if (typeof passkey === 'string') return c.json({ error: passkey }, 400);
+    if (!(await options.passkeys.add(passkey))) return c.json({ error: 'A passkey is already set up. Reload the page.' }, 409);
+    return c.json({ redirect: got.params ? codeRedirect(c, got.params) : '/passkey' });
+  });
+
+  app.post('/authorize/passkey', async c => {
+    const got = await ceremonyBody(c, 'get');
+    if (got.error !== undefined) return c.json({ error: got.error }, 400);
+    if (!got.params) return c.json({ error: 'Bad request.' }, 400);
+    const passkey = (await options.passkeys.list()).find(p => p.id === got.body.id);
+    if (!passkey) return c.json({ error: 'This passkey is not set up for Helm.' }, 401);
+    const result = verifyAssertion(got.body, passkey, expected(c, got.challenge));
+    if (typeof result === 'string') return c.json({ error: result }, 401);
+    await options.passkeys.setCounter(passkey.id, result.counter);
+    return c.json({ redirect: codeRedirect(c, got.params) });
   });
 
   app.post('/token', async c => {
