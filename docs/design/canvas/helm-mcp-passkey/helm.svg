@@ -1,0 +1,21 @@
+<!-- Иконка «Штурвала», вариант Е2·2 «Круглый экран» (холст docs/design/canvas/helm-icon, одобрено 27.09.2026).
+     Сетка иконки Волны: viewBox 120, диск r=44, линия 5.5; полный квадрат без скругления (скругление даёт система или make-icons.sh). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <filter id="lamp" x="-20%" y="-40%" width="140%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#E8A33D" flood-opacity=".9"/>
+    </filter>
+    <clipPath id="screen"><circle cx="60" cy="60" r="41"/></clipPath>
+  </defs>
+  <rect width="120" height="120" fill="#B8321F"/>
+  <circle cx="60" cy="60" r="44" fill="#26211D"/>
+  <circle cx="60" cy="60" r="44" fill="none" stroke="#E7E0D2" stroke-width="3"/>
+  <g stroke="#E7E0D2" stroke-opacity=".1" stroke-width="1.2" clip-path="url(#screen)">
+    <line x1="38" y1="20" x2="38" y2="100"/><line x1="60" y1="20" x2="60" y2="100"/><line x1="82" y1="20" x2="82" y2="100"/>
+    <line x1="20" y1="38" x2="100" y2="38"/><line x1="20" y1="60" x2="100" y2="60"/><line x1="20" y1="82" x2="100" y2="82"/>
+  </g>
+  <g transform="translate(60 60) scale(.95) translate(-60 -60)">
+    <path d="M26 60 Q30 50 34 60 Q38 70 42 60 Q46 50 50 60 Q54 70 58 60 L58 47 L70 47 L70 73 L82 73 L82 60 L93 60"
+          fill="none" stroke="#E8A33D" stroke-width="5.79" stroke-linecap="round" stroke-linejoin="round" filter="url(#lamp)"/>
+  </g>
+</svg>

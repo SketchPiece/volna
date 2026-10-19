@@ -6,6 +6,8 @@ import { fakeHelm, thread, turn, activity, message } from '../helm/test-support.
 import { loadConfig } from '../config.ts';
 import { Signer } from './tokens.ts';
 import type { HelmMcpOptions } from './server.ts';
+import { PasskeyStore } from './passkey.ts';
+import { fakeAuthenticator, pageData } from './test-support.ts';
 
 const PASSWORD = 'correct horse battery';
 const SECRET = 'x'.repeat(40);
@@ -29,19 +31,32 @@ function helm() {
 }
 
 function options(t3: ReturnType<typeof fakeHelm>, patch: Partial<HelmMcpOptions> = {}): Omit<HelmMcpOptions, 'log'> {
-  return { client: t3.client, signer: new Signer(SECRET), password: PASSWORD, runtimeMode: 'auto', instance: 'claudeAgent', model: null, ...patch };
+  return { client: t3.client, signer: new Signer(SECRET), password: PASSWORD, passkeys: new PasskeyStore(), runtimeMode: 'auto', instance: 'claudeAgent', model: null, ...patch };
 }
 
 const j = async (response: Promise<Response>): Promise<any> => (await response).json();
 const form = (body: Record<string, string>) => new URLSearchParams(body).toString();
 
-/** Весь вход, как его проходит Claude: регистрация, страница с паролем, код, токен. */
+const authenticators = new Map<string, ReturnType<typeof fakeAuthenticator>>();
+const json = (url: string, path: string, body: object, origin = url) => fetch(`${url}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify(body) });
+
+/** Весь вход, как его проходит Claude: регистрация, пароль и создание пасскея в первый раз, дальше пасскей; код, токен. */
 async function signIn(url: string): Promise<{ access: string; refresh: string; clientId: string }> {
   const registered = await j(fetch(`${url}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_name: 'Claude', redirect_uris: [REDIRECT] }) }));
   const params = { client_id: registered.client_id, redirect_uri: REDIRECT, code_challenge: CHALLENGE, code_challenge_method: 'S256', state: 's1', response_type: 'code' };
-  const approved = await fetch(`${url}/authorize`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: url }, body: form({ ...params, password: PASSWORD }) });
-  assert.equal(approved.status, 302);
-  const back = new URL(approved.headers.get('location')!);
+  if (!authenticators.has(url)) authenticators.set(url, fakeAuthenticator());
+  const key = authenticators.get(url)!;
+  const login = pageData(await (await fetch(`${url}/authorize?${form(params)}`)).text());
+  let answer: any;
+  if (login) {
+    answer = await j(json(url, login.endpoint, { ticket: login.ticket, ...key.get(login.options, url) }));
+  } else {
+    const approved = await fetch(`${url}/authorize`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: url }, body: form({ ...params, password: PASSWORD }) });
+    const create = pageData(await approved.text())!;
+    assert.equal(create.mode, 'create');
+    answer = await j(json(url, create.endpoint, { ticket: create.ticket, ...key.create(create.options, url) }));
+  }
+  const back = new URL(answer.redirect);
   assert.equal(back.origin + back.pathname, REDIRECT);
   assert.equal(back.searchParams.get('state'), 's1');
   const tokens = await j(fetch(`${url}/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form({ grant_type: 'authorization_code', code: back.searchParams.get('code')!, client_id: registered.client_id, redirect_uri: REDIRECT, code_verifier: VERIFIER }) }));
@@ -60,7 +75,7 @@ const call = async (url: string, token: string, name: string, args: object = {})
 };
 const codeOf = (preview: string) => preview.match(/confirmation="([^"]+)"/)![1]!;
 
-test('Claude signs in with the owner password: metadata, registration, PKCE code, tokens, refresh', () => run({ mcp: options(helm()) }, async url => {
+test('Claude signs in (password once, then passkey): metadata, registration, PKCE code, tokens, refresh', () => run({ mcp: options(helm()) }, async url => {
   const unauthorized = await fetch(`${url}/mcp`, { method: 'POST', body: '{}' });
   assert.equal(unauthorized.status, 401);
   assert.match(unauthorized.headers.get('www-authenticate')!, /resource_metadata="http:\/\/127\.0\.0\.1:\d+\/\.well-known\/oauth-protected-resource\/mcp"/);
@@ -86,17 +101,76 @@ test('sign-in refuses a wrong password, a foreign form, a wrong PKCE verifier an
   const params = { client_id, redirect_uri: REDIRECT, code_challenge: CHALLENGE, code_challenge_method: 'S256', response_type: 'code' };
   const page = await fetch(`${url}/authorize?${form(params)}`);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Пароль владельца/);
+  assert.match(await page.text(), /Owner password/);
   const post = (body: Record<string, string>, origin = url) => fetch(`${url}/authorize`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: origin }, body: form(body) });
   assert.equal((await post({ ...params, password: 'wrong password!' })).status, 401);
   assert.equal((await post({ ...params, password: PASSWORD }, 'https://evil.test')).status, 403);
   assert.equal((await post({ ...params, redirect_uri: 'https://evil.test/cb', password: PASSWORD })).status, 400);
-  const code = new URL((await post({ ...params, password: PASSWORD })).headers.get('location')!).searchParams.get('code')!;
+  const create = pageData(await (await post({ ...params, password: PASSWORD })).text())!;
+  const key = fakeAuthenticator();
+  const answer = await j(json(url, create.endpoint, { ticket: create.ticket, ...key.create(create.options, url) }));
+  const code = new URL(answer.redirect).searchParams.get('code')!;
   const exchange = (verifier: string) => fetch(`${url}/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form({ grant_type: 'authorization_code', code, client_id, redirect_uri: REDIRECT, code_verifier: verifier }) });
   assert.equal((await exchange('w'.repeat(50))).status, 400);
   assert.equal((await exchange(VERIFIER)).status, 200);
   assert.equal((await exchange(VERIFIER)).status, 400);
   assert.equal((await fetch(`${url}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ redirect_uris: ['http://evil.test/cb'] }) })).status, 400);
+}));
+
+test('the password works once: it creates the passkey, then only the passkey signs in', () => run({ mcp: options(helm()) }, async url => {
+  const setup = await fetch(`${url}/passkey`);
+  assert.match(await setup.text(), /Set up your passkey/);
+  const passwordPost = (path: string, body: Record<string, string> = {}) => fetch(`${url}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: url }, body: form({ ...body, password: PASSWORD }) });
+  const create = pageData(await (await passwordPost('/passkey')).text())!;
+  assert.equal(create.options.rp.id, '127.0.0.1');
+  assert.equal(create.options.authenticatorSelection.userVerification, 'required');
+  const key = fakeAuthenticator();
+  // Без проверки владельца (флаг UV), с чужого сайта или для другого домена пасскей не сохраняется.
+  assert.equal((await json(url, create.endpoint, { ticket: create.ticket, ...key.create(create.options, url, { flags: 0x01 }) })).status, 400);
+  const fresh = () => passwordPost('/passkey').then(r => r.text()).then(html => pageData(html)!);
+  let next = await fresh();
+  assert.equal((await json(url, next.endpoint, { ticket: next.ticket, ...key.create(next.options, url) }, 'https://evil.test')).status, 400);
+  next = await fresh();
+  assert.equal((await json(url, next.endpoint, { ticket: next.ticket, ...key.create(next.options, url, { rpId: 'evil.test' }) })).status, 400);
+  next = await fresh();
+  const saved = await j(json(url, next.endpoint, { ticket: next.ticket, ...key.create(next.options, url) }));
+  assert.equal(saved.redirect, '/passkey');
+  assert.match(await (await fetch(`${url}/passkey`)).text(), /You're set/);
+  // Второй пасскей той же страницей и пароль больше не проходят.
+  assert.equal((await json(url, create.endpoint, { ticket: create.ticket, ...fakeAuthenticator().create(create.options, url) })).status, 400);
+  assert.equal((await passwordPost('/passkey')).status, 403);
+
+  const { client_id } = await j(fetch(`${url}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_name: 'Codex', redirect_uris: [REDIRECT] }) }));
+  const params = { client_id, redirect_uri: REDIRECT, code_challenge: CHALLENGE, code_challenge_method: 'S256', state: 's2', response_type: 'code' };
+  assert.equal((await passwordPost('/authorize', params)).status, 403);
+  const html = await (await fetch(`${url}/authorize?${form(params)}`)).text();
+  assert.doesNotMatch(html, /Owner password/);
+  const login = pageData(html)!;
+  assert.equal(login.mode, 'get');
+  assert.deepEqual(login.options.allowCredentials, [{ type: 'public-key', id: key.id }]);
+  // Чужой ключ, подпись не к тому вызову и повтор билета не пускают.
+  const other = fakeAuthenticator();
+  assert.equal((await json(url, login.endpoint, { ticket: login.ticket, ...other.get(login.options, url), id: key.id })).status, 401);
+  const again = async () => pageData(await (await fetch(`${url}/authorize?${form(params)}`)).text())!;
+  let attempt = await again();
+  assert.equal((await json(url, attempt.endpoint, { ticket: attempt.ticket, ...key.get(attempt.options, url, { challenge: login.options.challenge }) })).status, 401);
+  attempt = await again();
+  const ok = await j(json(url, attempt.endpoint, { ticket: attempt.ticket, ...key.get(attempt.options, url) }));
+  assert.equal(new URL(ok.redirect).searchParams.get('state'), 's2');
+  assert.equal((await json(url, attempt.endpoint, { ticket: attempt.ticket, ...key.get(attempt.options, url) })).status, 400);
+}));
+
+test('a hardware key counter may not go back', () => run({ mcp: options(helm()) }, async url => {
+  const key = fakeAuthenticator();
+  authenticators.set(url, key);
+  key.tick();
+  await signIn(url);
+  key.tick();
+  await signIn(url);
+  const { client_id } = await j(fetch(`${url}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ redirect_uris: [REDIRECT] }) }));
+  const params = { client_id, redirect_uri: REDIRECT, code_challenge: CHALLENGE, code_challenge_method: 'S256', response_type: 'code' };
+  const login = pageData(await (await fetch(`${url}/authorize?${form(params)}`)).text())!;
+  assert.equal((await json(url, login.endpoint, { ticket: login.ticket, ...key.get(login.options, url) })).status, 401);
 }));
 
 test('without Helm MCP configured there is no sign-in page and browsers are still refused', () => run({}, async url => {

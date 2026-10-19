@@ -29,11 +29,14 @@ Claude (облако Anthropic) ── HTTPS + OAuth ──▶ ядро /mcp ─
 
 ## 3. Вход
 
-Минимальный OAuth 2.1 на одного владельца, как ждут custom connectors Claude (`mcp/oauth.ts`):
+Минимальный OAuth 2.1 на одного владельца, как ждут custom connectors Claude (`mcp/oauth.ts`), вход пасскеем:
 
 - `/.well-known/oauth-protected-resource[/mcp]`, `/.well-known/oauth-authorization-server`; `/mcp` без токена отвечает 401 с `WWW-Authenticate: Bearer resource_metadata=…`.
-- `POST /register` (DCR, адреса возврата только https или loopback), `GET /authorize` — страница с паролем владельца, `POST /authorize` — проверка пароля (10 неверных за 15 минут на всё ядро — пауза), форма только со своего `Origin`; `POST /token` — `authorization_code` с PKCE S256 и `refresh_token`. Токен доступа на час, обновления на 90 дней.
-- Базы нет: регистрации, коды и токены подписаны `MCP_SIGNING_SECRET` (вид токена входит в подпись). Смена секрета отзывает все входы. Одноразовость кодов — в памяти до их срока.
+- `POST /register` (DCR, адреса возврата только https или loopback); `POST /token` — `authorization_code` с PKCE S256 и `refresh_token`. Токен доступа на час, обновления на 90 дней.
+- Разрешает владелец пасскеем (с 19.10.2026, `mcp/passkey.ts`, страницы в `mcp/pages.ts` по холсту `docs/design/canvas/helm-mcp-passkey`, на английском). Пароль `MCP_OWNER_PASSWORD` годится один раз: пока пасскея нет, `GET /authorize` (или отдельная страница `/passkey`, чтобы настроить заранее) спрашивает пароль (10 неверных за 15 минут на всё ядро — пауза) и сразу предлагает создать пасскей; код входа клиент получает только после создания. Когда пасскей есть, `/authorize` показывает только кнопку пасскея (`POST /authorize/passkey`), а пароль сервер отклоняет с 403. Формы и вызовы пасскея принимаются только со своего `Origin`.
+- WebAuthn без библиотеки: аттестация `none`, ключ из `getPublicKey()` браузера (SPKI; ES256, EdDSA, RS256), обязательная проверка владельца (флаг UV), домен — хост ядра (`volna-core.up.railway.app`; смена домена — новый пасскей). Вызов подписан билетом `passkey` вместе с параметрами OAuth, одноразовый, 10 минут.
+- Пасскей лежит в `MEMORY_DIR/helm-mcp-passkey.json` (на Railway `/data`). Сброс — удалить файл (`railway ssh --service core -- rm /data/helm-mcp-passkey.json`): следующий вход снова спросит пароль. Испорченный файл — ошибка входа, а не возврат к паролю.
+- Базы нет (кроме файла пасскея): регистрации, коды и токены подписаны `MCP_SIGNING_SECRET` (вид токена входит в подпись). Смена секрета отзывает все входы. Одноразовость кодов — в памяти до их срока.
 - Общее правило ядра «браузерам 403» (`http/guards.ts`) не действует на пути Helm MCP (`/mcp`, `/authorize`, `/token`, `/register`, `/.well-known/oauth-*`), и только когда он включён: у них своя авторизация, платного в них нет, а форма `/authorize` принимается только со своего `Origin`.
 
 Иконка коннектора — иконка «Штурвала» (`core/assets/helm-icon.png` из `docs/design/icons/helm`): в `serverInfo.icons` при `initialize` и по `/icon.png`, `/favicon.ico`, `/apple-touch-icon.png`.
@@ -44,7 +47,7 @@ Claude (облако Anthropic) ── HTTPS + OAuth ──▶ ядро /mcp ─
 
 | Переменная | Что |
 |---|---|
-| `MCP_OWNER_PASSWORD` | Пароль владельца для входа, от 12 символов |
+| `MCP_OWNER_PASSWORD` | Пароль владельца, от 12 символов: один раз, чтобы создать пасскей |
 | `MCP_SIGNING_SECRET` | Секрет подписи, от 32 символов (`openssl rand -base64 48`) |
 | `MCP_PUBLIC_URL` | Необязательно: внешний адрес; по умолчанию `https://$RAILWAY_PUBLIC_DOMAIN`, локально — из запроса |
 | `MCP_CONFIRM_WRITES` | `server` (по умолчанию, двухшаговая запись) или `client` |

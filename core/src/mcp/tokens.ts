@@ -2,10 +2,10 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 /**
  * Подписанные токены Helm MCP (`<payload>.<hmac>`): регистрации клиентов, коды входа, токены доступа и обновления,
- * коды подтверждения записи. Базы нет: всё проверяется подписью и сроком. Смена `MCP_SIGNING_SECRET` отзывает всё сразу.
+ * коды подтверждения записи, вызовы пасскея. Базы нет: всё проверяется подписью и сроком. Смена `MCP_SIGNING_SECRET` отзывает всё сразу.
  * Вид токена (`kind`) входит в подпись, поэтому код подтверждения не сойдёт за токен доступа, и наоборот.
  */
-export type TokenKind = 'client' | 'code' | 'access' | 'refresh' | 'confirm';
+export type TokenKind = 'client' | 'code' | 'access' | 'refresh' | 'confirm' | 'passkey';
 export type Payload = Record<string, unknown> & { exp?: number };
 
 export class Signer {

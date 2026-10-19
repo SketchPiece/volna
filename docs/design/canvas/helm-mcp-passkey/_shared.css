@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Unbounded:wght@500&display=swap');
+:root{--bg:#161310;--surface:#1f1b18;--raised:#26211d;--border:#2a2420;--input:#302924;--text:#efe7d6;--muted:#a3968a;--ph:#8f8376;--lamp:#e8a33d;--lamp-hi:#f2b550;--on-lamp:#161310;--err:#ea7862}
+*{box-sizing:border-box;margin:0}
+html,body{width:100%;height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif;display:grid;place-items:center;-webkit-font-smoothing:antialiased}
+main{width:min(100% - 48px,380px)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+.brand img{width:28px;height:28px;border-radius:7px}
+.brand b{font:500 15px 'Unbounded',sans-serif;letter-spacing:.01em}
+.kicker{font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+h1{font-size:22px;line-height:1.3;font-weight:600;margin-bottom:10px}
+p{color:var(--muted);margin-bottom:24px}
+.field{display:block;width:100%;height:46px;padding:0 14px;border-radius:10px;border:1px solid var(--input);background:var(--surface);color:var(--text);font:inherit;margin-bottom:12px}
+.field.focus{border-color:var(--lamp)}
+.field::placeholder{color:var(--ph)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border:0;border-radius:10px;background:var(--lamp);color:var(--on-lamp);font:600 15px 'IBM Plex Sans',sans-serif}
+.btn svg{width:18px;height:18px}
+.ghost{display:block;text-align:center;margin-top:14px;color:var(--muted);font-size:13px}
+.row{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:24px;color:var(--muted);font-size:13px;line-height:1.45}
+.row svg{flex:none;width:18px;height:18px;color:var(--lamp);margin-top:1px}
+.row b{color:var(--text);font-weight:500}
+.err{color:var(--err);font-size:13px;margin:-4px 0 12px}
+.legacy{font:16px/1.5 -apple-system,system-ui,sans-serif;background:#1b1917;color:#ece6dc}

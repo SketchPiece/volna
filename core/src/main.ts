@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { loadConfig } from './config.ts';
 import { createBridge, listen } from './app.ts';
 import { defaultTools } from './assistant/tools/index.ts';
@@ -48,6 +48,7 @@ import { helmTools } from './helm/tools.ts';
 import { RelayLink, relayFetch, relayMac, relayRpc } from './relay/link.ts';
 import { attachRelaySocket } from './http/relay-socket.ts';
 import { Signer } from './mcp/tokens.ts';
+import { PasskeyStore } from './mcp/passkey.ts';
 import { WorkSync } from './work-sync/sync.ts';
 import { UsageLedger } from './usage/ledger.ts';
 import { Health } from './telemetry/health.ts';
@@ -231,7 +232,7 @@ const app = createBridge({
   relay: relay && config.relay ? { link: relay, token: config.relay.token, onHello: checkHelm } : undefined,
   // Helm MCP (docs/helm-mcp.md): тот же клиент «Штурвала», что у «Работы», в облаке через «Узел».
   mcp: helm && config.helm && config.mcp ? {
-    client: helm, signer: new Signer(config.mcp.signingSecret), password: config.mcp.password, publicUrl: config.mcp.publicUrl ?? undefined,
+    client: helm, signer: new Signer(config.mcp.signingSecret), password: config.mcp.password, passkeys: new PasskeyStore(join(config.memoryDir, 'helm-mcp-passkey.json')), publicUrl: config.mcp.publicUrl ?? undefined,
     confirmWrites: config.mcp.confirmWrites, macOnline: relay ? () => relay.connected : undefined,
     runtimeMode: config.helm.runtimeMode, instance: config.helm.instance, model: config.helm.model
   } : undefined,
