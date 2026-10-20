@@ -109,6 +109,7 @@ final class DesignScreenshots: XCTestCase {
         app.launchArguments = ["--memory-preview"]
         app.launch()
         XCTAssertTrue(app.buttons["homeCall.0"].waitForExistence(timeout: 10))
+        dismissNotificationPrompt()
         sleep(2)
         snapScreen("readme-home")
         app.buttons["homeCall.0"].tap()
@@ -158,6 +159,16 @@ final class DesignScreenshots: XCTestCase {
         sleep(1)
         snapScreen("readme-call-live")
         app.buttons["endCall"].tap()
+    }
+
+    /// A fresh simulator asks for notifications on first launch (`PushRegistration.start`), and `simctl privacy` can't
+    /// grant them, so the system alert is answered here before the first screenshot.
+    private func dismissNotificationPrompt() {
+        let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
+        guard alert.waitForExistence(timeout: 5) else { return }
+        let allow = alert.buttons["Allow"].exists ? alert.buttons["Allow"] : alert.buttons["Разрешить"]
+        if allow.exists { allow.tap() } else { alert.buttons.element(boundBy: alert.buttons.count - 1).tap() }
+        _ = alert.waitForNonExistence(timeout: 3)
     }
 
     private func snapScreen(_ name: String) {
