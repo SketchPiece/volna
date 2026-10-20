@@ -58,8 +58,11 @@ final class CallHistoryStore: ObservableObject {
     private static let decoder: JSONDecoder = { let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601; return d }()
 
     private static func sample(now: Date) -> [CallRecord] {
+        // Anchored at 9:41 today, the time of the screenshots' status bar, so «Сегодня, …» never reads later than the clock.
+        let nineFortyOne = Calendar.current.date(bySettingHour: 9, minute: 41, second: 0, of: now) ?? now
+        let now = min(now, nineFortyOne)
         let talks: [(Double, Double, String)] = [
-            (1.5, 3, "Что купить к ужину на шестерых"),
+            (0.6, 4, "Что нового в почте с утра"),
             (15, 4, "Что такое резонанс, по-простому"),
             (18.5, 2, "Перенести встречу с Олегом на пятницу"),
             (50, 11, "План переезда: что везти первым"),
@@ -67,15 +70,30 @@ final class CallHistoryStore: ObservableObject {
             (79, 6, "Идеи подарка маме"),
             // Enough to scroll the page past the title and fold the call key (docs/design/canvas/home-scroll).
             (86, 3, "Рецепт хачапури по-аджарски"),
-            (101, 9, "Починить тесты в колл ассистенте"),
+            (101, 9, "Почему падают тесты в «Заметках»"),
             (108, 2, "Сколько идти до вокзала пешком"),
             (121, 5, "Почему небо синее"),
             (130, 4, "Напомнить позвонить врачу"),
             (150, 8, "Разбор расходов за сентябрь"),
         ]
-        return talks.map { hours, minutes, title in
-            CallRecord(id: UUID(), startedAt: now.addingTimeInterval(-hours * 3600), duration: minutes * 60, title: title,
-                       lines: [TranscriptLine(id: 0, speaker: .you, text: title, offset: 2)])
+        return talks.enumerated().map { index, talk in
+            let (hours, minutes, title) = talk
+            return CallRecord(id: UUID(), startedAt: now.addingTimeInterval(-hours * 3600), duration: minutes * 60, title: title,
+                              lines: index == 0 ? sampleTalk : [TranscriptLine(id: 0, speaker: .you, text: title, offset: 2)])
         }
     }
+
+    /// The newest sample conversation in full: mail, a reminder and a job handed to Helm. Invented people and projects.
+    private static let sampleTalk: [TranscriptLine] = [
+        (TranscriptLine.Speaker.you, "Привет. Что нового в почте с утра?", 2.0),
+        (.wave, "Посмотрела почту: три новых письма. Ольга прислала смету по ремонту и просит ответить до пятницы, банк прислал выписку, остальное рассылки.", 6),
+        (.you, "Что в смете по итогу?", 21),
+        (.wave, "Итог сто восемьдесят тысяч, половина из них кухня. Ещё она спрашивает, можно ли начать в понедельник.", 24),
+        (.you, "Напомни мне ответить ей сегодня в шесть.", 38),
+        (.wave, "Готово: напоминание на 18:00, «Ответить Ольге про смету».", 41),
+        (.you, "И ещё: в «Заметках» не работает экспорт. Пусть агент посмотрит.", 52),
+        (.wave, "Мне кажется, это работа для Штурвала: найти, почему не срабатывает экспорт, и починить. Сделать?", 57),
+        (.you, "Да, давай.", 66),
+        (.wave, "Отправила задачу в Штурвал, проект «Заметки». Как будет готово, напишу или перезвоню.", 68),
+    ].enumerated().map { TranscriptLine(id: $0.offset, speaker: $0.element.0, text: $0.element.1, offset: $0.element.2) }
 }

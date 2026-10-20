@@ -198,7 +198,7 @@ final class CallCoordinator: ObservableObject {
             var seed = 0
             while !Task.isCancelled {
                 guard let self, self.state.isDemo, self.state.connected else { return }
-                if queue.isEmpty { queue = DemoConversation.exchanges.shuffled() }
+                if queue.isEmpty { queue = MemoryPreferences.isPreviewRun ? DemoConversation.exchanges.reversed() : DemoConversation.exchanges.shuffled() }
                 let exchange = queue.removeLast()
                 seed += 1
                 if !self.isMuted {

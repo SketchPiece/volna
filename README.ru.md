@@ -4,6 +4,14 @@
 
 Нативное iOS-приложение для быстрого голосового разговора с AI. SwiftUI + CallKit + SiriKit/App Intents + OpenAI Realtime через WebRTC. Минимальная iOS: 18.0.
 
+<p align="center">
+  <img src="docs/screenshots/home.png" width="190" alt="Главный экран">
+  <img src="docs/screenshots/call.png" width="190" alt="Звонок">
+  <img src="docs/screenshots/call-transcript.png" width="190" alt="Стенограмма во время звонка">
+  <img src="docs/screenshots/conversation.png" width="190" alt="Прошлый разговор: почта, напоминание, задача в Штурвал">
+</p>
+<p align="center"><sub>Настоящее приложение в симуляторе на выдуманных демо-данных (`--memory-preview`).</sub></p>
+
 ## Структура
 
 | Папка | Что там |

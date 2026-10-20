@@ -26,6 +26,8 @@ final class WorkFeed: ObservableObject {
     func refresh() async {
         let now = Date()
         if MemoryPreferences.isPreviewRun {
+            // Anchored at 9:41 like the sample conversations, the time of the screenshots' status bar.
+            let now = min(now, Calendar.current.date(bySettingHour: 9, minute: 41, second: 0, of: now) ?? now)
             items = HomeCopy.workItems(tasks: Self.sampleTasks(now: now), reminders: Self.sampleReminders(now: now), now: now)
             return
         }
@@ -39,14 +41,14 @@ final class WorkFeed: ObservableObject {
 
     private static func sampleTasks(now: Date) -> [WorkTask] {
         [
-            WorkTask(id: "s1", title: "Сравниваю тарифы на связь", status: "running", createdAt: now.addingTimeInterval(-720), startedAt: now.addingTimeInterval(-720)),
-            WorkTask(id: "s2", title: "Ищу билеты в Тбилиси на 10-е", status: "running", createdAt: now.addingTimeInterval(-180), startedAt: now.addingTimeInterval(-180)),
-            WorkTask(id: "s3", title: "Подарок маме", status: "running", waiting: .init(kind: "question", text: "Какой бюджет на подарок маме?"), createdAt: now.addingTimeInterval(-900)),
-            WorkTask(id: "s4", title: "План переезда: сводка", status: "done", createdAt: now.addingTimeInterval(-7200), finishedAt: now.addingTimeInterval(-5400)),
+            WorkTask(id: "s1", title: "Чиню экспорт в «Заметках»", status: "running", createdAt: now.addingTimeInterval(-720), startedAt: now.addingTimeInterval(-720)),
+            WorkTask(id: "s2", title: "Обновляю зависимости в боте", status: "running", createdAt: now.addingTimeInterval(-180), startedAt: now.addingTimeInterval(-180)),
+            WorkTask(id: "s3", title: "Команды бота", status: "running", waiting: .init(kind: "question", text: "Удалить старые команды бота?"), createdAt: now.addingTimeInterval(-900)),
+            WorkTask(id: "s4", title: "Тесты ядра снова зелёные", status: "done", createdAt: now.addingTimeInterval(-7200), finishedAt: now.addingTimeInterval(-5400)),
         ]
     }
     private static func sampleReminders(now: Date) -> [HomeReminder] {
-        [HomeReminder(id: "r1", title: "Позвонить в банк про карту", due: now.addingTimeInterval(3 * 3600))]
+        [HomeReminder(id: "r1", title: "Ответить Ольге про смету", due: Calendar.current.date(bySettingHour: 18, minute: 0, second: 0, of: now))]
     }
 }
 

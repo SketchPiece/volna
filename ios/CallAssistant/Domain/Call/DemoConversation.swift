@@ -8,7 +8,12 @@ enum DemoConversation {
         var answer: String
     }
 
+    /// Under `--memory-preview` they play in this order (design and README screenshots), otherwise shuffled.
     static let exchanges: [Exchange] = [
+        Exchange(question: "Есть что-то важное в почте?",
+                 answer: "Одно важное: Ольга ждёт ответа по смете до пятницы. Остальное рассылки."),
+        Exchange(question: "Как там задача с экспортом в «Заметках»?",
+                 answer: "Агент в Штурвале нашёл причину и уже чинит. Осталось прогнать тесты, минут десять."),
         Exchange(question: "Какая завтра погода в Берлине?",
                  answer: "Завтра в Берлине облачно, около пятнадцати градусов, к вечеру дождь. Зонт лучше взять."),
         Exchange(question: "Напомни вечером купить молоко.",

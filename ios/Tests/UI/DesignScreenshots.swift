@@ -102,6 +102,71 @@ final class DesignScreenshots: XCTestCase {
         snap(app, "01d-idle-empty")
     }
 
+    /// Screenshots for the README (docs/screenshots): home, a past conversation, the work list and a demo call with its
+    /// transcript, all on the `--memory-preview` sample data. Whole screen, so the status bar override shows.
+    func testCaptureReadmeShots() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--memory-preview"]
+        app.launch()
+        XCTAssertTrue(app.buttons["homeCall.0"].waitForExistence(timeout: 10))
+        sleep(2)
+        snapScreen("readme-home")
+        app.buttons["homeCall.0"].tap()
+        XCTAssertTrue(app.buttons["Готово"].waitForExistence(timeout: 3))
+        sleep(1)
+        app.swipeUp(velocity: .slow)
+        sleep(1)
+        // To the end of the talk: the job handed to Helm.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+        sleep(2)
+        snapScreen("readme-conversation")
+        app.buttons["Готово"].tap()
+        sleep(1)
+
+        app.buttons["settings"].tap()
+        XCTAssertTrue(app.buttons["homeMode.work"].waitForExistence(timeout: 3))
+        app.buttons["homeMode.work"].tap()
+        app.buttons["Готово"].tap()
+        sleep(2)
+        snapScreen("readme-work")
+        app.buttons["settings"].tap()
+        XCTAssertTrue(app.buttons["homeMode.talks"].waitForExistence(timeout: 3))
+        app.buttons["homeMode.talks"].tap()
+        let preview = app.buttons["preview"]
+        for _ in 0..<5 where !preview.isHittable { app.swipeUp() }
+        preview.tap()
+        XCTAssertTrue(app.buttons["endCall"].waitForExistence(timeout: 3))
+        // Volna's second answer (the Helm job) in the transcript, then the next answer on the call screen.
+        let status = app.staticTexts["callStatus"]
+        func waitForAnswer() {
+            var wasSpeaking = status.label == "Говорю"
+            for _ in 0..<120 {
+                let speaking = status.label == "Говорю"
+                if speaking && !wasSpeaking { return }
+                wasSpeaking = speaking
+                usleep(200_000)
+            }
+        }
+        waitForAnswer()
+        waitForAnswer()
+        app.buttons["transcript"].tap()
+        sleep(1)
+        snapScreen("readme-call-transcript")
+        app.buttons["Готово"].tap()
+        waitForAnswer()
+        sleep(1)
+        snapScreen("readme-call-live")
+        app.buttons["endCall"].tap()
+    }
+
+    private func snapScreen(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     private func snap(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
