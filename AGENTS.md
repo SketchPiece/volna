@@ -30,11 +30,9 @@
 - [docs/tools-routing.md](docs/tools-routing.md): план роста инструментов и выбора модели (паспорт инструмента, Jev выбирает техкарту и класс, фоновые задания); одобрен 22.09.2026; с 25.09.2026 единица маршрута — техкарта (`allowed-tools`, `metadata.tier`), большая работа только через «Мне кажется… Сделать?», исполнитель «Штурвал»; читать перед добавлением инструментов и техкарт.
 - [docs/design/volna-computer.html](docs/design/volna-computer.html): deprecated с 05.10.2026 вместе с Астрой и карточкой подтверждений; была карточка доступа Астры (Codex) к приложению Mac.
 - [docs/task-sync.md](docs/task-sync.md): план синхронизации заданий Волны и тредов «Штурвала» (решения владельца 26.09.2026, модель, статусы, этапы); читать перед работой над заданиями и «Штурвалом».
-- [docs/helm-push.md](docs/helm-push.md): уведомления и Live Activity мобильного «Штурвала» через ядро (`/helm`, свои токены `HELM_SERVER_TOKEN`/`HELM_DEVICE_TOKEN`, ключ APNs Волны); читать перед правкой пушей «Штурвала».
-- [docs/helm-mcp.md](docs/helm-mcp.md): Helm MCP в ядре — Claude владельца видит и ведёт треды «Штурвала» через `/mcp` (OAuth паролем владельца, сообщения дословно, запись только после «да»); читать перед правкой `core/src/mcp/`.
-- [docs/design/canvas/helm-mcp-passkey](docs/design/canvas/helm-mcp-passkey): страница входа Helm MCP в стиле «Штурвала» — пароль один раз, дальше пасскей, `/passkey` для настройки заранее; одобрено и внедрено 19.10.2026.
-- [docs/relay.md](docs/relay.md): «Узел» — помощник на Mac, через которого ядро в облаке ведёт «Работу» в «Штурвале» (протокол «Штурвала» 2 в разделе 2.1, белый список, установка); читать перед работой над «Работой» и «Штурвалом».
-- [docs/railway.md](docs/railway.md): ядро и почтовый сервис на Railway (проект, тома, переменные, порядок деплоя и переноса данных); читать перед деплоем.
+- Репозиторий helm-cloud (`~/Documents/Projects/helm-cloud`, его `README.md` и `docs/relay.md`, `docs/mcp.md`, `docs/push.md`): облачная часть «Штурвала» с 21.10.2026 — «Узел» (`relay/`), Helm MCP, пуши и диктовка «Штурвала»; ядро ходит к «Узлу» через неё (`/internal/relay`); читать перед работой над «Работой» и «Штурвалом».
+- [docs/design/canvas/helm-mcp-passkey](docs/design/canvas/helm-mcp-passkey): страница входа Helm MCP в стиле «Штурвала» — пароль один раз, дальше пасскей, `/passkey` для настройки заранее; одобрено и внедрено 19.10.2026; код теперь в helm-cloud.
+- [docs/railway.md](docs/railway.md): ядро, helm-cloud и почтовый сервис на Railway (проект, тома, переменные, порядок деплоя и переноса данных); читать перед деплоем.
 - [docs/ci-cd.md](docs/ci-cd.md): работа ветками и PR, самопроверка перед PR, CI и автодеплой после мержа; читать перед любым изменением.
 - [docs/pending.md](docs/pending.md): открытые задачи, решения владельца и непроверенное; сделанное вычёркивать, новое дописывать.
 - [docs/design/volna-pult.html](docs/design/volna-pult.html): панель в строке меню и настройки «Волны: Пульта»; чат-окно отложено по решению владельца 22.09.2026.
@@ -54,10 +52,9 @@
 ## Команды
 
 ```sh
-cd core && npm test                                   # 390 тестов ядра (1 в todo до решения по эксперименту 363cc0e); npm run typecheck; npm run metrics — сводка задержек звонков
+cd core && npm test                                   # 363 теста ядра (1 в todo до решения по эксперименту 363cc0e); npm run typecheck; npm run metrics — сводка задержек звонков
 cd ios && xcodebuild -project CallAssistant.xcodeproj -scheme CallAssistant \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build test   # 84 unit + 5 UI, с подписью для симулятора
-cd relay && node --test 'src/**/*.test.ts'           # тесты «Узла»; ./launchd.sh install | status — LaunchAgent на Mac
 ruby ios/scripts/sync-project.rb                        # после добавления, переноса или удаления Swift-файлов
 ```
 

@@ -10,10 +10,9 @@
 - [docs/vision.md](docs/vision.md): общая цель и порядок шагов к ней.
 - [docs/architecture.md](docs/architecture.md): архитектура, инварианты, план развития. Обновлять при изменении границ модулей.
 - [docs/core.md](docs/core.md): ядро и инструменты ассистента.
-- [docs/relay.md](docs/relay.md): «Узел», связь ядра в облаке с T3 Code на Mac, и план «Штурвала».
-- [docs/helm-mcp.md](docs/helm-mcp.md): Helm MCP, «Штурвал» из Claude владельца через ядро.
+- `~/Documents/Projects/helm-cloud` (README и `docs/`): «Узел», Helm MCP, пуши и диктовка «Штурвала»; ядро ходит к «Узлу» через неё.
 - [docs/ci-cd.md](docs/ci-cd.md): ветки и PR, самопроверка перед PR, CI и автодеплой.
-- [docs/railway.md](docs/railway.md): ядро и почтовый сервис на Railway (проект, тома, переменные, порядок деплоя и переноса данных).
+- [docs/railway.md](docs/railway.md): ядро, helm-cloud и почтовый сервис на Railway (проект, тома, переменные, порядок деплоя и переноса данных).
 - [docs/task-sync.md](docs/task-sync.md): синхронизация заданий Волны и тредов T3 Code.
 - [docs/skills.md](docs/skills.md): техкарты как скиллы (формат, источники, установка).
 - [docs/design/volna-design-system.html](docs/design/volna-design-system.html): дизайн-система, единственный источник визуальных решений.

@@ -1,28 +1,31 @@
-# Ядро и почта на Railway
+# Ядро, helm-cloud и почта на Railway
 
-Задеплоено 27.09.2026: ядро отвечает на `/health`, память перенесена (32 записи), плагин почты подключён по внутренней сети (5 инструментов `mail_*`; с 03.10.2026 шестой, `mail_mark_read`, выкачен в облако), ящик в почте один. На iPhone с этим адресом ещё не проверено. Проект Railway `volna` (id `<railway-project-id>`, окружение `production`), два сервиса:
+Задеплоено 27.09.2026: ядро отвечает на `/health`, память перенесена (32 записи), плагин почты подключён по внутренней сети (5 инструментов `mail_*`; с 03.10.2026 шестой, `mail_mark_read`, выкачен в облако), ящик в почте один. На iPhone с этим адресом ещё не проверено. Проект Railway `Helm` (до 21.10.2026 `volna`; id `<railway-project-id>`, окружение `production`), три сервиса:
 
 | Сервис | Код | Том | Адрес |
 |---|---|---|---|
-| `core` | `core/` этого репозитория (`SketchPiece/volna`, ветка `main`, корень `/core`), `core/railway.json` (Railpack, Node 24 из `core/.node-version`, `node src/main.ts`, проверка `/health`) | `core-data` → `/data` | публичный `https://your-core.example.com` |
+| `volna` (до 21.10.2026 `core`) | `core/` этого репозитория (`SketchPiece/volna`, ветка `main`, корень `/core`), `core/railway.json` (Railpack, Node 24 из `core/.node-version`, `node src/main.ts`, проверка `/health`) | `core-data` → `/data` | публичный `https://your-core.example.com` |
+| `helm` | helm-cloud (`~/Documents/Projects/helm-cloud`, его README): «Узел», Helm MCP, пуши и диктовка «Штурвала» | `helm-data` → `/data` | внутренний `http://helm.railway.internal:8788`, публичный домен сервиса `helm` |
 | `mail-triage` | `~/Documents/Sandbox/mail-triage` (`SketchPiece/mail-triage`, ветка `main`), его `railway.json` (`node src/server.ts`, без `--env-file`) | `mail-data` → `/data` | только внутренняя сеть: `http://mail-triage.railway.internal:8790/mcp` |
 
 ## 1. Что уже задано
 
-Регион: оба сервиса и оба тома в Амстердаме (`europe-west4-drams3a`), с 27.09.2026; до этого по умолчанию стоял Сингапур. Регион сервиса задаётся `serviceInstanceUpdate` с `multiRegionConfig` (или Settings → Scale → Regions), том переезжает при следующем деплое, сервис в это время недоступен (у нас около минуты). Перед переездом снять копию тома: `railway ssh --service <имя> -- "tar czf - -C /data ." > копия.tgz` (копии 27.09.2026 в `core/data/backups/`, вне Git). Позже возможен переезд в `us-east4` (Вирджиния), ближе к Канаде и к OpenAI.
+Регион: сервисы и тома в Амстердаме (`europe-west4-drams3a`), с 27.09.2026; до этого по умолчанию стоял Сингапур. Регион сервиса задаётся `serviceInstanceUpdate` с `multiRegionConfig` (или Settings → Scale → Regions), том переезжает при следующем деплое, сервис в это время недоступен (у нас около минуты). Перед переездом снять копию тома: `railway ssh --service <имя> -- "tar czf - -C /data ." > копия.tgz` (копии 27.09.2026 в `core/data/backups/`, вне Git). Позже возможен переезд в `us-east4` (Вирджиния), ближе к Канаде и к OpenAI.
 
-Ядро: `HOST=::` (внутренняя сеть Railway работает по IPv6), `PORT=8787`, `ASSISTANT_TIMEZONE=Europe/Berlin` (в контейнере UTC), `MEMORY_DIR=/data`, `METRICS_DIR=/data/metrics`, `APNS_KEY_PATH=/data/apns.p8`, `MAIL_TRIAGE_URL` и `MAIL_TRIAGE_TOKEN` ссылками на сервис почты.
+Ядро: `HOST=::` (внутренняя сеть Railway работает по IPv6), `PORT=8787`, `ASSISTANT_TIMEZONE=Europe/Berlin` (в контейнере UTC), `MEMORY_DIR=/data`, `METRICS_DIR=/data/metrics`, `APNS_KEY_PATH=/data/apns.p8`, `MAIL_TRIAGE_URL` и `MAIL_TRIAGE_TOKEN` ссылками на сервис почты, `HELM_CLOUD_URL=http://helm.railway.internal:8788`.
 
 Почта: `HOST=::`, `PORT=8790`, `DATA_DIR=/data`, `GOOGLE_CREDENTIALS=/data/credentials.json`, `TZ=Europe/Berlin`, `SYNC_INTERVAL_MIN=10`.
 
 ## 2. Секреты (задаёт владелец)
 
-Railway → `volna` → сервис → Variables → Raw Editor. Значения берутся из локальных файлов и на экран агентам не попадают.
+Railway → `Helm` → сервис → Variables → Raw Editor. Значения берутся из локальных файлов и на экран агентам не попадают.
 
-- `core`: `OPENAI_API_KEY`, `OPEN_ROUTER_API_KEY` (из `core/.env`), `BRIDGE_TOKEN` — тот же, что в `core/.env.device`: он уже в Keychain телефона, после переезда меняется только адрес. По желанию `APNS_KEY_ID`, `APNS_TEAM_ID` (перезвоны и уведомления), `OPENAI_ADMIN_KEY` (сверка расходов), `TYPESAFE_API_KEY`.
+- `volna`: `OPENAI_API_KEY`, `OPEN_ROUTER_API_KEY` (из `core/.env`), `BRIDGE_TOKEN` — тот же, что в `core/.env.device`: он уже в Keychain телефона, после переезда меняется только адрес. По желанию `APNS_KEY_ID`, `APNS_TEAM_ID` (перезвоны и уведомления), `OPENAI_ADMIN_KEY` (сверка расходов), `TYPESAFE_API_KEY`.
 - `mail-triage`: `OPENROUTER_API_KEY` (из его `.env`), `MAIL_TRIAGE_TOKEN` — новый, `openssl rand -hex 32`. Ядро получает его ссылкой.
 
-`HELM_TOKEN` в облаке не задаётся: «Работа» идёт в «Штурвале» на Mac через «Узел» ([relay.md](relay.md)). Пуши «Штурвала»: `HELM_SERVER_TOKEN` и `HELM_DEVICE_TOKEN` ([helm-push.md](helm-push.md)). В `core` заданы `RELAY_TOKEN` (тот же, что в `relay/.env` на Mac), `HELM_PROJECT_DIR=/Users/sketchpiece/Documents/Volna Work` и `HELM_NEW_PROJECTS_DIR=/Users/sketchpiece/Documents` (полные пути Mac: `~` в контейнере не тот; прежние имена `T3_*`, если они ещё заданы в Railway, ядро читает как запасные). Пока «Узел» не на связи, запросы к «Штурвалу» падают `helm_offline`, как у закрытого «Штурвала».
+`HELM_TOKEN` в облаке не задаётся: «Работа» идёт в «Штурвале» на Mac через «Узел», а к «Узлу» ядро ходит через сервис `helm` (`/internal/relay`). В `volna` заданы `HELM_INTERNAL_TOKEN` (тот же, что `INTERNAL_TOKEN` у `helm`), `HELM_PROJECT_DIR=/Users/sketchpiece/Documents/Volna Work` и `HELM_NEW_PROJECTS_DIR=/Users/sketchpiece/Documents` (полные пути Mac: `~` в контейнере не тот; прежние имена `T3_*`, если они ещё заданы в Railway, ядро читает как запасные). Пока «Узел» не на связи, запросы к «Штурвалу» падают `helm_offline`, как у закрытого «Штурвала».
+
+`RELAY_TOKEN`, `HELM_SERVER_TOKEN`, `HELM_DEVICE_TOKEN`, `MCP_*` и ключ диктовки задаются у сервиса `helm`, не у `volna`; список в README helm-cloud.
 
 ## 3. Деплой
 
@@ -34,7 +37,7 @@ Railway → `volna` → сервис → Variables → Raw Editor. Значен�
 
 ```sh
 railway up ~/Documents/Sandbox/mail-triage --path-as-root --service mail-triage --ci
-railway up core --path-as-root --service core --ci
+railway up core --path-as-root --service volna --ci
 curl https://your-core.example.com/health
 ```
 
@@ -42,7 +45,7 @@ curl https://your-core.example.com/health
 
 `railway volume files` ходит по SSH: нужен ключ в аккаунте Railway (`railway ssh keys add`, 27.09.2026 добавлен `~/.ssh/id_ed25519.pub` как `my-mac`). Базу SQLite нельзя класть поверх работающей: запущенный сервис уже создал пустую базу с `-wal` и `-shm`, и старый журнал накатился бы на новую. Поэтому база заливается под именем `mail-triage.db.new`, а внутри контейнера подменяется: `railway ssh --service mail-triage -- sh -c 'cd /data && rm -f mail-triage.db-wal mail-triage.db-shm && mv mail-triage.db.new mail-triage.db'`, затем перезапуск. `railway service restart` может зависнуть, надёжнее `railway api 'mutation { deploymentRestart(id: "…") }'`.
 
-Переносится память без замеров и истории консоли (решение владельца 27.09.2026): `memory.json`, `persona.json`, `skills/`, `tasks.json`, `callbacks.json`, `greeting.json`, `push.json`, `helm.json`, `transcripts/`, `apns.p8`. Плагин почты ставится в копию и включается на Mac: MCP-плагины включает только владелец ([skills.md, 7](skills.md#7-плагины)).
+Переносится память без замеров и истории консоли (решение владельца 27.09.2026): `memory.json`, `persona.json`, `skills/`, `tasks.json`, `callbacks.json`, `greeting.json`, `push.json`, `transcripts/`, `apns.p8`. `helm.json` и `helm-mcp-passkey.json` с 21.10.2026 лежат на томе `helm-data` сервиса `helm`. Плагин почты ставится в копию и включается на Mac: MCP-плагины включает только владелец ([skills.md, 7](skills.md#7-плагины)).
 
 ```sh
 rsync -a --exclude metrics --exclude console core/data/ /tmp/volna-data/
@@ -55,7 +58,7 @@ sqlite3 ~/Documents/Sandbox/mail-triage/data/mail-triage.db ".backup /tmp/mail-d
 cp ~/Documents/Sandbox/mail-triage/credentials.json /tmp/mail-data/
 for f in /tmp/mail-data/*; do railway volume files --volume mail-data upload "$f" "/${f:t}" --overwrite; done
 
-railway service restart --service mail-triage && railway service restart --service core
+railway service restart --service mail-triage && railway service restart --service volna
 rm -rf /tmp/volna-data /tmp/mail-data
 ```
 
@@ -67,7 +70,7 @@ rm -rf /tmp/volna-data /tmp/mail-data
 
 ## 6. Ограничения облака
 
-- «Работа» в «Штурвале» идёт через «Узел» на Mac ([relay.md](relay.md)): Mac включён, «Штурвал» открыт.
+- «Работа» в «Штурвале» идёт через сервис `helm` и «Узел» на Mac: Mac включён, «Штурвал» открыт.
 - Консоль ядра слушает `127.0.0.1:25452` внутри контейнера и снаружи не видна; история звонков копится в `/data/console`.
 - Пульта в ядре нет с 27.09.2026.
 - `SKILLS_EXTRA_DIRS` (папки скиллов на Mac) в облаке не задаётся.

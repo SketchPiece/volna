@@ -34,11 +34,11 @@ Voice assistants on the phone are either slow turn-taking chatbots or locked to 
 ## Architecture
 
 ```
- iPhone app (SwiftUI)                    core/ (Node, Railway)                     Mac
- ┌───────────────────────┐   HTTPS   ┌──────────────────────────┐   WebSocket   ┌──────────────┐     ┌────────────┐
- │ CallKit · SiriKit     │──────────▶│ session · tools · memory │◀══════════════│ relay/       │────▶│ Helm       │
- │ WebRTC audio          │           │ jobs · push · MCP        │  (outbound    │ LaunchAgent  │     │ (agents)   │
- │ EventKit · Contacts   │◀─ push ───│                          │   from Mac)   └──────────────┘     └────────────┘
+ iPhone app (SwiftUI)                    core/ (Node, Railway)                                         Mac
+ ┌───────────────────────┐   HTTPS   ┌──────────────────────────┐ internal ┌────────────┐  WebSocket   ┌──────────────┐     ┌────────────┐
+ │ CallKit · SiriKit     │──────────▶│ session · tools · memory │─────────▶│ helm-cloud │◀═════════════│ relay        │────▶│ Helm       │
+ │ WebRTC audio          │           │ jobs · push · MCP client │ network  │ (Railway)  │  (outbound   │ LaunchAgent  │     │ (agents)   │
+ │ EventKit · Contacts   │◀─ push ───│                          │          └────────────┘   from Mac)  └──────────────┘     └────────────┘
  └──────────┬────────────┘           └──────┬───────────┬───────┘
             │ WebRTC audio                  │ sideband  │ MCP (internal network)
             ▼                               ▼           ▼
@@ -46,12 +46,12 @@ Voice assistants on the phone are either slow turn-taking chatbots or locked to 
 ```
 
 - **`ios/`**: the iPhone app (`CallAssistant.xcodeproj`), the Siri extension and tests. The call state lives in a single reducer (`CallEvent` → `CallReducer`); side effects stay in services. The app stores no API keys and no audio; the core token lives in the Keychain.
-- **`core/`**: TypeScript on Node 22+ (no build step), Hono and zod. It creates the live voice session and exchanges SDP, answers the voice model's delegated requests with smaller models through OpenRouter, runs tools, stores memory, schedules callbacks, sends APNs pushes, and serves a local console with call timelines and costs. It also exposes a small MCP server so Claude can see and steer Helm threads.
-- **`relay/`**: a tiny dependency-free Node helper that runs on the Mac as a LaunchAgent. It opens an outbound WebSocket to the cloud core and executes a whitelisted set of calls against Helm, my desktop app for running coding agents. No inbound ports are opened on the Mac, and the relay never grants agent permissions on its own.
+- **`core/`**: TypeScript on Node 22+ (no build step), Hono and zod. It creates the live voice session and exchanges SDP, answers the voice model's delegated requests with smaller models through OpenRouter, runs tools, stores memory, schedules callbacks, sends APNs pushes, and serves a local console with call timelines and costs. It reaches Helm through helm-cloud.
+- **helm-cloud** (a separate repository): the cloud side of Helm, my desktop app for running coding agents. It holds the relay socket, a small MCP server so Claude can see and steer Helm threads, and Helm's own pushes and dictation. The relay is a tiny dependency-free Node helper that runs on the Mac as a LaunchAgent: it opens an outbound WebSocket to helm-cloud and executes a whitelisted set of calls against Helm. No inbound ports are opened on the Mac, and the relay never grants agent permissions on its own. The core reaches it over Railway's internal network.
 - **Mail**: [mail-triage](https://github.com/SketchPiece/mail-triage) plugs into the core as an MCP plugin, so Volna can read and triage email by voice.
 - **`archive/`**: retired experiments: "Pult", an earlier menu bar app for agent sessions, and a Speakerbox-based Siri/CallKit diagnostic.
 
-More detail (Russian): [architecture](docs/architecture.md), [core](docs/core.md), [relay](docs/relay.md), [memory design](docs/memory-design.md), [tools routing](docs/tools-routing.md), [design system](docs/design/volna-design-system.html).
+More detail (Russian): [architecture](docs/architecture.md), [core](docs/core.md), [memory design](docs/memory-design.md), [tools routing](docs/tools-routing.md), [design system](docs/design/volna-design-system.html).
 
 ## Setup
 
@@ -72,7 +72,7 @@ Requirements: Xcode with an iOS 18+ simulator or device, Node.js 22.18+, an Open
 
 3. **On a device** you need your own signing team and bundle IDs, an HTTPS URL for the core, and the same `BRIDGE_TOKEN` in the core and in the app. Callbacks need an APNs key. See [device setup](docs/device-setup.md).
 
-4. **Relay (optional)**: `cd relay && cp .env.example .env`, set `CORE_URL`, `RELAY_TOKEN` and `HELM_TOKEN`, then `./launchd.sh install`.
+4. **Helm (optional)**: locally the core talks to Helm directly with `HELM_TOKEN`. In the cloud it goes through helm-cloud: set `HELM_CLOUD_URL` and `HELM_INTERNAL_TOKEN`, and install the relay from the helm-cloud repository on the Mac.
 
 Tests:
 
@@ -80,7 +80,6 @@ Tests:
 cd core && npm test && npm run typecheck
 cd ios && xcodebuild -project CallAssistant.xcodeproj -scheme CallAssistant \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build test
-cd relay && node --test 'src/**/*.test.ts'
 ```
 
 Volna is a single-user prototype built for and tested on my own iPhone, and it is on hold for now. Docs are in Russian, as are the UI and prompts. It is not a public service: before anyone else used it, it would need real user accounts, quotas and proper secret management.
