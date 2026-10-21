@@ -178,11 +178,11 @@ test('without Helm MCP configured there is no sign-in page and browsers are stil
   assert.equal((await fetch(`${url}/.well-known/oauth-authorization-server`)).status, 404);
 }));
 
-test('tools/list marks reads and writes, and the instructions demand verbatim words and an explicit yes', () => run({ mcp: options(helm()) }, async url => {
+test('tools/list marks reads and writes, and the instructions ask for a short prompt and an explicit yes', () => run({ mcp: options(helm()) }, async url => {
   const { access } = await signIn(url);
   const init = await rpc(url, access, 'initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'claude', version: '1' } });
   assert.equal(init.protocolVersion, '2025-06-18');
-  assert.match(init.instructions, /verbatim/);
+  assert.match(init.instructions, /short message from what the user asked/);
   assert.match(init.instructions, /explicitly agrees/);
   assert.match(init.instructions, /Unsettled threads are the default/);
   // Иконка «Штурвала» для коннектора: в serverInfo и как favicon, без входа и с Origin браузера.

@@ -7,14 +7,14 @@ import { canonicalJson, sha256, type Signer } from './tokens.ts';
  * Инструменты Helm MCP (docs/helm-mcp.md, 2): Claude владельца видит и ведёт треды «Штурвала». Всё идёт через тот же
  * клиент, что «Работа» (helm/client.ts), а в облаке — через «Узел» и его белый список: новых операций на Mac нет.
  *
- * Два правила, ради которых сервер сделан. Сообщение агенту — дословно словами владельца, без переписывания.
+ * Два правила, ради которых сервер сделан. Сообщение агенту — короткое, выведенное из слов владельца, без раздувания.
  * Запись — только после явного «да»: первый вызов возвращает превью и код, подписанный по точным аргументам
  * (15 минут, одноразовый), исполняет только повторный вызов с кодом.
  */
 export const INSTRUCTIONS = `Helm MCP lets you see and steer the user's Helm app (Штурвал): coding-agent threads running on their computer, grouped by project.
 
 Rules:
-1. Relay the user's words, not yours. When a tool takes a "message" for an agent, pass the user's own words for that agent verbatim, in the language they used. Do not rewrite, expand, summarise, translate, fix, add context, add instructions or turn it into a bigger prompt. Only leave out the part addressed to you (e.g. "send to the Volna thread:"). If you are unsure what exactly to send, ask the user instead of composing it.
+1. Write a short message from what the user asked. When a tool takes a "message" for an agent, turn the user's request into a brief, plain prompt for that agent, in the language they used: drop the part addressed to you (e.g. "send to the Volna thread:"), clean up dictation slips, and make it read as a clear task. Stay close to what they said: do not invent requirements, add long context or turn it into a big structured prompt; a few sentences is usually enough. If the user asks to send their words as is, send them as is. If the user wants something changed in the message, change it.
 2. Writes need the user's OK. Write tools (send message, start thread, stop thread, answer question, settle, snooze) first return a preview and a confirmation code. Show the user the preview exactly as returned and ask whether to proceed. Call the tool again with the code only after the user explicitly agrees in their reply. Never confirm on the user's behalf, and never reuse a code for different arguments.
 3. Reading is free: use helm_overview first to see what is going on, then helm_read_thread for details. Ask which thread the user means when more than one fits.
 4. Unsettled threads are the default. To list threads, use helm_list_unsettled_threads: these still need the user's attention. Use helm_list_threads (all, settled too) only when the user asks about settled, old or all threads, or the thread they mean is not among the unsettled ones.
@@ -261,10 +261,10 @@ export function mcpTools(options: McpToolsOptions): McpTool[] {
     {
       name: 'helm_send_message',
       title: 'Send message to thread',
-      description: 'Send the user\'s message to a thread\'s agent: it joins the running turn or starts a new one. The message must be the user\'s own words, verbatim and in their language: no rewriting, expanding, translating or added instructions. Asks for confirmation first (see the server instructions).',
+      description: 'Send the user\'s message to a thread\'s agent: it joins the running turn or starts a new one. Write it as a short prompt inferred from what the user asked, in their language; do not pad it with invented requirements. Asks for confirmation first (see the server instructions).',
       input: z.object({
         threadId: z.string().min(1).max(200),
-        message: z.string().min(1).max(MAX_MESSAGE_CHARS).describe('The user\'s words for the agent, verbatim.'),
+        message: z.string().min(1).max(MAX_MESSAGE_CHARS).describe('A short prompt for the agent, based on what the user asked.'),
         confirmation
       }),
       annotations: write(false),
@@ -278,11 +278,11 @@ export function mcpTools(options: McpToolsOptions): McpTool[] {
     {
       name: 'helm_start_thread',
       title: 'Start new thread',
-      description: 'Start a new thread in a project with the user\'s task. The message must be the user\'s own words, verbatim and in their language. The title may be a short label you choose. Uses the project\'s default model and runs in the project folder. Asks for confirmation first.',
+      description: 'Start a new thread in a project with the user\'s task. The message is a short prompt inferred from what the user asked, in their language. The title may be a short label you choose. Uses the project\'s default model and runs in the project folder. Asks for confirmation first.',
       input: z.object({
         projectId: z.string().min(1).max(200),
         title: z.string().min(1).max(120),
-        message: z.string().min(1).max(MAX_MESSAGE_CHARS).describe('The user\'s task for the agent, verbatim.'),
+        message: z.string().min(1).max(MAX_MESSAGE_CHARS).describe('A short task for the agent, based on what the user asked.'),
         planMode: z.boolean().optional().describe('Start in plan mode: the agent proposes a plan before changing anything.'),
         confirmation
       }),
@@ -322,7 +322,7 @@ export function mcpTools(options: McpToolsOptions): McpTool[] {
       input: z.object({
         threadId: z.string().min(1).max(200),
         requestId: z.string().min(1).max(200),
-        answers: z.array(z.string().min(1).max(MAX_MESSAGE_CHARS)).min(1).max(20).describe('The user\'s answers, one per question, verbatim.'),
+        answers: z.array(z.string().min(1).max(MAX_MESSAGE_CHARS)).min(1).max(20).describe('The user\'s answers, one per question.'),
         confirmation
       }),
       annotations: write(false),
