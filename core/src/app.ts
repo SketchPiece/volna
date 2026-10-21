@@ -16,12 +16,7 @@ import type { PrefetchSettings, ClientDelegationSettings } from './http/session-
 import { LiveCalls } from './realtime/live-calls.ts';
 import { DeviceBroker } from './delegation/device-broker.ts';
 import { deviceToolRoutes } from './http/device-tool-routes.ts';
-import { relayRoutes } from './http/relay-routes.ts';
-import type { RelayLink } from './relay/link.ts';
 import { pushRoutes } from './http/push-routes.ts';
-import { helmRoutes } from './http/helm-routes.ts';
-import type { HelmPush } from './helm/helm-push.ts';
-import type { Transcriber } from './helm/transcribe.ts';
 import { taskRoutes } from './http/task-routes.ts';
 import { workRoutes } from './http/work-routes.ts';
 import type { WorkSync } from './work-sync/sync.ts';
@@ -34,7 +29,6 @@ import type { GreetingComposer } from './greeting/composer.ts';
 import type { ConsoleHub } from './console/hub.ts';
 import type { UsageMeter } from './usage/ledger.ts';
 import type { Health } from './telemetry/health.ts';
-import { helmMcpRoutes, isHelmMcpPath, type HelmMcpOptions } from './mcp/server.ts';
 
 export interface BridgeOptions {
   apiKey?: string;
@@ -78,14 +72,8 @@ export interface BridgeOptions {
   usage?: { meter: UsageMeter; pricePerMinute: number };
   /** Состояние служб для «Сводки» консоли. */
   health?: Health;
-  /** «Узел» на Mac (relay/link.ts): через него ядро в облаке ходит в «Штурвал». Свой токен; без него маршрута /relay нет. */
-  relay?: { link: RelayLink; token: string; onHello?: () => void };
   /** Коммит, из которого собрано ядро (Railway задаёт `RAILWAY_GIT_COMMIT_SHA`); по нему CI проверяет, что выкатилась нужная версия. */
   commit?: string;
-  /** Пуши «Штурвала» (docs/helm-push.md): токен сервера «Штурвала» и токен телефона; без них маршрута /helm нет. */
-  helm?: { push: HelmPush; serverToken: string; deviceToken: string; transcribe?: Transcriber };
-  /** Helm MCP для Claude владельца (docs/helm-mcp.md): OAuth и `/mcp`; без него этих маршрутов нет. */
-  mcp?: Omit<HelmMcpOptions, 'log'>;
 }
 
 /** Собирает ядро: маршруты, защиту и зависимости. Один вызов на процесс; в тестах на каждый сценарий. */
@@ -94,7 +82,7 @@ export function createBridge(options: BridgeOptions = {}) {
     apiKey = '', token = '', model = 'gpt-live-1', webSearch = false,
     timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
     tools = defaultTools(), limits = DEFAULT_LIMITS, log = consoleLogger, fetchImpl = fetch, socketFactory, memory,
-    metrics, prefetch, clientDelegation, tasks, work, callbacks, push, greeting, persona, skills, console: consoleHub, titleModel, usage, health, relay, commit, helm, mcp
+    metrics, prefetch, clientDelegation, tasks, work, callbacks, push, greeting, persona, skills, console: consoleHub, titleModel, usage, health, commit
   } = options;
   const liveCalls = options.liveCalls ?? new LiveCalls();
   // Инструменты телефона: ядро кладёт вызовы в очередь, телефон забирает их долгим опросом.
@@ -103,9 +91,7 @@ export function createBridge(options: BridgeOptions = {}) {
   if (deviceBroker && tasks) tasks.subscribe(() => deviceBroker.notify());
 
   const app = new Hono();
-  // Helm MCP: страница входа открывается в браузере владельца и шлёт форму с Origin (её Origin проверяет mcp/oauth.ts), а клиент
-  // Claude может слать Origin на /mcp и /token. У этих путей своя авторизация, платного в них нет.
-  app.use(noStore, async (c, next) => mcp && isHelmMcpPath(c.req.path) ? next() : rejectBrowsers(c, next));
+  app.use(noStore, rejectBrowsers);
   app.notFound(c => c.json({ error: 'Not found.' }, 404));
   app.onError((error, c) => { log.warn('unhandled error', { error: error.name }); return c.json({ error: 'Internal error.' }, 500); });
 
@@ -121,12 +107,8 @@ export function createBridge(options: BridgeOptions = {}) {
   if (memory) app.route('/memory', memoryRoutes(memory, bearerAuth(token), persona, skills));
   if (deviceBroker) app.route('/device-tools', deviceToolRoutes({ broker: deviceBroker, auth: bearerAuth(token), working: () => tasks?.active.map(t => t.id) ?? [] }));
   if (tasks) app.route('/tasks', taskRoutes({ tasks, auth: bearerAuth(token) }));
-  // Пустой токен в bearerAuth пускал бы всех: без RELAY_TOKEN маршрута нет (config.ts).
-  if (relay?.token) app.route('/relay', relayRoutes({ link: relay.link, auth: bearerAuth(relay.token), log, onHello: relay.onHello }));
-  if (helm?.serverToken && helm.deviceToken) app.route('/helm', helmRoutes({ push: helm.push, serverAuth: bearerAuth(helm.serverToken), deviceAuth: bearerAuth(helm.deviceToken), transcribe: helm.transcribe }));
   if (work) app.route('/work', workRoutes({ work, auth: bearerAuth(token) }));
   if (push) app.route('/push', pushRoutes({ devices: push.devices, auth: bearerAuth(token), configured: push.apns }));
-  if (mcp) app.route('/', helmMcpRoutes({ ...mcp, log }));
   if (titleModel) {
     app.use('/calls/*', bodyLimit({ maxSize: 256 * 1024, onError: c => c.json({ error: 'Стенограмма слишком длинная.' }, 413) }));
     app.route('/calls', callTitleRoutes({ model: titleModel, auth: bearerAuth(token), log }));

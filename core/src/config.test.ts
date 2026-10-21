@@ -60,18 +60,11 @@ test('Helm is off without a token; with one it reads URL, folder, instance and a
   assert.throws(() => loadConfig({ HELM_TOKEN: 'tok', HELM_RUNTIME_MODE: 'full-access' }), 'bypass is never configured');
 });
 
-test('Helm pushes need two distinct Helm tokens and never borrow the relay token', () => {
-  assert.equal(loadConfig({ RELAY_TOKEN: 'r', HELM_PROJECT_DIR: '/w', HELM_NEW_PROJECTS_DIR: '/p' }).helmPush, null);
-  assert.equal(loadConfig({ HELM_SERVER_TOKEN: 's' }).helmPush, null);
-  assert.equal(loadConfig({ HELM_SERVER_TOKEN: 'same', HELM_DEVICE_TOKEN: 'same' }).helmPush, null);
-  assert.deepEqual(loadConfig({ HELM_SERVER_TOKEN: 's', HELM_DEVICE_TOKEN: 'd' }).helmPush, { serverToken: 's', deviceToken: 'd', transcribeModel: 'gpt-transcribe' });
-
 test('the old T3_* names of the Helm variables still work; the new name wins', () => {
   const old = loadConfig({ T3_TOKEN: 'old', T3_PROJECT_DIR: '/w', T3_STALL_MINUTES: '7' });
   assert.equal(old.helm?.token, 'old');
   assert.equal(old.helm?.projectDir, '/w');
   assert.equal(old.helm?.stallMs, 7 * 60_000);
   assert.equal(loadConfig({ T3_TOKEN: 'old', HELM_TOKEN: 'new' }).helm?.token, 'new');
-  assert.equal(loadConfig({ RELAY_TOKEN: 'r', T3_PROJECT_DIR: '/Users/me/Work', T3_NEW_PROJECTS_DIR: '/Users/me' }).helm?.projectDir, '/Users/me/Work');
-});
+  assert.equal(loadConfig({ HELM_CLOUD_URL: 'http://h', HELM_INTERNAL_TOKEN: 'i', T3_PROJECT_DIR: '/Users/me/Work', T3_NEW_PROJECTS_DIR: '/Users/me' }).helm?.projectDir, '/Users/me/Work');
 });

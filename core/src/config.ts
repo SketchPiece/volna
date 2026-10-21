@@ -54,28 +54,14 @@ const schema = z.object({
   APNS_KEY_ID: z.string().default(''),
   APNS_TEAM_ID: z.string().default(''),
   APNS_TOPIC: z.string().default('dev.prototype.callassistant'),
-  // «Штурвал», форк T3 Code (helm/, протокол 2, docs/relay.md, 2.1): с токеном вся «Работа», и код тоже, идёт в его треды.
+  // «Штурвал», форк T3 Code (helm/, протокол 2, helm-cloud/docs/relay.md, 2.1): с токеном вся «Работа», и код тоже, идёт в его треды.
   // До 07.10.2026 переменные назывались T3_*: старые имена читаются, если новых нет (legacyNames).
   // Токен выдаёт владелец: node apps/server/dist/bin.mjs auth session issue --base-dir ~/.helm --label volna --ttl 30d --token-only.
   HELM_TOKEN: z.string().default(''),
-  // «Узел» (docs/relay.md): ядро в облаке ходит в «Штурвал» через помощника на Mac; токен общий с relay/.env. Без HELM_TOKEN включает «Работу»
-  // через «Узел»; папки HELM_PROJECT_DIR и HELM_NEW_PROJECTS_DIR тогда задаются полными путями Mac.
-  RELAY_TOKEN: z.string().default(''),
-  // «Штурвал» (docs/helm-push.md): свои токены, не «Узла». Серверный только публикует состояние тредов, телефонный
-  // только регистрирует устройство и читает карточку; ни один не пускает в /relay. Нужны оба, иначе /helm нет.
-  HELM_SERVER_TOKEN: z.string().default(''),
-  HELM_DEVICE_TOKEN: z.string().default(''),
-  // Распознавание голоса «Штурвала» ключом OPENAI_API_KEY; без ключа /helm/v1/transcriptions отвечает 503.
-  HELM_TRANSCRIBE_MODEL: z.string().default('gpt-transcribe'),
-  // Helm MCP (docs/helm-mcp.md): Claude владельца ведёт треды «Штурвала» через /mcp. Нужны оба и «Работа» (HELM_TOKEN или RELAY_TOKEN);
-  // пароль владельца для входа и секрет подписи токенов (32+ символа; смена отзывает все входы).
-  MCP_OWNER_PASSWORD: z.string().default(''),
-  MCP_SIGNING_SECRET: z.string().default(''),
-  // Внешний адрес ядра для OAuth; без него — RAILWAY_PUBLIC_DOMAIN или адрес из запроса.
-  MCP_PUBLIC_URL: z.string().optional(),
-  RAILWAY_PUBLIC_DOMAIN: z.string().optional(),
-  // client: запись подтверждает только сам Claude (annotations), без двухшагового кода. По умолчанию server.
-  MCP_CONFIRM_WRITES: z.enum(['server', 'client']).default('server'),
+  // helm-cloud (helm-cloud/docs/relay.md): облако «Штурвала» держит «Узел» на Mac, Волна просит его /internal/relay своим токеном.
+  // Без HELM_TOKEN включает «Работу» через helm-cloud; папки HELM_PROJECT_DIR и HELM_NEW_PROJECTS_DIR тогда полными путями Mac.
+  HELM_CLOUD_URL: z.string().default(''),
+  HELM_INTERNAL_TOKEN: z.string().default(''),
   HELM_URL: z.string().default('http://127.0.0.1:3783'),
   HELM_PROJECT_DIR: z.string().default('~/Documents/Volna Work'),
   HELM_NEW_PROJECTS_DIR: z.string().default('~/Documents'),
@@ -122,19 +108,15 @@ export interface Config {
   greeting: boolean;
   /** Порт консоли ядра на 127.0.0.1; null выключает. */
   consolePort: number | null;
-  /** null: нет ни HELM_TOKEN, ни RELAY_TOKEN — «Работы» нет. */
+  /** null: нет ни HELM_TOKEN, ни helm-cloud — «Работы» нет. */
   helm: HelmConfig | null;
-  /** «Узел» на Mac; null без RELAY_TOKEN или при прямом HELM_TOKEN. */
-  relay: { token: string } | null;
-  /** Пуши «Штурвала»; null без обоих токенов. */
-  helmPush: { serverToken: string; deviceToken: string; transcribeModel: string } | null;
-  /** Helm MCP для Claude владельца; null без пароля и секрета. Без «Работы» (helm) маршрута всё равно нет. */
-  mcp: { password: string; signingSecret: string; publicUrl: string | null; confirmWrites: boolean } | null;
+  /** «Узел» на Mac через helm-cloud; null без HELM_CLOUD_URL и HELM_INTERNAL_TOKEN или при прямом HELM_TOKEN. */
+  helmCloud: { url: string; token: string } | null;
 }
 
 /** «Штурвал» (helm/client.ts): сервер, токен и то, где и чем идёт «Работа». */
 export interface HelmConfig {
-  /** `direct`: «Штурвал» на этой же машине (HELM_TOKEN); `relay`: через «Узел» на Mac, токен «Штурвала» там. */
+  /** `direct`: «Штурвал» на этой же машине (HELM_TOKEN); `relay`: через helm-cloud и «Узел» на Mac, токен «Штурвала» там. */
   via: 'direct' | 'relay';
   url: string;
   token: string;
@@ -210,21 +192,11 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     greeting: parsed.GREETING === 'on',
     consolePort: parsed.CONSOLE === 'on' ? parsed.CONSOLE_PORT : null,
     helm: helmConfig(parsed),
-    relay: !parsed.HELM_TOKEN && parsed.RELAY_TOKEN ? { token: parsed.RELAY_TOKEN } : null,
-    helmPush: parsed.HELM_SERVER_TOKEN && parsed.HELM_DEVICE_TOKEN && parsed.HELM_SERVER_TOKEN !== parsed.HELM_DEVICE_TOKEN
-      ? { serverToken: parsed.HELM_SERVER_TOKEN, deviceToken: parsed.HELM_DEVICE_TOKEN, transcribeModel: parsed.HELM_TRANSCRIBE_MODEL } : null,
-    mcp: mcpConfig(parsed)
+    helmCloud: !parsed.HELM_TOKEN && viaCloud(parsed) ? { url: parsed.HELM_CLOUD_URL, token: parsed.HELM_INTERNAL_TOKEN } : null
   };
 }
 
-/** Helm MCP: пароль и секрет вместе, секрет не короче 32 символов, пароль не короче 12. */
-function mcpConfig(parsed: z.output<typeof schema>): Config['mcp'] {
-  if (!parsed.MCP_OWNER_PASSWORD && !parsed.MCP_SIGNING_SECRET) return null;
-  if (parsed.MCP_OWNER_PASSWORD.length < 12) throw new Error('MCP_OWNER_PASSWORD must be at least 12 characters (Helm MCP).');
-  if (parsed.MCP_SIGNING_SECRET.length < 32) throw new Error('MCP_SIGNING_SECRET must be at least 32 characters (Helm MCP): openssl rand -base64 48.');
-  const publicUrl = parsed.MCP_PUBLIC_URL ?? (parsed.RAILWAY_PUBLIC_DOMAIN ? `https://${parsed.RAILWAY_PUBLIC_DOMAIN}` : null);
-  return { password: parsed.MCP_OWNER_PASSWORD, signingSecret: parsed.MCP_SIGNING_SECRET, publicUrl, confirmWrites: parsed.MCP_CONFIRM_WRITES === 'server' };
-}
+const viaCloud = (parsed: z.output<typeof schema>) => Boolean(parsed.HELM_CLOUD_URL && parsed.HELM_INTERNAL_TOKEN);
 
 /** До 07.10.2026 переменные «Штурвала» назывались T3_*; новое имя важнее старого. */
 export function legacyNames(env: Record<string, string | undefined>): Record<string, string | undefined> {
@@ -238,13 +210,13 @@ export function legacyNames(env: Record<string, string | undefined>): Record<str
   return out;
 }
 
-/** «Штурвал» напрямую (HELM_TOKEN, «~» раскрывается здесь) или через «Узел» (RELAY_TOKEN, пути Mac полные: «~» здесь не тот). */
+/** «Штурвал» напрямую (HELM_TOKEN, «~» раскрывается здесь) или через helm-cloud и «Узел» (пути Mac полные: «~» здесь не тот). */
 function helmConfig(parsed: z.output<typeof schema>): HelmConfig | null {
-  const via = parsed.HELM_TOKEN ? 'direct' : parsed.RELAY_TOKEN ? 'relay' : null;
+  const via = parsed.HELM_TOKEN ? 'direct' : viaCloud(parsed) ? 'relay' : null;
   if (!via) return null;
   const dir = (value: string, name: string) => {
     if (via === 'direct') return value.replace(/^~(?=$|\/)/, homedir());
-    if (!value.startsWith('/')) throw new Error(`With RELAY_TOKEN set ${name} to a full path on the Mac, e.g. /Users/<you>/Documents/Volna Work.`);
+    if (!value.startsWith('/')) throw new Error(`With HELM_CLOUD_URL set ${name} to a full path on the Mac, e.g. /Users/<you>/Documents/Volna Work.`);
     return value;
   };
   return {

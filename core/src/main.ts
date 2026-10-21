@@ -1,4 +1,4 @@
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { loadConfig } from './config.ts';
 import { createBridge, listen } from './app.ts';
 import { defaultTools } from './assistant/tools/index.ts';
@@ -26,8 +26,6 @@ import { ScheduleScheduler } from './schedules/scheduler.ts';
 import { scheduleTools } from './schedules/tools.ts';
 import { DeviceTokens } from './push/devices.ts';
 import { ApnsSender } from './push/apns.ts';
-import { HelmPush } from './helm/helm-push.ts';
-import { openAiTranscriber } from './helm/transcribe.ts';
 import { GreetingComposer } from './greeting/composer.ts';
 import { PersonaStore } from './persona/store.ts';
 import { PersonaReviewer } from './persona/review.ts';
@@ -45,10 +43,7 @@ import { HelmClient } from './helm/client.ts';
 import { newProjectModel, helmWorker } from './helm/worker.ts';
 import { pickProject } from './helm/projects.ts';
 import { helmTools } from './helm/tools.ts';
-import { RelayLink, relayFetch, relayMac, relayRpc } from './relay/link.ts';
-import { attachRelaySocket } from './http/relay-socket.ts';
-import { Signer } from './mcp/tokens.ts';
-import { PasskeyStore } from './mcp/passkey.ts';
+import { HelmCloudRelay, relayFetch, relayMac, relayRpc } from './relay/link.ts';
 import { WorkSync } from './work-sync/sync.ts';
 import { UsageLedger } from './usage/ledger.ts';
 import { Health } from './telemetry/health.ts';
@@ -82,9 +77,9 @@ if (store.state.techCards.length) {
   await store.update(state => { state.techCards = []; });
   log.info('techcards.migrated', { moved });
 }
-// «Штурвал» (helm/, форк T3 Code): с HELM_TOKEN вся «Работа», и код тоже, идёт в него на этой машине. Ядро в облаке (RELAY_TOKEN)
-// ходит в него через «Узел» на Mac (docs/relay.md): снимки, команды RPC и проверка папки исполняются там, токен не покидает Mac.
-const relay = config.relay ? new RelayLink() : null;
+// «Штурвал» (helm/, форк T3 Code): с HELM_TOKEN вся «Работа», и код тоже, идёт в него на этой машине. Ядро в облаке ходит в него
+// через helm-cloud и «Узел» на Mac (helm-cloud/docs/relay.md): снимки, команды RPC и проверка папки исполняются там, токен не покидает Mac.
+const relay = config.helmCloud ? new HelmCloudRelay({ ...config.helmCloud, onOnline: checkHelm }) : null;
 const mac = relay ? relayMac(relay) : null;
 const helm = config.helm ? new HelmClient({
   url: config.helm.url, token: config.helm.token,
@@ -216,34 +211,15 @@ const dashboard = consoleHub ? new Dashboard({
   push: devices ? { apns: apnsReady, devices: () => devices.current ? 1 : 0 } : undefined,
   plugins: { servers: plugins.connections.length }
 }) : undefined;
-// «Штурвал» (docs/helm-push.md): уведомления и Live Activity его агентов тем же ключом APNs; свои токены сервера и телефона.
-const helmApns = config.tasks?.apns;
-const helmPush = config.helmPush ? new HelmPush({
-  dir: resolve(config.memoryDir), log,
-  apns: helmApns ? { keyPem: await readFile(resolve(helmApns.keyPath), 'utf8'), keyId: helmApns.keyId, teamId: helmApns.teamId } : null
-}) : undefined;
-await helmPush?.load();
 const app = createBridge({
   // Коммит сборки Railway задаёт сам при деплое из GitHub; локально его нет.
   ...config, commit: process.env.RAILWAY_GIT_COMMIT_SHA || undefined, tools, memory, metrics, prefetch, clientDelegation, liveCalls,
   tasks: taskStore, work, callbacks: callbackStore, push: devices ? { devices, apns: apnsReady } : undefined, greeting, persona, skills, console: consoleHub, titleModel,
-  log, usage: { meter: ledger, pricePerMinute: config.billing.livePricePerMinute }, health,
-  // «Узел» подключился: проверяем «Штурвал» всем путём (ядро → «Узел» → «Штурвал»), в логе helm.ready или helm.unavailable.
-  relay: relay && config.relay ? { link: relay, token: config.relay.token, onHello: checkHelm } : undefined,
-  // Helm MCP (docs/helm-mcp.md): тот же клиент «Штурвала», что у «Работы», в облаке через «Узел».
-  mcp: helm && config.helm && config.mcp ? {
-    client: helm, signer: new Signer(config.mcp.signingSecret), password: config.mcp.password, passkeys: new PasskeyStore(join(config.memoryDir, 'helm-mcp-passkey.json')), publicUrl: config.mcp.publicUrl ?? undefined,
-    confirmWrites: config.mcp.confirmWrites, macOnline: relay ? () => relay.connected : undefined,
-    runtimeMode: config.helm.runtimeMode, instance: config.helm.instance, model: config.helm.model
-  } : undefined,
-  helm: helmPush && config.helmPush ? {
-    push: helmPush, ...config.helmPush,
-    transcribe: config.apiKey ? openAiTranscriber({ apiKey: config.apiKey, model: config.helmPush.transcribeModel, meter: ledger }) : undefined
-  } : undefined
+  log, usage: { meter: ledger, pricePerMinute: config.billing.livePricePerMinute }, health
 });
-const server = await listen(app, config.port, config.host);
-// «Узел» держит WebSocket (http/relay-socket.ts); HTTP-опрос /relay остаётся для старых версий «Узла».
-if (relay && config.relay) attachRelaySocket(server, { link: relay, token: config.relay.token, log, onHello: checkHelm });
+await listen(app, config.port, config.host);
+// «Узел» подключился (по опросу helm-cloud): проверяем «Штурвал» всем путём, в логе helm.ready или helm.unavailable.
+relay?.start();
 work?.start();
 if (consoleHub && config.consolePort) await listen(consoleApp({ hub: consoleHub, dashboard, port: config.consolePort }), config.consolePort, CONSOLE_HOST);
 console.log(`Volna core: http://${config.host}:${config.port}`);
@@ -254,12 +230,11 @@ console.log(`Delegation: ${cd ? `${cd.openAiKey ? 'openai/* via OpenAI Responses
 console.log(`Metrics: ${metrics ? metrics.dir : 'off'}; Jev (goodbye, routing): ${jev.mode}${jev.apiKey ? ` via ${jev.provider}, ${jev.model}` : ' (no TYPESAFE_API_KEY or OPEN_ROUTER_API_KEY)'}`);
 console.log(`Plugins: ${plugins.connections.length ? `${plugins.connections.length} MCP servers, ${plugins.tools.length} tools` : 'no MCP servers'} (npm run plugins)`);
 console.log(`Tools: ${tools.names().join(', ') || 'none'}; on the phone: ${tools.deviceNames().join(', ') || 'none'}; time zone ${config.timeZone}`);
-console.log(`Work: ${tc ? `Helm (up to ${config.helm!.taskMaxMs / 60_000} min, stalled after ${config.helm!.stallMs / 60_000} min), progress ${tc.progress ? `${tc.progress.model} every ${tc.progress.intervalMs / 1000}s` : 'off'}; ${apnsReady ? `APNs ${tc.apns!.topic} (one notification or call when all tasks finish)` : 'no APNs key: results wait for the next call'}` : 'off (TASKS=off, no HELM_TOKEN or RELAY_TOKEN, or no OPEN_ROUTER_API_KEY)'}`);
-console.log(`Helm: ${helm && config.helm ? `${config.helm.via === 'relay' ? 'via Relay on the Mac (/relay)' : helm.url}, ${config.helm.instance}${config.helm.model ? `/${config.helm.model}` : ''}, ${config.helm.runtimeMode}, work in ${config.helm.projectDir}` : 'off (no HELM_TOKEN or RELAY_TOKEN)'}`);
+console.log(`Work: ${tc ? `Helm (up to ${config.helm!.taskMaxMs / 60_000} min, stalled after ${config.helm!.stallMs / 60_000} min), progress ${tc.progress ? `${tc.progress.model} every ${tc.progress.intervalMs / 1000}s` : 'off'}; ${apnsReady ? `APNs ${tc.apns!.topic} (one notification or call when all tasks finish)` : 'no APNs key: results wait for the next call'}` : 'off (TASKS=off, no HELM_TOKEN or HELM_CLOUD_URL, or no OPEN_ROUTER_API_KEY)'}`);
+console.log(`Helm: ${helm && config.helm ? `${config.helm.via === 'relay' ? `via helm-cloud (${config.helmCloud!.url}) and the Relay on the Mac` : helm.url}, ${config.helm.instance}${config.helm.model ? `/${config.helm.model}` : ''}, ${config.helm.runtimeMode}, work in ${config.helm.projectDir}` : 'off (no HELM_TOKEN or HELM_CLOUD_URL)'}`);
 // Версия «Штурвала» проверяется в фоне: он может быть ещё не запущен. Несовместимый сервер не получит ни одной команды (helm/client.ts).
-// Через «Узел» проверка ждёт его подключения (checkHelm в onHello).
+// Через helm-cloud проверка ждёт подключения «Узла» (checkHelm в onOnline).
 if (helm && !relay) checkHelm();
-console.log(`Helm MCP: ${helm && config.mcp ? `${config.mcp.publicUrl ?? 'this host'}/mcp, writes confirmed by ${config.mcp.confirmWrites ? 'a code from the server' : 'the client'}` : config.mcp ? 'off (no work: HELM_TOKEN or RELAY_TOKEN)' : 'off (no MCP_OWNER_PASSWORD and MCP_SIGNING_SECRET)'}`);
 console.log(`Greeting: ${greeting ? 'phrase from the set (greeting/phrases.ts)' : 'fallback rule (GREETING=off)'}`);
 console.log(`Console: ${consoleHub ? `http://${CONSOLE_HOST}:${config.consolePort}` : 'off (CONSOLE=off)'}`);
 console.log(`Usage: ${ledger.dir}, GPT-Live $${config.billing.livePricePerMinute}/min; OpenAI bill ${openAiAdminKey ? `on${openAiProject ? ` (project ${openAiProject})` : ''}` : 'off (no OPENAI_ADMIN_KEY)'}`);
