@@ -7,6 +7,7 @@
 ## Ссылки
 
 - [AGENTS.md](AGENTS.md): правила работы, команды, что читать первым.
+- [docs/hermes.md](docs/hermes.md): текущее основное направление — Волна на Hermes Agent в Telegram (установка, характер, риски).
 - [docs/vision.md](docs/vision.md): общая цель и порядок шагов к ней.
 - [docs/architecture.md](docs/architecture.md): архитектура, инварианты, план развития. Обновлять при изменении границ модулей.
 - [docs/core.md](docs/core.md): ядро и инструменты ассистента.
